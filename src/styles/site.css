@@ -30,12 +30,12 @@ a:hover{color:var(--ink)}
    wordmark gave way to the profile links, since the hero already carries the name. */
 .bar{position:sticky;top:0;z-index:10;display:flex;align-items:center;justify-content:flex-end;padding:9px var(--gutter);border-bottom:2px solid var(--rule);background:var(--sheet)}
 .bar-links{display:flex;flex-wrap:wrap;justify-content:flex-end;column-gap:clamp(1rem, 2.7778vw, 2.5rem);list-style:none;margin:0;padding:0}
-/* Set as the C3 nav labels are: t-1, 600, uppercase, 1px tracking, --ink-3 at rest. 12px
-   above and 13px below the 19.2px line box make the 44px target. */
-.bar-links a{display:inline-block;padding:12px 0 13px;font-size:var(--t-1);font-weight:600;line-height:1.2;letter-spacing:1px;text-transform:uppercase;color:var(--ink-3)}
+/* Sized as the C3 nav labels are (t-1, 600, --ink-3 at rest) but in normal case, so without
+   their caps tracking. 12px above and 13px below the 19.2px line box make the 44px target. */
+.bar-links a{display:inline-block;padding:12px 0 13px;font-size:var(--t-1);font-weight:600;line-height:1.2;color:var(--ink-3)}
 .bar-links a:hover{color:var(--ink)}
-/* At the 320 floor the three labels need 250px of the 272px available, which a fixed gap
-   overruns. On narrow screens the row spans the bar and the gaps take what is left. */
+/* On narrow screens the row spans the bar and the gaps take what is left, so the three
+   labels hold one line down to the 320 floor. */
 @media (max-width:30rem){
   .bar nav{flex:1}
   .bar-links{justify-content:space-between;column-gap:0}
