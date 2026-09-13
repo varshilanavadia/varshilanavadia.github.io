@@ -44,15 +44,14 @@ const year = new Date().getFullYear();
           </div>
         </div>
         <!-- The box is masked by the portrait's own alpha, so the white band inside it shows
-             only across the figure. .grayscale sits on the image rather than the box, so the
-             band is not desaturated with it. -->
+             only across the figure. No .grayscale here: the file is already black and white
+             apart from the yellow bar, which the filter would flatten. -->
         <div class="portrait">
           <img
-            class="grayscale"
             src="/hero-portrait.webp"
             alt="Portrait of Varshil Anavadia"
-            width="827"
-            height="1102"
+            width="828"
+            height="1104"
             fetchpriority="high"
           />
           <div class="hero-name hero-name--over" aria-hidden="true">
