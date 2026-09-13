@@ -28,8 +28,15 @@ const year = new Date().getFullYear();
     <header class="bar">
       <nav aria-label="Elsewhere">
         <ul class="bar-links">
+          {/* Plain https profile URLs on purpose: on a phone with the app installed, iOS
+              Universal Links and Android App Links hand these to the app; without it they
+              open in the browser. Custom app schemes would fail where the app is missing. */}
           {links.map(({ label, href }) => (
-            <li><a href={href} rel="me">{label}</a></li>
+            <li>
+              <a href={href} target="_blank" rel="me noopener">
+                {label}<span class="sr-only"> (opens in a new tab)</span>
+              </a>
+            </li>
           ))}
         </ul>
       </nav>
