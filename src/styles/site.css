@@ -42,18 +42,34 @@ a:hover{color:var(--ink)}
 }
 
 /* ── Hero ─────────────────────────────────────────────────────────────────── */
-.hero{position:relative;display:flex;justify-content:center;overflow:hidden}
+/* A container, so the masked copy of the band inside the portrait can size itself to the
+   hero rather than to the viewport — cqw ignores the scrollbar, vw does not. */
+.hero{position:relative;display:flex;justify-content:center;overflow:hidden;container-type:inline-size}
 /* The name is a band across the foot of the hero, in front of the figure, bleeding off both
    edges. 260px at 1440 is 18.06vw; the band keeps that proportion down to a 96px floor. */
 /* The marquee runs at every width, by decision (12 Sep 2026); only the size scales. */
-.hero-name{position:absolute;left:0;right:0;bottom:clamp(1.5rem, 5.5556vw, 5rem);z-index:2;pointer-events:none;overflow:hidden;font-size:clamp(6rem, 18.0556vw, 16.25rem);font-weight:500;line-height:var(--lh-tight);letter-spacing:-0.035em;color:var(--ink)}
+.hero-name{position:absolute;left:0;right:0;bottom:clamp(1.5rem, 5.5556vw, 5rem);z-index:1;pointer-events:none;overflow:hidden;font-size:clamp(6rem, 18.0556vw, 16.25rem);font-weight:500;line-height:var(--lh-tight);letter-spacing:-0.035em;color:var(--ink)}
 .hero-name-track{display:flex;align-items:center;gap:0.16em;white-space:nowrap;width:max-content;will-change:transform}
 .hero-name-seg{display:flex;align-items:center;gap:0.16em}
-.hero-name-dash{display:block;width:0.62em;height:0.105em;background:currentColor}/* 42% of the column at 1440 (605px), never narrower than 280px on a phone. */
-.portrait{position:relative;z-index:1;align-self:flex-end;width:clamp(17.5rem, 42%, 37.8rem);aspect-ratio:3/4;overflow:hidden}
+.hero-name-dash{display:block;width:0.62em;height:0.105em;background:currentColor}/* 42% of the column at 1440 (605px), never narrower than 280px on a phone. The box is
+   masked by the portrait's own alpha, cut to the same rectangle the <img> below is drawn
+   at: a mask-position percentage aligns that point of the image with the same point of the
+   box, so 62.84% / 46.57% put the image's edges where the crop puts them. Everything in
+   this box — the figure and the white band — therefore shows only across the figure. */
+/* Above the dark band, not behind it: the figure hides the dark letters where it covers
+   them, and the white copy inside this box draws them back in white. */
+.portrait{position:relative;z-index:2;align-self:flex-end;width:clamp(17.5rem, 42%, 37.8rem);aspect-ratio:3/4;overflow:hidden;
+  -webkit-mask-image:url('/hero-portrait.webp');mask-image:url('/hero-portrait.webp');
+  -webkit-mask-size:151.35% 151.25%;mask-size:151.35% 151.25%;
+  -webkit-mask-position:62.84% 46.57%;mask-position:62.84% 46.57%;
+  -webkit-mask-repeat:no-repeat;mask-repeat:no-repeat}
 /* The crop saved in the wireframe's image slot: 1.5125× over a cover fit, centre moved
    6.59% left and 1.76% down. */
 .portrait img{position:absolute;max-width:none;width:151.35%;height:151.25%;left:43.41%;top:51.76%;transform:translate(-50%,-50%)}
+/* The white copy of the band. It lives inside the masked portrait box but is laid out in
+   the hero's coordinates — the box is centred in the hero and its foot is the hero's foot,
+   so the two bands sit on the same line and scroll together. */
+.hero-name--over{left:calc((100% - 100cqw) / 2);right:auto;width:100cqw;z-index:3;color:#fff}
 
 /* ── Sections ─────────────────────────────────────────────────────────────── */
 .block-label{margin:0;font-size:var(--t-1);font-weight:600;line-height:var(--lh-normal);color:var(--ink-3);text-transform:uppercase;letter-spacing:1px}

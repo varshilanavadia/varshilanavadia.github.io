@@ -35,7 +35,7 @@ const year = new Date().getFullYear();
       <section class="hero">
         <h1 class="sr-only">Varshil Anavadia</h1>
         <div class="hero-name" aria-hidden="true">
-          <div class="hero-name-track" id="hero-name-track">
+          <div class="hero-name-track">
             {[0, 1, 2, 3].map(() => (
               <div class="hero-name-seg">
                 Varshil Anavadia<span class="hero-name-dash"></span>
@@ -44,7 +44,8 @@ const year = new Date().getFullYear();
           </div>
         </div>
         <!-- Colour, not .grayscale: a knowing exception to the DS's black-and-white rule
-             while this placeholder portrait stands in (12 Sep 2026). -->
+             while this placeholder portrait stands in (12 Sep 2026). The portrait is masked
+             by its own alpha, so the white band inside it shows only across the figure. -->
         <div class="portrait">
           <img
             src="/hero-portrait.webp"
@@ -53,6 +54,15 @@ const year = new Date().getFullYear();
             height="1102"
             fetchpriority="high"
           />
+          <div class="hero-name hero-name--over" aria-hidden="true">
+            <div class="hero-name-track">
+              {[0, 1, 2, 3].map(() => (
+                <div class="hero-name-seg">
+                  Varshil Anavadia<span class="hero-name-dash"></span>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 
@@ -73,7 +83,10 @@ const year = new Date().getFullYear();
       // every scroll delta adds to a boost that decays, so scrolling down runs it faster and
       // scrolling up drags it left. The track holds four copies of "name + dash" and the
       // offset wraps modulo one copy's width, so the seam never shows.
-      const track = document.getElementById('hero-name-track');
+      // Two tracks: the dark green band, and its white copy masked into the figure. One loop
+      // drives both, so they can never drift apart.
+      const tracks = Array.from(document.querySelectorAll<HTMLElement>('.hero-name-track'));
+      const track = tracks[0];
       if (track) {
         const reduce = matchMedia('(prefers-reduced-motion: reduce)');
         let seg = 0;
@@ -114,7 +127,8 @@ const year = new Date().getFullYear();
             boost *= Math.pow(0.02, dt); // decays to nothing in about a third of a second
             // Direction eases back to rightward once the gesture stops.
             dir += (1 - dir) * (1 - Math.pow(0.15, dt));
-            track.style.transform = `translate3d(${mx - seg}px,0,0)`;
+            const t = `translate3d(${mx - seg}px,0,0)`;
+            for (const el of tracks) el.style.transform = t;
           }
           raf = requestAnimationFrame(tick);
         };
