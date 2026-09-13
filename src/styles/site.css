@@ -38,6 +38,15 @@ a:hover{color:var(--ink)}
 .hero-name-track{display:flex;align-items:center;gap:0.16em;white-space:nowrap;width:max-content;will-change:transform}
 .hero-name-seg{display:flex;align-items:center;gap:0.16em}
 .hero-name-dash{display:block;width:0.62em;height:0.105em;background:var(--ink)}
+.hero-name-static{display:none}
+/* D7: below the narrow anchor the band stops being a marquee. A running band that narrow
+   never shows the whole name, so it sets still on two lines at t5, broken between the words
+   by the markup rather than left to the browser (Type System §14). */
+@media (max-width:30rem){
+  .hero-name{left:var(--gutter);right:var(--gutter);font-size:var(--t5)}
+  .hero-name-track{display:none}
+  .hero-name-static{display:block}
+}
 /* 42% of the column at 1440 (605px), never narrower than 280px on a phone. */
 .portrait{position:relative;z-index:1;align-self:flex-end;width:clamp(17.5rem, 42%, 37.8rem);aspect-ratio:3/4;overflow:hidden}
 /* The crop saved in the wireframe's image slot: 1.5125× over a cover fit, centre moved

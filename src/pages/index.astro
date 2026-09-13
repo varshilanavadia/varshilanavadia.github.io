@@ -36,6 +36,7 @@ const year = new Date().getFullYear();
               </div>
             ))}
           </div>
+          <div class="hero-name-static">Varshil<br />Anavadia</div>
         </div>
         <div class="portrait grayscale">
           <img
@@ -139,10 +140,9 @@ const year = new Date().getFullYear();
           raf = 0;
         };
 
-        // Run only while the band is on screen, and not at all under reduced motion.
-        new IntersectionObserver(([entry]) => (entry?.isIntersecting ? start() : stop())).observe(
-          track.parentElement ?? track,
-        );
+        // Run only while the band is on screen, and not at all under reduced motion. Observing
+        // the track itself also stops the loop on narrow screens, where it is display:none.
+        new IntersectionObserver(([entry]) => (entry?.isIntersecting ? start() : stop())).observe(track);
         reduce.addEventListener('change', () => (reduce.matches ? stop() : start()));
       }
     </script>
