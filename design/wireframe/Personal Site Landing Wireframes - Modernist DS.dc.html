@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@300..800&family=IBM+Plex+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="./image-slot.js"></script>
+<link rel="stylesheet" href="_ds/personal-portfolio-d708aeee-8a4f-4afd-9a63-76771f71ba00/styles.css">
+<style>
+/* Type scale: major third (1.25) off a 16px floor. */
+/* Spacing ladder, 8px base. Sections carry a uniform s5 frame on all four sides:
+   the 1px section rules already mark the boundaries, so the padding only has to
+   keep content off them. There are no section headings, so top and bottom match. */
+html{--s0:0.25rem;--s1:0.5rem;--s2:1rem;--s3:1.5rem;--s4:1.875rem;--s5:3.75rem}
+html{--t-1:1rem;--t0:1.25rem;--t1:1.56rem;--t2:1.95rem;--t3:2.44rem;--t4:3.05rem;--t5:3.81rem;--t6:4.76rem}
+html{--measure:46ch}
+/* DS PEEK: every ink, ground and rule token now resolves to a Modernist role rather than
+   to the wireframe's greys. Names and instances are untouched — only what they point at. */
+html{--ink:var(--color-text);--ink-2:var(--color-neutral-900);--ink-3:var(--color-neutral-800);--ink-deco:var(--color-neutral-300);--rule-strong:var(--color-divider);--rule:var(--color-divider);--rule-faint:var(--color-neutral-300);--sheet:var(--color-bg);--sheet-alt:var(--color-surface)}
+html{--desk:var(--color-neutral-300);--scrim:var(--color-text)}
+/* Inverted set, §08: the dark ground is --ink itself; each value clears on #111 what its counterpart clears on --sheet-alt. */
+html{--ink-inv:var(--color-neutral-100);--ink-inv-2:var(--color-neutral-300);--ink-inv-3:var(--color-neutral-500);--rule-inv:var(--color-accent-900)}
+html{--lh-tight:1.05;--lh-snug:1.15;--lh-normal:1.3;--lh-body:1.5;--lh-mono:1.6}
+@keyframes caret{0%,49%{opacity:1}50%,100%{opacity:0}}
+/* §12: one fallback, tuned. Arial is 0.519 x-height against Figtree's 0.500, so size-adjust
+   is 96.4%; its advance is within 1.5% untuned, the closest of the four measured faces.
+   A cascade of five would be four untuned outcomes. The ascent and descent overrides §12
+   also asks for are not here: they need the same measurement, and it has not been taken. */
+@font-face{font-family:'Figtree Fallback';src:local('Arial');size-adjust:96.4%}
+/* §09, buttons: the hover treatment sits behind reduced motion, and the reduced variant is an
+   instant fill — the hover values still apply, they just arrive without transit. Inline
+   transitions on the brackets and the spill blobs need the !important to lose. */
+@media (prefers-reduced-motion: reduce){
+  [data-metaball] *{transition:none!important;animation:none!important}
+}
+body{margin:0;background:var(--desk);min-width:1440px;font-family:'Figtree','Figtree Fallback',sans-serif;font-size:var(--t0);line-height:var(--lh-body);color:var(--ink)}
+a{color:var(--ink);text-decoration:none}
+a:hover{color:var(--ink)}
+
+/* Scroll-spy: JS writes data-active / data-past-hero on <html> (not a React-owned
+   node, so the inline-style reversion that blocks writes on templated elements does
+   not apply). Styling stays declarative here. Boundaries are derived at runtime from
+   real section offsets, so content edits cannot desync them. */
+/* Section indicator: the four labels are now links, drawn by the logic class (C3, design
+   2a). data-active stays the spy's output and the class observes it, so the boundary maths
+   still lives here in one place. */
+/* Back to top: revealed once the spy reports any section past the hero. */
+html[data-past-hero="1"] #btt{opacity:1!important;pointer-events:auto!important;transform:translateY(0)!important}
+/* ...and retired once the floor is reached: with no page left below, the control has
+   arrived, and at rest it would otherwise sit across the footer's terminal rule. */
+html[data-at-foot="1"] #btt{opacity:0!important;pointer-events:none!important;transform:translateY(12px)!important}
+</style>
+<script>
+(function(){
+  var IDS=['about','movement','writing','contact'], root=document.documentElement;
+  // One boundary constant, shared with the sections' scroll-margin-top: an anchor click
+  // lands exactly where the spy hands over, so the two can never disagree.
+  var HEADER=72;
+  // snake_case deliberately: camelCase identifiers in assignment position inside a
+  // helmet script get kebab-cased by the template pipeline, which is a syntax error.
+  var tops=null, measured_h=0;
+  function measure(){
+    tops=[];
+    for(var i=0;i<IDS.length;i++){
+      var el=document.getElementById(IDS[i]), top=null;
+      if(el){ top=0; for(var n=el;n;n=n.offsetParent) top+=n.offsetTop; }
+      tops.push(top);
+    }
+    measured_h=root.scrollHeight;
+  }
+  function apply(){
+    // Offsets are cached rather than walked per tick. Document height is the invalidation
+    // signal: any content edit that moves a section also changes it.
+    if(!tops||measured_h!==root.scrollHeight) measure();
+    var y=window.scrollY||root.scrollTop||0, active=null;
+    // Nothing is active at rest, and nothing is active before the document is tall
+    // enough to scroll — during mount scrollHeight is still under the viewport, which
+    // would otherwise trip the end-of-document clamp below and flash the last label.
+    var live=y>0&&root.scrollHeight>window.innerHeight+8;
+    for(var i=0;live&&i<IDS.length;i++){
+      if(tops[i]!==null&&tops[i]-HEADER<=y) active=IDS[i];
+    }
+    if(live&&window.innerHeight+y>=root.scrollHeight-4) active=IDS[IDS.length-1];
+    if(active) root.setAttribute('data-active',active); else root.removeAttribute('data-active');
+    var past=!!active&&active!=='about';
+    if(past) root.setAttribute('data-past-hero','1'); else root.removeAttribute('data-past-hero');
+  }
+  // No rAF coalescing: rAF is throttled to the point of not firing in embedded preview
+  // realms, which would latch the pending flag and drop every later event. Events call
+  // apply directly; pump() then covers only the tail after the last event — smooth-scroll
+  // momentum and layout settling — and clears itself, so nothing polls while idle.
+  var ticks=0, timer=null;
+  function pump(){
+    ticks=8;
+    if(timer) return;
+    timer=setInterval(function(){
+      apply();
+      ticks-=1;
+      if(ticks<=0){ clearInterval(timer); timer=null; }
+    },100);
+  }
+  function onEvent(){ apply(); pump(); }
+  addEventListener('scroll',onEvent,{passive:true});
+  addEventListener('resize',function(){ tops=null; onEvent(); });
+  // TEMPORARY wireframe tool: hover any text to read its computed size. Gated by the
+  // data-typeprobe attribute (set from the typeProbe prop). Delete this block and the
+  // prop to remove. Draws its own overlay nodes rather than restyling the hovered
+  // element, so it never fights React over inline styles.
+  (function(){
+    var badge, ring;
+    function ensure(){
+      if(badge) return;
+      ring=document.createElement('div');
+      ring.style.cssText='position:fixed;z-index:9998;pointer-events:none;border:1px solid #ff3b30;opacity:0';
+      badge=document.createElement('div');
+      badge.style.cssText='position:fixed;z-index:9999;pointer-events:none;background:var(--ink);color:var(--color-bg);font:600 12px/1.4 Figtree,system-ui,sans-serif;padding:5px 8px;white-space:nowrap;opacity:0';
+      document.body.appendChild(ring); document.body.appendChild(badge);
+    }
+    function hasText(el){
+      for(var n=el.firstChild;n;n=n.nextSibling) if(n.nodeType===3&&n.nodeValue.trim()) return true;
+      return false;
+    }
+    function hide(){ if(badge){ badge.style.opacity='0'; ring.style.opacity='0'; } }
+    addEventListener('mousemove',function(e){
+      if(root.getAttribute('data-typeprobe')!=='1'){ hide(); return; }
+      ensure();
+      var el=e.target;
+      while(el&&el!==document.body&&!hasText(el)) el=el.parentElement;
+      if(!el||el===document.body||el===badge||el===ring){ hide(); return; }
+      var cs=getComputedStyle(el), r=el.getBoundingClientRect(), lh=parseFloat(cs.lineHeight);
+      var px=Math.round(parseFloat(cs.fontSize)), TOK={16:'t-1',20:'t0',25:'t1',31:'t2',39:'t3',49:'t4',61:'t5',76:'t6'};
+      badge.textContent=(TOK[px]?TOK[px]+'  ·  ':'')+px+'px  ·  w'+cs.fontWeight+'  ·  lh '+(lh?Math.round(lh)+'px':'normal');
+      badge.style.left=Math.min(e.clientX+14,innerWidth-200)+'px';
+      badge.style.top=(e.clientY+18)+'px';
+      badge.style.opacity='1';
+      ring.style.left=r.left+'px'; ring.style.top=r.top+'px';
+      ring.style.width=r.width+'px'; ring.style.height=r.height+'px'; ring.style.opacity='1';
+    },{passive:true});
+    addEventListener('mouseleave',hide);
+  })();
+  onEvent();
+})();
+</script>
+</helmet>
+
+<div>
+<div id="page-top" style="width:1440px;margin:0 auto;background:var(--sheet);position:relative">
+
+<div ref="{{ setNavBar }}" style="position:sticky;top:0;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:9px var(--s5);border-bottom:2px solid var(--rule);background:var(--sheet);box-sizing:border-box">
+<nav aria-label="Sections" style="flex:1;min-width:0">
+<ul onMouseLeave="{{ navHoverClose }}" style="list-style:none;margin:0;padding:0;position:relative;display:flex;align-items:baseline;width:fit-content;min-height:44px">
+<sc-for list="{{ navItems }}" as="item" hint-placeholder-count="4">
+<li style="position:{{ item.pos }};left:0;overflow:{{ item.ov }};white-space:nowrap;max-width:{{ item.max }};opacity:{{ item.op }};margin-left:{{ item.ml }};pointer-events:{{ item.pe }};transition:{{ item.stackTr }}">
+<a href="{{ item.href }}" onClick="{{ item.click }}" onMouseEnter="{{ navHoverOpen }}" aria-current="{{ item.cur }}" data-id="{{ item.id }}" style="position:relative;display:inline-block;line-height:1.2;font-size:var(--t-1);font-weight:600;letter-spacing:1px;text-transform:uppercase;color:{{ item.color }};padding-top:12px;padding-bottom:13px;outline:none">
+<span style="position:absolute;top:12px;right:100%;margin-right:4px;color:var(--ink-3)">{{ item.pre }}</span><span style="border-bottom:2px solid transparent;padding-bottom:2px">{{ item.label }}</span><span style="position:absolute;top:12px;left:100%;margin-left:4px;color:var(--ink-3)">{{ item.post }}</span>
+</a>
+</li>
+</sc-for>
+</ul>
+</nav>
+<div id="wordmark" style="font-size:var(--t1);font-weight:700;color:var(--ink);line-height:var(--lh-snug)">VARSHIL ANAVADIA</div>
+
+</div>
+
+
+<div id="hero" style="position:relative;display:flex;overflow:hidden">
+
+<div id="hero-name" style="position:absolute;left:0;right:0;bottom:80px;z-index:2;pointer-events:none;overflow:hidden;font-size:260px;font-weight:500;line-height:var(--lh-tight);letter-spacing:-0.035em;color:var(--ink)">
+<div id="hero-name-track" style="display:flex;align-items:center;gap:0.16em;white-space:nowrap;width:max-content;will-change:transform">
+<div style="display:flex;align-items:center;gap:0.16em">Varshil Anavadia<span style="display:block;width:0.62em;height:0.105em;background:var(--ink)"></span></div>
+<div style="display:flex;align-items:center;gap:0.16em">Varshil Anavadia<span style="display:block;width:0.62em;height:0.105em;background:var(--ink)"></span></div>
+<div style="display:flex;align-items:center;gap:0.16em">Varshil Anavadia<span style="display:block;width:0.62em;height:0.105em;background:var(--ink)"></span></div>
+<div style="display:flex;align-items:center;gap:0.16em">Varshil Anavadia<span style="display:block;width:0.62em;height:0.105em;background:var(--ink)"></span></div>
+</div>
+</div>
+
+<div style="position:relative;z-index:1;flex:1;display:flex;align-items:flex-end;justify-content:center;padding:0;box-sizing:border-box">
+
+<div class="grayscale" style="align-self:flex-end;width:42%;aspect-ratio:3/4;position:relative">
+<image-slot id="hero-portrait" shape="rect" fit="cover" style="--slot-bg:transparent" placeholder="Drop a portrait — it will crop to fill"></image-slot>
+</div>
+
+</div>
+</div>
+
+<div id="about" style="scroll-margin-top:72px;padding:var(--s5);border-top:2px solid var(--rule);box-sizing:border-box;position:relative" data-comment-anchor="ad1b7ddb6d-div">
+<div style="position:absolute;left:50%;top:0;bottom:0;width:1px;background:linear-gradient(to bottom,transparent,var(--rule) 12%,var(--rule) 88%,transparent);transform:translateX(-50%)"></div>
+
+<div style="position:relative;width:100%;display:flex;flex-direction:column;gap:40px">
+<sc-for list="{{ timelineItems }}" as="item" hint-placeholder-count="8">
+<div style="display:grid;grid-template-columns:1fr 1fr;align-items:start">
+<div style="display:flex;align-items:baseline;justify-content:flex-end">
+<sc-if value="{{ item.isLeft }}" hint-placeholder-val="{{ true }}">
+<div style="text-align:right;padding-right:var(--s3)">
+<div style="font-size:var(--t1);font-weight:600;color:var(--ink);line-height:var(--lh-snug);text-wrap:balance">{{ item.role }}</div>
+<div style="font-size:var(--t0);font-weight:400;line-height:var(--lh-normal);color:var(--ink-2);margin-top:var(--s0);max-width:340px;margin-left:auto;text-wrap:balance">{{ item.org }}</div>
+</div>
+<div style="min-width:120px;flex-shrink:0">
+<div style="font-family:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;font-size-adjust:0.5;font-size:var(--t-1);font-weight:400;line-height:var(--lh-normal);color:var(--ink-3);font-variant-numeric:tabular-nums;text-align:center;white-space:nowrap;margin-bottom:var(--s0)">{{ item.date }}</div>
+<div style="width:100%;height:1px;background:var(--ink)"></div>
+</div>
+</sc-if>
+</div>
+<div style="display:flex;align-items:baseline;justify-content:flex-start">
+<sc-if value="{{ item.isRight }}" hint-placeholder-val="{{ false }}">
+<div style="min-width:120px;flex-shrink:0">
+<div style="font-family:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;font-size-adjust:0.5;font-size:var(--t-1);font-weight:400;line-height:var(--lh-normal);color:var(--ink-3);font-variant-numeric:tabular-nums;text-align:center;white-space:nowrap;margin-bottom:var(--s0)">{{ item.date }}</div>
+<div style="width:100%;height:1px;background:var(--ink)"></div>
+</div>
+<div style="padding-left:var(--s3)">
+<div style="font-size:var(--t1);font-weight:600;color:var(--ink);line-height:var(--lh-snug);text-wrap:balance">{{ item.role }}</div>
+<div style="font-size:var(--t0);font-weight:400;line-height:var(--lh-normal);color:var(--ink-2);margin-top:var(--s0);max-width:340px;text-wrap:balance">{{ item.org }}</div>
+</div>
+</sc-if>
+</div>
+</div>
+</sc-for>
+</div>
+</div>
+
+<div id="movement" style="scroll-margin-top:72px;padding:var(--s5);border-top:2px solid var(--rule);box-sizing:border-box" data-comment-anchor="8e4f7b8584-div">
+
+
+<div style="display:flex;border:1px solid var(--rule);border-right:none">
+<div style="flex:0 0 auto;min-width:216px;box-sizing:border-box;padding:var(--s2) var(--s3);display:flex;flex-direction:column;justify-content:flex-end;border-right:1px solid var(--rule);background:var(--sheet-alt)">
+<div style="font-size:var(--t0);font-weight:700;color:var(--ink);text-transform:uppercase;letter-spacing:1px;line-height:var(--lh-normal)">This week</div>
+<div style="font-size:var(--t-1);font-weight:600;color:var(--ink-3);text-transform:uppercase;letter-spacing:0.5px;line-height:var(--lh-normal);margin-top:var(--s0)">{{ weekRange }}</div>
+</div>
+<sc-for list="{{ statCells }}" as="cell" hint-placeholder-count="8">
+<div style="flex:1;padding:var(--s2) var(--s3);text-align:center;border-right:1px solid var(--rule);display:flex;flex-direction:column;justify-content:flex-end">
+<div style="font-family:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;font-size-adjust:0.5;font-size:var(--t3);font-weight:700;color:var(--ink);line-height:var(--lh-snug);font-variant-numeric:tabular-nums;white-space:nowrap">{{ cell.value }}</div>
+<div style="font-size:var(--t-1);font-weight:600;color:var(--ink-3);text-transform:uppercase;letter-spacing:0.5px;line-height:var(--lh-normal);margin-top:var(--s0)">{{ cell.label }}</div>
+</div>
+</sc-for>
+</div>
+<div id="activity-grid" style="display:grid;grid-template-columns:repeat(3,368px);justify-content:center;gap:52px;margin-top:52px">
+<sc-for list="{{ activityCards }}" as="card" hint-placeholder-count="5">
+<div style="position:relative;z-index:1;height:297px;box-sizing:border-box;display:flex;flex-direction:column;border:1px solid var(--rule);overflow:hidden;cursor:pointer;transform:scale(1);box-shadow:0 0 0 transparent;transition:transform .22s ease-out,box-shadow .22s ease-out;background:repeating-linear-gradient(135deg,var(--rule-faint),var(--rule-faint) 8px,var(--sheet-alt) 8px,var(--sheet-alt) 16px)" style-hover="transform:scale(1.1);z-index:2;box-shadow:var(--shadow-lg)">
+<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;box-sizing:border-box;font-family:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;font-size-adjust:0.5;font-size:var(--t-1);line-height:1;color:var(--ink-3)">{{ card.visual }}</div>
+<div style="position:relative;box-sizing:border-box;padding:var(--s2) var(--s2) 40px;background:linear-gradient(to bottom,color-mix(in srgb,var(--scrim) 80%,transparent),color-mix(in srgb,var(--scrim) 62%,transparent) 45%,transparent 100%)">
+<div style="font-size:var(--t1);font-weight:600;color:var(--ink-inv);line-height:var(--lh-snug)">{{ card.type }}</div>
+<div style="font-size:var(--t-1);color:var(--ink-inv);line-height:var(--lh-normal);margin-top:var(--s0)">{{ card.date }}</div>
+</div>
+<div style="position:relative;margin-top:auto;box-sizing:border-box;padding:40px var(--s2) var(--s2);display:flex;background:linear-gradient(to top,color-mix(in srgb,var(--scrim) 80%,transparent),color-mix(in srgb,var(--scrim) 62%,transparent) 45%,transparent 100%)">
+<sc-for list="{{ card.stats }}" as="stat" hint-placeholder-count="3">
+<div style="flex:1;min-width:0;text-align:center;font-family:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;font-size-adjust:0.5;font-size:var(--t0);font-weight:400;color:var(--ink-inv);line-height:var(--lh-snug);font-variant-numeric:tabular-nums;white-space:nowrap">{{ stat.value }}</div>
+</sc-for>
+</div>
+</div>
+</sc-for>
+</div>
+
+</div>
+
+<div id="writing" style="scroll-margin-top:72px;padding:var(--s5);border-top:2px solid var(--rule);box-sizing:border-box">
+<div style="display:flex;flex-direction:column;border-top:1px solid var(--rule)">
+<sc-for list="{{ articles }}" as="art" hint-placeholder-count="3">
+<div style="border-bottom:1px solid var(--rule);transition:background .15s ease-out;cursor:pointer" style-hover="background:var(--sheet-alt)">
+<div style="display:flex;align-items:stretch;gap:var(--s3);padding:var(--s3)">
+<div style="flex:1;min-width:0;display:grid;grid-template-columns:160px 1fr;column-gap:var(--s3);align-items:first baseline">
+<div style="font-size:var(--t0);font-weight:600;color:var(--ink-3);text-transform:uppercase;letter-spacing:0.5px;line-height:var(--lh-normal)">{{ art.date }}</div>
+<div style="min-width:0;font-size:var(--t3);font-weight:700;color:var(--ink);line-height:var(--lh-snug);display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden">{{ art.title }}</div>
+<div style="align-self:start">
+<div style="font-size:var(--t-1);font-weight:400;color:var(--ink-3);line-height:var(--lh-normal);margin-top:var(--s1)">{{ art.read }}</div>
+<div style="display:flex;flex-direction:column;margin-top:var(--s1)">
+<sc-for list="{{ art.tags }}" as="tag" hint-placeholder-count="2">
+<span style="font-size:var(--t-1);font-weight:600;color:var(--ink);line-height:var(--lh-normal);letter-spacing:0.5px">{{ tag }}</span>
+</sc-for>
+</div>
+</div>
+<div style="align-self:start;min-width:0;font-size:var(--t0);color:var(--ink-2);line-height:var(--lh-body);margin-top:var(--s1);text-wrap:pretty;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden">{{ art.excerpt }}</div>
+</div>
+<sc-if value="{{ art.hasImg }}" hint-placeholder-val="{{ true }}">
+<div style="width:180px;height:120px;align-self:center;flex-shrink:0;box-sizing:border-box;background:repeating-linear-gradient(135deg,var(--rule-faint),var(--rule-faint) 8px,var(--sheet-alt) 8px,var(--sheet-alt) 16px);border:1px solid var(--rule)"></div>
+</sc-if>
+</div>
+</div>
+</sc-for>
+</div>
+
+<div style="display:flex;gap:var(--s3);padding:var(--s4) var(--s3) 0">
+<a href="#" data-metaball="1" style="position:relative;display:inline-flex;align-items:center;height:56px;padding:0 28px;box-sizing:border-box;font-size:var(--t0);font-weight:600;color:var(--ink);letter-spacing:0.5px;overflow:hidden;isolation:isolate;--spill:1000ms;--spillStep:110ms" style-hover="--bw:100%;--bh:100%;--sp:2.6;--lbl:var(--color-neutral-100)">
+<div style="position:absolute;inset:0;overflow:hidden">
+<div data-fx="1" style="position:absolute;inset:-16px;background:var(--sheet);filter:blur(7px) contrast(26)">
+<sc-for list="{{ spillBlobs }}" as="blob" hint-placeholder-count="7"><div style="{{ blob.style }}"></div></sc-for>
+</div>
+</div>
+<div style="position:absolute;top:0;right:0;z-index:2;box-sizing:border-box;width:var(--bw,34px);height:var(--bh,18px);border-top:2px solid var(--ink);border-right:2px solid var(--ink);transition:width 600ms ease-out,height 600ms ease-out"></div>
+<div style="position:absolute;bottom:0;left:0;z-index:2;box-sizing:border-box;width:var(--bw,34px);height:var(--bh,18px);border-bottom:2px solid var(--ink);border-left:2px solid var(--ink);transition:width 600ms ease-out,height 600ms ease-out"></div>
+<span style="position:relative;z-index:1;color:var(--lbl,var(--ink));transition:color 260ms ease-out 300ms">Read more</span>
+</a>
+</div>
+
+</div>
+
+<div id="contact" style="scroll-margin-top:72px;padding:var(--s5);border-top:2px solid var(--rule);box-sizing:border-box" data-comment-anchor="c357667da2-div">
+
+<div style="display:flex;gap:var(--s5);align-items:flex-start">
+
+<div style="flex:1 1 0;min-width:0">
+<div style="display:flex;flex-direction:column;border-top:1px solid var(--rule)">
+<div style="display:flex;gap:var(--s3);padding:var(--s2) 0;border-bottom:1px solid var(--rule)">
+<div style="flex:0 0 12ch;font-family:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;font-size-adjust:0.5;font-size:var(--t-1);line-height:var(--lh-mono);color:var(--ink-3)">
+<div style="font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums">01</div>
+<div>string</div>
+</div>
+<div style="flex:1;min-width:0">
+<div data-q="1" style="font-size:var(--t1);font-weight:600;color:var(--ink);line-height:var(--lh-snug);text-wrap:balance;overflow-wrap:break-word">What's your name?</div>
+<div data-a="1" style="font-family:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;font-size-adjust:0.5;font-size:var(--t0);font-weight:400;line-height:var(--lh-body);color:var(--ink-3);margin-top:var(--s1)">Author name..<span data-caret="1" style="display:inline-block;width:2px;height:0.95em;background:var(--ink);margin-left:2px;vertical-align:-2px;animation:caret 1.06s step-end infinite"></span></div>
+</div>
+</div>
+<div style="display:flex;gap:var(--s3);padding:var(--s2) 0;border-bottom:1px solid var(--rule)">
+<div style="flex:0 0 12ch;font-family:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;font-size-adjust:0.5;font-size:var(--t-1);line-height:var(--lh-mono);color:var(--ink-3)">
+<div style="font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums">02</div>
+<div>email</div>
+</div>
+<div style="flex:1;min-width:0">
+<div data-q="1" style="font-size:var(--t1);font-weight:600;color:var(--ink);line-height:var(--lh-snug);text-wrap:balance;overflow-wrap:break-word">What's your email?</div>
+<div data-a="1" style="font-family:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;font-size-adjust:0.5;font-size:var(--t0);font-weight:400;line-height:var(--lh-body);color:var(--ink-3);margin-top:var(--s1);overflow-wrap:anywhere">Author email..</div>
+</div>
+</div>
+<div style="display:flex;gap:var(--s3);padding:var(--s2) 0;border-bottom:1px solid var(--rule)">
+<div style="flex:0 0 12ch;font-family:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;font-size-adjust:0.5;font-size:var(--t-1);line-height:var(--lh-mono);color:var(--ink-3)">
+<div style="font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums">03</div>
+<div>text</div>
+<div style="font-size:var(--t-1);font-variant-numeric:tabular-nums">0 / 2000</div>
+</div>
+<div style="flex:1;min-width:0">
+<div data-q="1" style="font-size:var(--t1);font-weight:600;color:var(--ink);line-height:var(--lh-snug);text-wrap:balance;overflow-wrap:break-word">What's your message?</div>
+<div data-a="1" style="font-family:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;font-size-adjust:0.5;font-size:var(--t0);font-weight:400;line-height:var(--lh-body);color:var(--ink-3);margin-top:var(--s1);min-height:132px;text-wrap:pretty">Commit message..</div>
+</div>
+</div>
+</div>
+
+<div style="display:flex;justify-content:space-between;align-items:center;padding-top:var(--s4);gap:var(--s4);flex-direction:row-reverse">
+<div style="display:flex;align-items:center;gap:var(--s1);font-family:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;font-size-adjust:0.5;font-size:var(--t-1);line-height:var(--lh-mono);color:var(--ink-3)"><span style="border:1px solid var(--rule);padding:2px 6px;line-height:var(--lh-normal)">⌘</span><span style="border:1px solid var(--rule);padding:2px 6px;line-height:var(--lh-normal)">↵</span>to send</div>
+<button type="submit" data-metaball="1" style="position:relative;display:inline-flex;align-items:center;height:56px;padding:0 28px;box-sizing:border-box;font-size:var(--t0);font-weight:600;color:var(--ink);letter-spacing:0.5px;font-family:inherit;background:transparent;border:none;cursor:pointer;overflow:hidden;isolation:isolate;--spill:1000ms;--spillStep:110ms" style-hover="--bw:100%;--bh:100%;--sp:2.6;--lbl:var(--color-neutral-100)">
+<div style="position:absolute;inset:0;overflow:hidden">
+<div data-fx="1" style="position:absolute;inset:-16px;background:var(--sheet);filter:blur(7px) contrast(26)">
+<sc-for list="{{ spillBlobs }}" as="blob" hint-placeholder-count="7"><div style="{{ blob.style }}"></div></sc-for>
+</div>
+</div>
+<div style="position:absolute;top:0;right:0;z-index:2;box-sizing:border-box;width:var(--bw,34px);height:var(--bh,18px);border-top:2px solid var(--ink);border-right:2px solid var(--ink);transition:width 600ms ease-out,height 600ms ease-out"></div>
+<div style="position:absolute;bottom:0;left:0;z-index:2;box-sizing:border-box;width:var(--bw,34px);height:var(--bh,18px);border-bottom:2px solid var(--ink);border-left:2px solid var(--ink);transition:width 600ms ease-out,height 600ms ease-out"></div>
+<span style="position:relative;z-index:1;color:var(--lbl,var(--ink));transition:color 260ms ease-out 300ms">Say hello</span>
+</button>
+</div>
+</div>
+
+<div style="flex:0 0 400px;border-top:2px solid var(--rule-strong);padding-top:var(--s2)">
+<div style="font-size:var(--t-1);font-weight:600;line-height:var(--lh-normal);color:var(--ink-3);text-transform:uppercase;letter-spacing:1px">Or skip the form</div>
+<div style="font-family:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;font-size-adjust:0.5;font-size:var(--t2);font-weight:700;line-height:var(--lh-snug);color:var(--ink);margin-top:var(--s2);overflow-wrap:anywhere">vanavadia@gmail.com</div>
+</div>
+
+</div>
+
+</div>
+
+<div id="site-foot" style="border-top:2px solid var(--rule);padding:var(--s4) var(--s5);box-sizing:border-box">
+<div style="display:grid;grid-template-columns:minmax(0,1fr) 400px;column-gap:var(--s5);row-gap:var(--s2);align-items:baseline">
+<div style="grid-column:2;grid-row:1;font-size:var(--t-1);font-weight:600;line-height:var(--lh-normal);color:var(--ink-3);text-transform:uppercase;letter-spacing:1px">Elsewhere</div>
+<ul style="grid-column:2;grid-row:2;list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:var(--s4)">
+<li><a href="#" rel="me" style="font-size:var(--t0);font-weight:600;line-height:var(--lh-normal);color:var(--ink);text-decoration:underline;text-decoration-color:var(--ink-3);text-decoration-thickness:1px;text-underline-offset:3px" style-hover="text-decoration-color:var(--ink)">LinkedIn</a></li>
+<li><a href="#" rel="me" style="font-size:var(--t0);font-weight:600;line-height:var(--lh-normal);color:var(--ink);text-decoration:underline;text-decoration-color:var(--ink-3);text-decoration-thickness:1px;text-underline-offset:3px" style-hover="text-decoration-color:var(--ink)">Strava</a></li>
+<li><a href="#" rel="me" style="font-size:var(--t0);font-weight:600;line-height:var(--lh-normal);color:var(--ink);text-decoration:underline;text-decoration-color:var(--ink-3);text-decoration-thickness:1px;text-underline-offset:3px" style-hover="text-decoration-color:var(--ink)">Instagram</a></li>
+</ul>
+<div style="grid-column:1;grid-row:1;font-size:var(--t-1);font-weight:600;line-height:var(--lh-normal);color:var(--ink-3);text-transform:uppercase;letter-spacing:1px">Quote of the day</div>
+<blockquote style="grid-column:1;grid-row:2;margin:0;font-size:var(--t1);font-weight:400;line-height:var(--lh-snug);color:var(--ink);max-width:var(--measure);text-wrap:pretty">{{ quoteText }}</blockquote>
+</div>
+<div style="border-top:1px solid var(--rule);margin-top:var(--s4);padding-top:var(--s2)">
+<div style="font-size:var(--t-1);font-weight:400;line-height:var(--lh-normal);color:var(--ink-3)">© 2026 Varshil Anavadia</div>
+</div>
+</div>
+
+<div style="position:sticky;bottom:48px;height:0;z-index:20">
+<a href="#page-top" id="btt" style="position:absolute;right:48px;bottom:0;width:56px;height:56px;display:flex;align-items:center;justify-content:center;z-index:20;transition:opacity .25s ease,transform .25s ease;opacity:0;pointer-events:none;transform:translateY(12px)">
+<div style="display:flex;flex-direction:column;align-items:center;gap:2px">
+<div style="width:16px;height:16px;border-top:2px solid var(--ink);border-right:2px solid var(--ink);transform:rotate(-45deg);margin-top:6px"></div>
+<div style="width:16px;height:16px;border-top:2px solid var(--ink-3);border-right:2px solid var(--ink-3);transform:rotate(-45deg);margin-top:-6px"></div>
+</div>
+</a>
+</div>
+
+</div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:1024},&quot;typeProbe&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Temporary tools&quot;}}">
+class Component extends DCLogic {
+  componentDidMount() { this.sync(); this.bindSpill(); this.watchActive();
+    this.watchFoot(); this.grabMarquee(); }
+  componentDidUpdate() { this.sync(); this.bindSpill(); this.segW = null; this.grabMarquee(); }
+
+  // ── Hero name marquee ──────────────────────────────────────────────────────────
+  // One rAF loop owns the offset. Base drift carries it right at rest; every scroll delta
+  // is added to a boost that decays, so scrolling down runs it faster right and scrolling
+  // up drags it left. The track holds four copies of "name + dash", and the offset wraps
+  // modulo one copy's width, so the seam never shows.
+  // Acquired by query, not by ref: the template compiler does not forward a ref attribute
+  // on a plain div, so a ref hole here silently leaves the loop unstarted.
+  grabMarquee() {
+    const el = document.getElementById('hero-name-track');
+    if (!el || this.track === el) return;
+    this.track = el;
+    this.segW = null;
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { this.segW = null; });
+    if (!this._raf) this.runMarquee();
+  }
+
+  measureSeg() {
+    if (!this.track) return 0;
+    const first = this.track.firstElementChild;
+    if (!first) return 0;
+    const gap = parseFloat(getComputedStyle(this.track).columnGap) || 0;
+    this.segW = first.offsetWidth + gap;
+    return this.segW;
+  }
+
+  runMarquee() {
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    this.mx = 0;
+    this.boost = 0;
+    this.dir = 1;
+    this.lastY = window.scrollY || 0;
+    this._mScroll = () => {
+      const y = window.scrollY || 0;
+      const d = y - this.lastY;
+      if (d !== 0) this.dir = d < 0 ? -1 : 1;
+      // 2.4px of extra travel per px scrolled, clamped so a flick cannot smear the name.
+      this.boost = Math.max(-800, Math.min(800, this.boost + d * 2.4));
+      this.lastY = y;
+    };
+    this._mResize = () => { this.segW = null; };
+    window.addEventListener('scroll', this._mScroll, { passive: true });
+    window.addEventListener('resize', this._mResize);
+    let last = performance.now();
+    const tick = (t) => {
+      const dt = Math.min(0.064, (t - last) / 1000);
+      last = t;
+      const seg = this.segW || this.measureSeg();
+      if (seg > 0) {
+        this.mx = (((this.mx + ((reduce ? 0 : 100 * this.dir) + this.boost) * dt) % seg) + seg) % seg;
+        this.boost *= Math.pow(0.02, dt); // ~decays to nothing in a third of a second
+        // Direction eases back to rightward once the gesture stops, so rest state is always
+        // rightward while any upward scroll — however gentle — reverses the name immediately.
+        this.dir += (1 - this.dir) * (1 - Math.pow(0.15, dt));
+        if (this.track) this.track.style.transform = 'translate3d(' + (this.mx - seg) + 'px,0,0)';
+      }
+      this._raf = requestAnimationFrame(tick);
+    };
+    this._raf = requestAnimationFrame(tick);
+  }
+
+  // The sticky back-to-top retires into the floor. Threshold is the button's own reach —
+  // 48px inset plus its 56px box — so it goes before it can touch the terminal rule.
+  watchFoot() {
+    const foot = document.getElementById('site-foot');
+    if (!foot) return;
+    const read = () => {
+      const near = foot.getBoundingClientRect().top < window.innerHeight - 104;
+      document.documentElement.setAttribute('data-at-foot', near ? '1' : '0');
+    };
+    this._foot = read;
+    window.addEventListener('scroll', read, { passive: true });
+    window.addEventListener('resize', read);
+    read();
+  }
+
+  componentWillUnmount() {
+    if (this._foot) { window.removeEventListener('scroll', this._foot); window.removeEventListener('resize', this._foot); }
+    if (this._raf) cancelAnimationFrame(this._raf);
+    if (this._mScroll) window.removeEventListener('scroll', this._mScroll);
+    if (this._mResize) window.removeEventListener('resize', this._mResize);
+    document.querySelectorAll('[data-metaball]').forEach((c) => clearTimeout(c._rt));
+    document.removeEventListener('pointerleave', this._leave, true);
+    document.removeEventListener('pointerenter', this._enter, true);
+    if (this._mo) this._mo.disconnect();
+    Object.keys(this.timers).forEach((k) => clearTimeout(this.timers[k]));
+  }
+
+  // ── Sticky-bar nav — decision C3, design 2a ─────────────────────────────────────
+  // Ported from Nav Open State Explorations.dc.html, which stays the exploration record;
+  // C3 Handoff.md carries the behaviour and the traps behind each phase. Closed, this is
+  // the bar the wireframe always had: four labels absolute at the gutter, only the current
+  // one inked, opacity the only thing that animates. The set pushes open on focus, hover
+  // (after 100ms) or a tap, and collapses when focus and pointer have both left.
+  // The helmet spy stays the single source of truth for which section is current — it
+  // already writes data-active on <html> — and watchActive reads it into state, so the
+  // boundary maths is not duplicated here.
+  state = { cur: null, ph: 'stacked', cross: false, ring: null, focIn: false, hov: false, w: null };
+  timers = {};
+  navSections = [['about', 'About Me'], ['movement', 'Movement'], ['writing', 'Writing'], ['contact', 'Contact']];
+  NAV_MS = 500;
+  NAV_HEADER = 72; // the spy's handover boundary, and the sections' scroll-margin-top
+
+  watchActive() {
+    const root = document.documentElement;
+    const read = () => {
+      const active = root.getAttribute('data-active') || null;
+      // A smooth scroll passes through every section in between and the spy hands the mark
+      // to each one on the way. Once a label has been activated the mark belongs to its
+      // destination: hold it there until the spy agrees.
+      if (this.navLock) {
+        if (active !== this.navLock) return;
+        this.navLock = null;
+      }
+      if (this.state.cur === active) return;
+      const patch = { cur: active };
+      // Ink is where you are and scroll owns it; the brackets are where focus is and focus
+      // owns them, so a section change must not take them off a focused label. With nothing
+      // focused they fall back to the current section.
+      if (!this.state.focIn) patch.ring = null;
+      // The closed crossfade is armed by the section change that needs it, and only while
+      // the labels are stacked. Everywhere else opacity has no transition, so re-entering
+      // the stack after a close can never fade anything.
+      if ((this.state.ph || 'stacked') === 'stacked') {
+        patch.cross = true;
+        if (this.timers.cross) clearTimeout(this.timers.cross);
+        this.timers.cross = setTimeout(() => this.setState({ cross: false }), this.NAV_MS + 60);
+      }
+      this.setState(patch);
+    };
+    if (this._mo) this._mo.disconnect();
+    this._mo = new MutationObserver(read);
+    this._mo.observe(root, { attributes: true, attributeFilter: ['data-active'] });
+    read();
+  }
+
+  // Refs rather than onFocus/onBlur props: focusin/focusout are the events that bubble,
+  // and the reveal has to answer focus arriving anywhere inside the bar.
+  setNavBar = (el) => {
+    if (!el) return;
+    this.navBar = el;
+    // Each label expands to its own measured width, not a shared cap.
+    this.navMeasure();
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => this.navMeasure());
+    const onIn = (e) => {
+      const id = e.target && e.target.getAttribute ? e.target.getAttribute('data-id') : null;
+      this.setState({ ring: id, focIn: true });
+      this.openNav(true);
+    };
+    const onOut = () => {
+      setTimeout(() => {
+        if (el.contains(document.activeElement)) return;
+        this.setState({ ring: null, focIn: false });
+        if (!this.state.hov) this.openNav(false);
+      }, 0);
+    };
+    // Tab while the row is shut opens it and leaves focus alone, so the first Tab after
+    // activating a label re-opens rather than advancing onto a label that is still
+    // collapsing; the next Tab moves on. Shift+Tab passes through, and only a Tab from
+    // inside the nav counts — never from the wordmark. Accepted cost: the keystroke
+    // announces nothing to a screen reader, which needs it least, since all four links are
+    // in the accessibility tree at every phase.
+    const onKey = (e) => {
+      if (e.key !== 'Tab' || e.shiftKey || e.altKey || e.ctrlKey || e.metaKey) return;
+      const ph = this.state.ph || 'stacked';
+      if (ph === 'open' || ph === 'prime') return;
+      const nav = el.querySelector('nav');
+      if (!nav || !nav.contains(document.activeElement)) return;
+      e.preventDefault();
+      this.openNav(true);
+    };
+    if (el.__fin) {
+      el.removeEventListener('focusin', el.__fin);
+      el.removeEventListener('focusout', el.__fout);
+      el.removeEventListener('keydown', el.__key);
+    }
+    el.__fin = onIn;
+    el.__fout = onOut;
+    el.__key = onKey;
+    el.addEventListener('focusin', onIn);
+    el.addEventListener('focusout', onOut);
+    el.addEventListener('keydown', onKey);
+  };
+
+  navMeasure() {
+    if (!this.navBar) return;
+    const w = {};
+    // offsetWidth, not getBoundingClientRect: the page can be zoomed, and a scaled
+    // measurement written back as a CSS cap clips every label mid-word.
+    this.navBar.querySelectorAll('nav a[data-id]').forEach((a) => {
+      const px = a.offsetWidth;
+      if (px > 0) w[a.getAttribute('data-id')] = px + 1;
+    });
+    if (Object.keys(w).length) this.setState({ w });
+  }
+
+  navGo(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    this.navLock = id;
+    this.setState({ cur: id, ring: null });
+    if (this.timers.nav) clearTimeout(this.timers.nav);
+    this.timers.nav = setTimeout(() => { this.navLock = null; }, 1400);
+    // Activating a label shuts the row, and this is also the keyboard's way out. It is safe
+    // precisely because the destination becomes the current section: the label left inked at
+    // the gutter is the one holding focus, so nothing is stranded on an invisible link.
+    this.openNav(false);
+    let top = 0;
+    for (let n = el; n; n = n.offsetParent) top += n.offsetTop;
+    window.scrollTo({ top: top - this.NAV_HEADER, behavior: 'smooth' });
+  }
+
+  // The next-commit step races a frame callback against a timer: rAF never fires in a
+  // hidden or throttled tab, and a stranded half-open row is invisible links in the tab
+  // order.
+  navNext(key, fn) {
+    let done = false;
+    const go = () => { if (done) return; done = true; fn(); };
+    requestAnimationFrame(() => requestAnimationFrame(go));
+    if (this.timers[key]) clearTimeout(this.timers[key]);
+    this.timers[key] = setTimeout(go, 32);
+  }
+
+  // Read at the moment a phase change starts, so it always reflects the current OS setting
+  // without a listener.
+  navReduced() {
+    try { return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches); } catch (e) { return false; }
+  }
+
+  openNav(want) {
+    const ph = this.state.ph || 'stacked';
+    // Snap, not stay-open: everyone gets the same resting bar, since the collapsed single
+    // label is a design decision rather than a motion effect. Under reduced motion prime
+    // and closing are dead — they exist only to give a transition somewhere to start and
+    // end — and max-width is dropped, so the measured-width trap cannot fire.
+    if (this.navReduced()) {
+      if (this.timers.close) clearTimeout(this.timers.close);
+      if (this.timers.adv) clearTimeout(this.timers.adv);
+      const to = want ? 'open' : 'stacked';
+      if (ph !== to) this.setState({ ph: to, cross: false });
+      return;
+    }
+    if (want) {
+      if (this.timers.close) clearTimeout(this.timers.close);
+      if (ph === 'open') return;
+      // Reversing mid-close needs no priming: the widths are already mid-flight on the same
+      // transition, so it just runs back out.
+      if (ph === 'closing') { this.setState({ ph: 'open' }); return; }
+      // The advance is driven by the commit callback, not a frame: reading a layout value
+      // flushes the primed geometry, so the transition has something to start from. The
+      // timer is the backstop.
+      const advance = () => {
+        if (this.navBar) void this.navBar.offsetWidth;
+        if ((this.state.ph || 'stacked') === 'prime') this.setState({ ph: 'open' });
+      };
+      if (ph !== 'prime') this.setState({ ph: 'prime', cross: false }, advance);
+      this.navNext('adv', advance);
+    } else {
+      if (ph === 'stacked' || ph === 'closing') return;
+      if (this.timers.adv) clearTimeout(this.timers.adv);
+      this.setState({ ph: 'closing' });
+      if (this.timers.close) clearTimeout(this.timers.close);
+      this.timers.close = setTimeout(() => {
+        // The stack is re-entered with opacity untransitioned, so the three labels drop
+        // their ink instantly however the commits coalesce.
+        if (this.timers.cross) clearTimeout(this.timers.cross);
+        this.setState({ ph: 'stacked', cross: false });
+      }, this.NAV_MS);
+    }
+  }
+
+  navItems() {
+    const reduced = this.navReduced();
+    const ph = this.state.ph || 'stacked';
+    const flow = ph === 'prime' || ph === 'open' || ph === 'closing';
+    const open = ph === 'open';
+    const ms = this.NAV_MS;
+    const ease = 'cubic-bezier(0.33, 0, 0.2, 1)';
+    const gap = '40px';
+    const ink3 = 'var(--ink-3)';
+    const w = this.state.w || {};
+    const cur = this.state.cur;
+    const ring = this.state.ring;
+    let tr = 'none';
+    if (reduced) tr = 'none';
+    else if (ph === 'stacked') tr = this.state.cross ? 'opacity ' + ms + 'ms ease' : 'none';
+    // Both directions take one duration. The labels stay inked while their widths collapse —
+    // that is the wipe — and the stack is re-entered with transitions off.
+    else tr = 'max-width ' + ms + 'ms ' + ease + ', margin-left ' + ms + 'ms ' + ease;
+    // The brackets sit on whichever label you are on: the focused one while focus is in the
+    // set, the current section otherwise. They are the focus indicator — no ring on the
+    // labels, which is the exception §09 of the type spec records.
+    const marked = ring && ring !== 'wordmark' ? ring : cur;
+    return this.navSections.map(([id, label], i) => {
+      const isCur = id === cur;
+      const isMarked = id === marked;
+      // Nothing animates under reduced motion, so nothing needs clipping.
+      const nat = reduced ? 'none' : (w[id] ? w[id] + 'px' : '360px');
+      return {
+        id, label,
+        stackTr: tr,
+        // location, not page: the mark tracks scroll position, so it reports where you are
+        // in this document rather than claiming a navigation. Absent rather than false over
+        // the hero, where nothing is current.
+        cur: isCur ? 'location' : undefined,
+        // A real fragment href and no aria-expanded: the collapse hides nothing from
+        // assistive technology, so there is no disclosure to announce, the label stays one
+        // element in both states, and Space keeps its link behaviour.
+        href: '#' + id,
+        color: isCur ? 'var(--ink)' : ink3,
+        pre: isMarked && open ? '[' : '',
+        post: isMarked && open ? ']' : '',
+        pos: flow ? 'static' : 'absolute',
+        // Only the settled open row lets a label paint outside its clip, and then only so
+        // the brackets can hang. Allowing it mid-animation lets a marked label paint full
+        // width over its zero-width siblings and piles every word up at the gutter.
+        ov: isMarked && ph === 'open' ? 'visible' : 'hidden',
+        op: flow ? 1 : (isCur ? 1 : 0),
+        max: flow ? (open || isCur ? nat : '0px') : nat,
+        // The gap leads each label rather than trailing it, so the row is never wider than
+        // what it draws — a trailing margin made it measure 40px closer to the wordmark
+        // than it looked, which would corrupt the narrow-screen budget.
+        ml: open && i > 0 ? gap : '0px',
+        pe: open || isCur ? 'auto' : 'none',
+        click: (e) => {
+          e.preventDefault();
+          // Closed, the one visible label is the disclosure. Once the set is in flow — mid
+          // animation included — a click is a click on a link and navigates.
+          if (!flow) { this.openNav(true); return; }
+          this.navGo(id);
+        }
+      };
+    });
+  }
+  sync() {
+    document.documentElement.setAttribute('data-typeprobe', (this.props.typeProbe ?? true) ? '1' : '0');
+
+  }
+
+  // Bracket button — see Button Design.dc.html for the full spec. Two halves of the
+  // randomisation are dealt at different moments because they tolerate a rewrite
+  // differently: scale and jitter are transform inputs and can be re-aimed at any time,
+  // while transition-delay makes the engine re-evaluate mid-flight and stalls the spill.
+  bindSpill() {
+    if (this._spillBound) return;
+    this._spillBound = true;
+    const blobsOf = (ctrl) => {
+      const fx = ctrl.querySelector('[data-fx]');
+      return fx ? Array.from(fx.children) : [];
+    };
+    // Stepped rather than redrawn, so consecutive hovers always differ by a visible
+    // amount instead of occasionally landing on top of each other.
+    const step = (prev, lo, span, min) => {
+      if (prev === null || !isFinite(prev)) return lo + Math.random() * span;
+      let d = min + Math.random() * (span - 2 * min);
+      if (Math.random() < 0.5) d = -d;
+      let v = prev + d;
+      if (v > lo + span) v -= span;
+      if (v < lo) v += span;
+      return v;
+    };
+    const prevOf = (b, name) => {
+      const raw = parseFloat(b.style.getPropertyValue(name));
+      return isFinite(raw) ? raw : null;
+    };
+    this._shape = (ctrl) => {
+      blobsOf(ctrl).forEach((b) => {
+        b.style.setProperty('--k', step(prevOf(b, '--k'), 0.82, 0.6, 0.25).toFixed(2));
+        b.style.setProperty('--jx', Math.round(step(prevOf(b, '--jx'), -15, 30, 11)) + 'px');
+        b.style.setProperty('--jy', Math.round(step(prevOf(b, '--jy'), -10, 20, 7)) + 'px');
+      });
+    };
+    // Six legible cadences drawn from a shuffle bag, rather than a free shuffle whose
+    // orderings mostly differ only where no eye can tell.
+    const cadences = ['Source', 'Reverse', 'Alternate', 'Inside out', 'Largest first', 'Smallest first'];
+    const order = (blobs, name) => {
+      const n = blobs.length;
+      const idx = blobs.map((_, i) => i);
+      const w = (i) => parseFloat(blobs[i].style.width) || 0;
+      const alternate = () => {
+        const h = Math.ceil(n / 2), a = idx.slice(0, h), b = idx.slice(h), out = [];
+        for (let i = 0; i < h; i++) { out.push(a[i]); if (b[i] !== undefined) out.push(b[i]); }
+        return out;
+      };
+      if (name === 'Reverse') return idx.slice().reverse();
+      if (name === 'Alternate') return alternate();
+      if (name === 'Inside out') return alternate().reverse();
+      if (name === 'Largest first') return idx.slice().sort((x, y) => w(y) - w(x));
+      if (name === 'Smallest first') return idx.slice().sort((x, y) => w(x) - w(y));
+      return idx;
+    };
+    this._delays = (ctrl) => {
+      const blobs = blobsOf(ctrl);
+      if (!blobs.length) return;
+      if (!ctrl._bag || !ctrl._bag.length) {
+        const bag = cadences.slice().sort(() => Math.random() - 0.5);
+        if (ctrl._lastCadence && bag[bag.length - 1] === ctrl._lastCadence) {
+          bag[bag.length - 1] = bag[0];
+          bag[0] = ctrl._lastCadence;
+        }
+        ctrl._bag = bag;
+      }
+      const name = ctrl._bag.pop();
+      ctrl._lastCadence = name;
+      const s = parseFloat(getComputedStyle(ctrl).getPropertyValue('--spillStep')) || 110;
+      order(blobs, name).forEach((blobIndex, slot) => {
+        const jitter = (Math.random() - 0.5) * 0.8;
+        blobs[blobIndex].style.transitionDelay = Math.max(0, Math.round((slot + jitter) * s)) + 'ms';
+      });
+    };
+    this._enter = (e) => {
+      const ctrl = e.target && e.target.closest && e.target.closest('[data-metaball]');
+      if (!ctrl) return;
+      clearTimeout(ctrl._rt);
+      this._shape(ctrl);
+    };
+    // The new cadence is dealt on the way out, once the retract has finished.
+    this._leave = (e) => {
+      const ctrl = e.target && e.target.closest && e.target.closest('[data-metaball]');
+      if (!ctrl) return;
+      clearTimeout(ctrl._rt);
+      const cs = getComputedStyle(ctrl);
+      const ms = parseFloat(cs.getPropertyValue('--spill')) || 1000;
+      const s = parseFloat(cs.getPropertyValue('--spillStep')) || 110;
+      ctrl._rt = setTimeout(() => {
+        if (ctrl.matches(':hover')) return;
+        this._delays(ctrl);
+      }, ms + s * 9);
+    };
+    document.addEventListener('pointerenter', this._enter, true);
+    document.addEventListener('pointerleave', this._leave, true);
+    document.querySelectorAll('[data-metaball]').forEach((c) => { this._shape(c); this._delays(c); });
+  }
+  // Footer quote. One entry for now — rotation is deferred, and the pick is keyed to the
+  // day so every visitor sees the same line on the same date once the list grows.
+  quotes = ['What are you truly afraid of when nothing in the world belongs to you?'];
+
+  renderVals() {
+    const quoteText = this.quotes[Math.floor(Date.now() / 86400000) % this.quotes.length];
+
+    // Metaball field: three circles in from each corner, one closing the middle. Sizes
+    // descend inward so the mass tapers. Slots here are the deterministic baseline; the
+    // cadence bag overwrites them per hover.
+    const spillBlobs = [
+      { css: { top: '-14px', right: '-14px' }, size: 66, slot: 0 },
+      { css: { top: '-4px', right: '34px' }, size: 48, slot: 2 },
+      { css: { top: '4px', right: '74px' }, size: 40, slot: 4 },
+      { css: { bottom: '-14px', left: '-14px' }, size: 66, slot: 1 },
+      { css: { bottom: '-6px', left: '36px' }, size: 52, slot: 3 },
+      { css: { bottom: '2px', left: '80px' }, size: 38, slot: 5 },
+      { css: { top: '8px', left: '44%' }, size: 44, slot: 6 }
+    ].map((b) => ({
+      style: Object.assign({
+        position: 'absolute', width: b.size + 'px', height: b.size + 'px',
+        borderRadius: '50%', background: 'var(--color-accent)',
+        transform: 'translate(var(--jx,0px),var(--jy,0px)) scale(calc(var(--sp,0) * var(--k,1)))',
+        transition: `transform var(--spill,1000ms) cubic-bezier(.3,.9,.3,1) calc(var(--spillStep,110ms) * ${b.slot})`
+      }, b.css)
+    }));
+
+    // The portrait frame is a fixed 3/4 of its column width — deliberately independent
+    // of viewport height and zoom, so the slot's saved crop stays put everywhere. The
+    // hero height follows from the frame plus the column's 40px top gap.
+    const rows = [
+      ['Software Engineer', 'Oracle (NetSuite)', '2022–'],
+      ['Data Analytics Manager', 'Nike', '2020–2022'],
+      ['Technology Consultant', 'Ernst & Young', '2020–2022'],
+      ['MSc Computer Science', 'The Pennsylvania State University', '2018–2020'],
+      ['Graduate Teaching Assistant', 'The Pennsylvania State University', '2019–2020'],
+      ['Research Assistant', 'The Hong Kong University of Science and Technology', '2017'],
+      ['B.Tech Computer Science', 'Vellore Institute of Technology', '2013–2017']
+    ];
+    const timelineItems = rows.map(([role, org, date], i) => ({
+      role, org, date,
+      isLeft: i % 2 === 1,
+      isRight: i % 2 === 0
+    }));
+    // Activity feed. Two rows deep; the tweak decides how wide a row is, and whether the
+    // last slot is left open so the incomplete-row case stays visible while designing.
+    const activities = [
+      { type: 'Ride', date: 'Mon, Aug 3', visual: 'route map', distance: '104.3 mi', duration: '5h 38m', pace: '18.5 mph', hr: '142 bpm' },
+      { type: 'Run', date: 'Sun, Aug 2', visual: 'route map', distance: '13.1 mi', duration: '1h 52m', pace: '8:34 /mi', hr: '156 bpm' },
+      { type: 'Walk', date: 'Sat, Aug 1', visual: 'route map', distance: '3.1 mi', duration: '52m', pace: '16:47 /mi', hr: '104 bpm' },
+      { type: 'Yoga', date: 'Fri, Jul 31', visual: 'no gps — session summary', distance: '—', duration: '45m', pace: '—', hr: '96 bpm' },
+      { type: 'Run', date: 'Thu, Jul 30', visual: 'route map', distance: '6.4 mi', duration: '55m', pace: '8:36 /mi', hr: '149 bpm' },
+      { type: 'Ride', date: 'Wed, Jul 29', visual: 'route map', distance: '32.7 mi', duration: '1h 58m', pace: '16.6 mph', hr: '134 bpm' },
+      { type: 'Run', date: 'Tue, Jul 28', visual: 'route map', distance: '8.0 mi', duration: '1h 09m', pace: '8:38 /mi', hr: '151 bpm' },
+      { type: 'Walk', date: 'Sun, Jul 26', visual: 'route map', distance: '2.4 mi', duration: '41m', pace: '17:05 /mi', hr: '99 bpm' }
+    ];
+    // Which fields each activity type surfaces, in display order. The card renders
+    // whatever this produces, so adding a type or reordering its stats happens here
+    // and nowhere else. Values are self-describing, so no labels are shown.
+    const TYPE_STATS = {
+      Ride: ['distance', 'duration', 'pace'],
+      Run: ['distance', 'duration', 'pace'],
+      Walk: ['distance', 'duration'],
+      Yoga: ['duration']
+    };
+    // Live but capped: the feed fills up to two full rows of three and shows fewer in a
+    // quiet week. A multiple of the column count is what keeps the last row from
+    // orphaning at the cap.
+    const ACTIVITY_CAP = 6;
+    // Sample week returns five, one short of the cap — so the short second row is the
+    // case on screen rather than the tidy one.
+    const feed = activities.slice(0, 5);
+    const activityCards = feed
+      .slice(0, ACTIVITY_CAP)
+      .map(a => ({
+        type: a.type, date: a.date, visual: a.visual,
+        stats: (TYPE_STATS[a.type] || ['distance', 'duration']).map(k => ({ value: a[k] }))
+      }));
+    return {
+      quoteText,
+      navItems: this.navItems(),
+      setNavBar: this.setNavBar,
+      // Hover intent, 100ms, on opening only: a pointer crossing the label on its way to the
+      // wordmark should not open the row. Focus and clicks still open it at once, and closing
+      // stays immediate, so a row you have left gets out of the way.
+      navHoverOpen: () => {
+        this.setState({ hov: true });
+        if (this.timers.hover) clearTimeout(this.timers.hover);
+        this.timers.hover = setTimeout(() => {
+          if (this.state.hov) this.openNav(true);
+        }, 100);
+      },
+      navHoverClose: () => {
+        if (this.timers.hover) clearTimeout(this.timers.hover);
+        this.setState({ hov: false });
+        if (!this.state.focIn) this.openNav(false);
+      },
+      spillBlobs,
+      timelineItems,
+      weekRange: 'Aug 3 – today',
+      // Placeholders are worst-case values, not shapes: the layout has to hold the
+      // longest plausible string Strava can return, since none of this is authored.
+      statCells: [
+        { value: '104.3 mi', label: 'Distance' },
+        { value: '12h 45m', label: 'Time' },
+        { value: '11', label: 'Activities' },
+        { value: '8,420 ft', label: 'Elevation' }
+      ],
+      activityCards,
+      // Row geometry is fixed: 160px rail + 24px gap, title clamped to one line and the
+      // excerpt to three, art at a fixed 180x120. Rows therefore stay equal height no
+      // matter how long a title runs or whether a post has art. hasImg false = text only.
+      articles: [
+        { title: 'Before you read anything here...', date: 'Jul 2026', read: '2 min read', tags: ['site-notes', 'first-post'], hasImg: true, excerpt: 'A short note on what this site is for, what I write about, and why most of it is unfinished thinking rather than conclusions. If you came looking for a portfolio this is not quite that, though there is enough here to work out what I do all day. Most posts start as a note to myself and only get tidied up when somebody asks me about one of them directly.' },
+        { title: 'The thing about perception is...', date: 'Jun 2026', read: '6 min read', tags: ['working', 'perception', 'teams'], hasImg: false, excerpt: 'Two people can watch the same meeting and leave with different accounts of what happened. I have stopped assuming one of them is lying, and started paying attention to what each of them walked in already expecting to find. It has made me a slower reader of meeting notes, and a considerably more forgiving one when the accounts do not line up.' },
+        { title: 'A list of YouTubers I admire', date: 'May 2026', read: '4 min read', tags: ['lists', 'youtube'], hasImg: true, excerpt: 'Nine channels I keep returning to, and the specific thing each one does well enough that I have tried to steal it. Mostly it comes down to pacing, and a willingness to leave the boring parts in when the boring parts are the point. Two of them have quietly changed how I structure anything longer than about five minutes.' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

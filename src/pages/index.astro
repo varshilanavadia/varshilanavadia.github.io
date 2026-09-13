@@ -1,0 +1,150 @@
+---
+import '@fontsource-variable/figtree';
+import '@fontsource/ibm-plex-mono/700.css';
+import '../styles/modernist.css';
+import '../styles/site.css';
+
+const links = [
+  { label: 'LinkedIn', href: 'https://www.linkedin.com/in/varshilanavadia/' },
+  { label: 'Strava', href: 'https://www.strava.com/athletes/95580455' },
+  { label: 'Instagram', href: 'https://www.instagram.com/varshilanavadia/' },
+];
+const year = new Date().getFullYear();
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Varshil Anavadia</title>
+    <meta name="description" content="Varshil Anavadia's personal site. Coming soon." />
+    <meta name="theme-color" content="#e7ede9" />
+  </head>
+  <body>
+    <header class="bar">
+      <p class="wordmark">Varshil Anavadia</p>
+    </header>
+
+    <main>
+      <section class="hero">
+        <h1 class="sr-only">Varshil Anavadia</h1>
+        <div class="hero-name" aria-hidden="true">
+          <div class="hero-name-track" id="hero-name-track">
+            {[0, 1, 2, 3].map(() => (
+              <div class="hero-name-seg">
+                Varshil Anavadia<span class="hero-name-dash"></span>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div class="portrait grayscale">
+          <img
+            src="/hero-portrait.webp"
+            alt="Portrait of Varshil Anavadia"
+            width="827"
+            height="1102"
+            fetchpriority="high"
+          />
+        </div>
+      </section>
+
+      <section class="intro split" aria-label="Coming soon">
+        <div class="split-main">
+          <p class="block-label">Coming soon</p>
+          <p class="statement">Something's being built here. Until then, say hello.</p>
+        </div>
+        <div class="split-side">
+          <p class="block-label">Email</p>
+          <a class="email" href="mailto:vanavadia@gmail.com">vanavadia<wbr />@gmail.com</a>
+        </div>
+      </section>
+    </main>
+
+    <footer class="foot">
+      <div class="split">
+        <div class="split-main">
+          <p class="block-label">Quote of the day</p>
+          <blockquote>What are you truly afraid of when nothing in the world belongs to you?</blockquote>
+        </div>
+        <nav class="split-side" aria-label="Elsewhere">
+          <p class="block-label">Elsewhere</p>
+          <ul>
+            {links.map(({ label, href }) => (
+              <li><a href={href} rel="me">{label}</a></li>
+            ))}
+          </ul>
+        </nav>
+      </div>
+      <p class="copyright">© {year} Varshil Anavadia</p>
+    </footer>
+
+    <script>
+      // Hero name marquee, ported from the wireframe. A base drift carries the name right;
+      // every scroll delta adds to a boost that decays, so scrolling down runs it faster and
+      // scrolling up drags it left. The track holds four copies of "name + dash" and the
+      // offset wraps modulo one copy's width, so the seam never shows.
+      const track = document.getElementById('hero-name-track');
+      if (track) {
+        const reduce = matchMedia('(prefers-reduced-motion: reduce)');
+        let seg = 0;
+        let mx = 0;
+        let boost = 0;
+        let dir = 1;
+        let lastY = scrollY;
+        let raf = 0;
+        let last = 0;
+
+        const measure = () => {
+          const first = track.firstElementChild as HTMLElement | null;
+          const gap = parseFloat(getComputedStyle(track).columnGap) || 0;
+          seg = first ? first.offsetWidth + gap : 0;
+        };
+
+        addEventListener(
+          'scroll',
+          () => {
+            const d = scrollY - lastY;
+            if (d !== 0) dir = d < 0 ? -1 : 1;
+            // 2.4px of extra travel per px scrolled, clamped so a flick cannot smear the name.
+            boost = Math.max(-800, Math.min(800, boost + d * 2.4));
+            lastY = scrollY;
+          },
+          { passive: true },
+        );
+        addEventListener('resize', () => { seg = 0; });
+        // Re-measure once the webfont has swapped in; the fallback face has different widths.
+        document.fonts.addEventListener('loadingdone', () => { seg = 0; });
+
+        const tick = (t: number) => {
+          const dt = Math.min(0.064, (t - last) / 1000);
+          last = t;
+          if (!seg) measure();
+          if (seg > 0) {
+            mx = (((mx + (100 * dir + boost) * dt) % seg) + seg) % seg;
+            boost *= Math.pow(0.02, dt); // decays to nothing in about a third of a second
+            // Direction eases back to rightward once the gesture stops.
+            dir += (1 - dir) * (1 - Math.pow(0.15, dt));
+            track.style.transform = `translate3d(${mx - seg}px,0,0)`;
+          }
+          raf = requestAnimationFrame(tick);
+        };
+
+        const start = () => {
+          if (raf || reduce.matches) return;
+          last = performance.now();
+          raf = requestAnimationFrame(tick);
+        };
+        const stop = () => {
+          cancelAnimationFrame(raf);
+          raf = 0;
+        };
+
+        // Run only while the band is on screen, and not at all under reduced motion.
+        new IntersectionObserver(([entry]) => (entry?.isIntersecting ? start() : stop())).observe(
+          track.parentElement ?? track,
+        );
+        reduce.addEventListener('change', () => (reduce.matches ? stop() : start()));
+      }
+    </script>
+  </body>
+</html>
