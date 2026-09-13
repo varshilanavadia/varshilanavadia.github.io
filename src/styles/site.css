@@ -75,7 +75,9 @@ a:hover{color:var(--ink)}
 .block-label{margin:0;font-size:var(--t-1);font-weight:600;line-height:var(--lh-normal);color:var(--ink-3);text-transform:uppercase;letter-spacing:1px}
 
 .intro{padding:var(--s5) var(--gutter);border-top:2px solid var(--rule)}
-.statement{margin:var(--s2) 0 0;font-size:var(--t1);font-weight:400;line-height:var(--lh-snug);color:var(--ink);max-width:var(--measure);text-wrap:pretty}
+/* Page title: t4 · 700 · --lh-tight · --ink · balance · 56.25rem. Per §14 a display role
+   interpolates with the viewport, two steps down to t2 at the 320 floor. */
+.statement{margin:0;font-size:clamp(1.95rem, calc(1.636rem + 1.5714vw), 3.05rem);font-weight:700;line-height:var(--lh-tight);color:var(--ink);max-width:56.25rem;text-wrap:balance}
 
 /* ── Footer ───────────────────────────────────────────────────────────────── */
 .foot{padding:var(--s4) var(--gutter);border-top:2px solid var(--rule)}
