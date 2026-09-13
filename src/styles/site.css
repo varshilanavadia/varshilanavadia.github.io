@@ -62,7 +62,10 @@ a:hover{color:var(--ink)}
   -webkit-mask-image:url('/hero-portrait.webp');mask-image:url('/hero-portrait.webp');
   -webkit-mask-size:100% 100%;mask-size:100% 100%;
   -webkit-mask-repeat:no-repeat;mask-repeat:no-repeat}
-.portrait img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+/* The hero is a picture, not content to handle: no selection, no drag, and the image takes
+   no pointer events, so a double-click or a right-click lands on the page rather than on it. */
+.portrait, .hero-name{-webkit-user-select:none;user-select:none}
+.portrait img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none;-webkit-user-drag:none}
 /* The white copy of the band. It lives inside the masked portrait box but is laid out in
    the hero's coordinates — the box is centred in the hero and its foot is the hero's foot,
    so the two bands sit on the same line and scroll together. */
