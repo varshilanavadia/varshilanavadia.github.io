@@ -50,8 +50,8 @@ const year = new Date().getFullYear();
           <img
             src="/hero-portrait.webp"
             alt="Portrait of Varshil Anavadia"
-            width="828"
-            height="1104"
+            width="835"
+            height="1113"
             fetchpriority="high"
           />
           <div class="hero-name hero-name--over" aria-hidden="true">
@@ -126,8 +126,8 @@ const year = new Date().getFullYear();
             boost *= Math.pow(0.02, dt); // decays to nothing in about a third of a second
             // Direction eases back to rightward once the gesture stops.
             dir += (1 - dir) * (1 - Math.pow(0.15, dt));
-            const t = `translate3d(${mx - seg}px,0,0)`;
-            for (const el of tracks) el.style.transform = t;
+            const shift = `translate3d(${mx - seg}px,0,0)`;
+            for (const el of tracks) el.style.transform = shift;
           }
           raf = requestAnimationFrame(tick);
         };
