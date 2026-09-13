@@ -22,7 +22,13 @@ const year = new Date().getFullYear();
   </head>
   <body>
     <header class="bar">
-      <p class="wordmark">Varshil Anavadia</p>
+      <nav aria-label="Elsewhere">
+        <ul class="bar-links">
+          {links.map(({ label, href }) => (
+            <li><a href={href} rel="me">{label}</a></li>
+          ))}
+        </ul>
+      </nav>
     </header>
 
     <main>
@@ -36,9 +42,10 @@ const year = new Date().getFullYear();
               </div>
             ))}
           </div>
-          <div class="hero-name-static">Varshil<br />Anavadia</div>
         </div>
-        <div class="portrait grayscale">
+        <!-- Colour, not .grayscale: a knowing exception to the DS's black-and-white rule
+             while this placeholder portrait stands in (12 Sep 2026). -->
+        <div class="portrait">
           <img
             src="/hero-portrait.webp"
             alt="Portrait of Varshil Anavadia"
@@ -49,33 +56,15 @@ const year = new Date().getFullYear();
         </div>
       </section>
 
-      <section class="intro split" aria-label="Coming soon">
-        <div class="split-main">
-          <p class="block-label">Coming soon</p>
-          <p class="statement">Something's being built here. Until then, say hello.</p>
-        </div>
-        <div class="split-side">
-          <p class="block-label">Email</p>
-          <a class="email" href="mailto:vanavadia@gmail.com">vanavadia<wbr />@gmail.com</a>
-        </div>
+      <section class="intro" aria-label="Coming soon">
+        <p class="block-label">Coming soon</p>
+        <p class="statement">Something's being built here.</p>
       </section>
     </main>
 
     <footer class="foot">
-      <div class="split">
-        <div class="split-main">
-          <p class="block-label">Quote of the day</p>
-          <blockquote>What are you truly afraid of when nothing in the world belongs to you?</blockquote>
-        </div>
-        <nav class="split-side" aria-label="Elsewhere">
-          <p class="block-label">Elsewhere</p>
-          <ul>
-            {links.map(({ label, href }) => (
-              <li><a href={href} rel="me">{label}</a></li>
-            ))}
-          </ul>
-        </nav>
-      </div>
+      <p class="block-label">Quote of the day</p>
+      <blockquote>What are you truly afraid of when nothing in the world belongs to you?</blockquote>
       <p class="copyright">© {year} Varshil Anavadia</p>
     </footer>
 
@@ -140,8 +129,7 @@ const year = new Date().getFullYear();
           raf = 0;
         };
 
-        // Run only while the band is on screen, and not at all under reduced motion. Observing
-        // the track itself also stops the loop on narrow screens, where it is display:none.
+        // Run only while the band is on screen, and not at all under reduced motion.
         new IntersectionObserver(([entry]) => (entry?.isIntersecting ? start() : stop())).observe(track);
         reduce.addEventListener('change', () => (reduce.matches ? stop() : start()));
       }

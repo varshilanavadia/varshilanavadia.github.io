@@ -5,6 +5,9 @@ html{--s0:0.25rem;--s1:0.5rem;--s2:1rem;--s3:1.5rem;--s4:1.875rem;--s5:3.75rem}
 html{--t-1:1rem;--t0:1.25rem;--t1:1.56rem;--t2:1.95rem;--t3:2.44rem;--t4:3.05rem;--t5:3.81rem;--t6:4.76rem}
 html{--measure:46ch}
 html{--ink:var(--color-text);--ink-2:var(--color-neutral-900);--ink-3:var(--color-neutral-800);--ink-deco:var(--color-neutral-300);--rule-strong:var(--color-divider);--rule:var(--color-divider);--rule-faint:var(--color-neutral-300);--sheet:var(--color-bg);--sheet-alt:var(--color-surface)}
+/* Inverted set, §08: the dark ground is --ink itself. */
+html{--ink-inv:var(--color-neutral-100);--ink-inv-2:var(--color-neutral-300);--ink-inv-3:var(--color-neutral-500);--rule-inv:var(--color-accent-900)}
+html{--scrim:var(--color-text)}
 html{--lh-tight:1.05;--lh-snug:1.15;--lh-normal:1.3;--lh-body:1.5;--lh-mono:1.6}
 /* Page margin: the wireframe's s5 at the 1440 design width, down to 24px at the 320 floor
    (Type System §14). Interpolated, so there is no breakpoint to maintain. */
@@ -23,55 +26,42 @@ a:hover{color:var(--ink)}
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 
 /* ── Sticky bar ───────────────────────────────────────────────────────────── */
-/* The section labels are not here: the sections they point at do not exist yet. */
+/* The section labels are not here: the sections they point at do not exist yet. The
+   wordmark gave way to the profile links, since the hero already carries the name. */
 .bar{position:sticky;top:0;z-index:10;display:flex;align-items:center;justify-content:flex-end;padding:9px var(--gutter);border-bottom:2px solid var(--rule);background:var(--sheet)}
-.wordmark{display:flex;align-items:center;min-height:44px;margin:0;font-size:var(--t1);font-weight:700;line-height:var(--lh-snug);text-transform:uppercase;white-space:nowrap;color:var(--ink)}
-/* D8: below the narrow anchor the wordmark drops to t0. With no label beside it, the full
-   name still fits, so it does not abbreviate. */
-@media (max-width:30rem){.wordmark{font-size:var(--t0)}}
+.bar-links{display:flex;flex-wrap:wrap;justify-content:flex-end;column-gap:clamp(1rem, 2.7778vw, 2.5rem);list-style:none;margin:0;padding:0}
+/* Set as the C3 nav labels are: t-1, 600, uppercase, 1px tracking, --ink-3 at rest. 12px
+   above and 13px below the 19.2px line box make the 44px target. */
+.bar-links a{display:inline-block;padding:12px 0 13px;font-size:var(--t-1);font-weight:600;line-height:1.2;letter-spacing:1px;text-transform:uppercase;color:var(--ink-3)}
+.bar-links a:hover{color:var(--ink)}
+/* At the 320 floor the three labels need 250px of the 272px available, which a fixed gap
+   overruns. On narrow screens the row spans the bar and the gaps take what is left. */
+@media (max-width:30rem){
+  .bar nav{flex:1}
+  .bar-links{justify-content:space-between;column-gap:0}
+}
 
 /* ── Hero ─────────────────────────────────────────────────────────────────── */
 .hero{position:relative;display:flex;justify-content:center;overflow:hidden}
 /* The name is a band across the foot of the hero, in front of the figure, bleeding off both
    edges. 260px at 1440 is 18.06vw; the band keeps that proportion down to a 96px floor. */
+/* The marquee runs at every width, by decision (12 Sep 2026); only the size scales. */
 .hero-name{position:absolute;left:0;right:0;bottom:clamp(1.5rem, 5.5556vw, 5rem);z-index:2;pointer-events:none;overflow:hidden;font-size:clamp(6rem, 18.0556vw, 16.25rem);font-weight:500;line-height:var(--lh-tight);letter-spacing:-0.035em;color:var(--ink)}
 .hero-name-track{display:flex;align-items:center;gap:0.16em;white-space:nowrap;width:max-content;will-change:transform}
 .hero-name-seg{display:flex;align-items:center;gap:0.16em}
-.hero-name-dash{display:block;width:0.62em;height:0.105em;background:var(--ink)}
-.hero-name-static{display:none}
-/* D7: below the narrow anchor the band stops being a marquee. A running band that narrow
-   never shows the whole name, so it sets still on two lines at t5, broken between the words
-   by the markup rather than left to the browser (Type System §14). */
-@media (max-width:30rem){
-  .hero-name{left:var(--gutter);right:var(--gutter);font-size:var(--t5)}
-  .hero-name-track{display:none}
-  .hero-name-static{display:block}
-}
-/* 42% of the column at 1440 (605px), never narrower than 280px on a phone. */
+.hero-name-dash{display:block;width:0.62em;height:0.105em;background:currentColor}/* 42% of the column at 1440 (605px), never narrower than 280px on a phone. */
 .portrait{position:relative;z-index:1;align-self:flex-end;width:clamp(17.5rem, 42%, 37.8rem);aspect-ratio:3/4;overflow:hidden}
 /* The crop saved in the wireframe's image slot: 1.5125× over a cover fit, centre moved
    6.59% left and 1.76% down. */
 .portrait img{position:absolute;max-width:none;width:151.35%;height:151.25%;left:43.41%;top:51.76%;transform:translate(-50%,-50%)}
 
 /* ── Sections ─────────────────────────────────────────────────────────────── */
-/* Two columns — content, and a 400px side column — that stack when there is no room. */
-.split{display:flex;flex-wrap:wrap;align-items:flex-start;column-gap:var(--s5);row-gap:var(--s4)}
-.split-main{flex:1 1 20rem;min-width:0}
-.split-side{flex:0 1 400px;min-width:0}
-
 .block-label{margin:0;font-size:var(--t-1);font-weight:600;line-height:var(--lh-normal);color:var(--ink-3);text-transform:uppercase;letter-spacing:1px}
 
 .intro{padding:var(--s5) var(--gutter);border-top:2px solid var(--rule)}
 .statement{margin:var(--s2) 0 0;font-size:var(--t1);font-weight:400;line-height:var(--lh-snug);color:var(--ink);max-width:var(--measure);text-wrap:pretty}
-.email{display:inline-block;margin-top:var(--s2);font-family:var(--font-mono);font-size-adjust:0.5;font-size:var(--t2);font-weight:700;line-height:var(--lh-snug);color:var(--ink);text-decoration:underline;text-decoration-color:var(--ink-3);text-decoration-thickness:1px;text-underline-offset:3px}
-.email:hover{text-decoration-color:var(--ink)}
 
 /* ── Footer ───────────────────────────────────────────────────────────────── */
 .foot{padding:var(--s4) var(--gutter);border-top:2px solid var(--rule)}
 .foot blockquote{margin:var(--s2) 0 0;font-size:var(--t1);font-weight:400;line-height:var(--lh-snug);color:var(--ink);max-width:var(--measure);text-wrap:pretty}
-.foot ul{list-style:none;margin:var(--s2) 0 0;padding:0;display:flex;flex-wrap:wrap;column-gap:var(--s4)}
-/* 9px above and below the 26px line box makes the 44px target; the negative margin gives
-   the space back so the row sits where the wireframe draws it. */
-.foot li a{display:inline-block;padding:9px 0;margin:-9px 0;font-size:var(--t0);font-weight:600;line-height:var(--lh-normal);color:var(--ink);text-decoration:underline;text-decoration-color:var(--ink-3);text-decoration-thickness:1px;text-underline-offset:3px}
-.foot li a:hover{text-decoration-color:var(--ink)}
 .copyright{margin:var(--s4) 0 0;padding-top:var(--s2);border-top:1px solid var(--rule);font-size:var(--t-1);font-weight:400;line-height:var(--lh-normal);color:var(--ink-3)}
