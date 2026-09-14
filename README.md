@@ -2,7 +2,7 @@
 
 Personal website. Currently a Coming Soon page: the hero and footer from the landing wireframe.
 
-Built with [Astro](https://astro.build) as a static site, hosted on Vercel.
+Built with [Astro](https://astro.build) as a static site, hosted on GitHub Pages at https://varshilanavadia.github.io.
 
 ## Develop
 
@@ -12,6 +12,10 @@ npm run dev      # http://localhost:4321
 npm run build    # outputs to dist/
 npm run preview  # serve the build locally
 ```
+
+## Deploy
+
+Every push to `main` builds the site and publishes it to GitHub Pages through `.github/workflows/deploy.yml`.
 
 ## Layout
 

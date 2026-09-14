@@ -1,0 +1,4 @@
+# GitHub Pages cannot send an X-Robots-Tag header, so the portrait is kept out of image
+# search here instead, alongside the page's noimageindex robots meta.
+User-agent: *
+Disallow: /hero-portrait.webp
