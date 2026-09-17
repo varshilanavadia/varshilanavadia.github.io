@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+html{--s0:0.25rem;--s1:0.5rem;--s2:1rem;--s3:1.5rem;--s4:1.875rem;--s5:3.75rem}
+html{--ink:#111;--ink-2:#555;--ink-3:#737373;--rule-strong:#111;--rule:#ddd;--rule-faint:#eee;--sheet:#fff;--sheet-alt:#fbfaf8}
+html{--t-1:1rem;--t0:1.25rem;--t1:1.56rem;--t2:1.95rem;--t3:2.44rem;--t4:3.05rem}
+html{--lh-tight:1.05;--lh-snug:1.15;--lh-normal:1.3;--lh-body:1.5;--lh-mono:1.6}
+body{margin:0;background:#e9e8e6;min-width:1440px;font-family:'Figtree',system-ui,-apple-system,Helvetica,Arial,sans-serif;font-size:var(--t0);line-height:var(--lh-body);color:var(--ink)}
+a{color:var(--ink);text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px}
+a:hover{color:var(--ink-2)}
+</style>
+</helmet>
+
+<div style="width:1440px;margin:0 auto;background:var(--sheet);box-sizing:border-box">
+
+<div style="box-sizing:border-box;padding:var(--s5) var(--s5) var(--s4)">
+<div style="font-size:var(--t-1);font-weight:600;color:var(--ink-3);text-transform:uppercase;letter-spacing:1px">Asset spec · 17 September 2026 · every asset built · one value to substitute</div>
+<div style="font-size:var(--t4);font-weight:700;color:var(--ink);line-height:var(--lh-tight);margin-top:var(--s2);max-width:900px;text-wrap:balance">Favicon and app icon</div>
+<div style="font-size:var(--t0);color:var(--ink-2);line-height:var(--lh-body);margin-top:var(--s3);max-width:760px;text-wrap:pretty">The mark comes from the supplied vector artwork. The shape is unchanged — what was refined is the execution: a hairline stroke removed, a kinked edge merged, two edges levelled, one taper corrected, five intended-smooth joins made tangent-continuous, and the whole thing renormalised onto a 1000-unit artboard with a true circle. The section below lists each change and what it was before.</div>
+<div style="font-size:var(--t0);color:var(--ink-2);line-height:var(--lh-body);margin-top:var(--s2);max-width:760px;text-wrap:pretty">There are now two drawings: the main mark, and a 16-pixel master with the ribbon blunted and the counters opened, because a mark this detailed cannot hold its counters at tab size. Both live in <a href="Symbol.dc.html">Symbol.dc.html</a> and this file defers to it for geometry. What this file settles is the colourway, which crop and which drawing belong in which slot, the sanctioned variants, dark-chrome behaviour, the rasters and manifest, and how the mark behaves on the page.</div>
+<div style="font-size:var(--t0);color:var(--ink-2);line-height:var(--lh-body);margin-top:var(--s2);max-width:760px;text-wrap:pretty">The colourway is <b style="color:var(--ink);font-weight:600">tonal</b>: <span style="font-family:'IBM Plex Mono',ui-monospace,monospace;font-size-adjust:0.5">#134B2E</span> ink on a <span style="font-family:'IBM Plex Mono',ui-monospace,monospace;font-size-adjust:0.5">#D3F0DE</span> ground, at 8.3:1. Both values are the supplied artwork's own.</div>
+</div>
+
+<div style="box-sizing:border-box;padding:var(--s5);border-top:1px solid var(--rule)">
+<div style="font-size:var(--t-1);font-weight:700;color:var(--ink);text-transform:uppercase;letter-spacing:1px">The set</div>
+<div style="font-size:var(--t-1);color:var(--ink-3);line-height:var(--lh-body);margin-top:var(--s1);margin-bottom:var(--s4)">On white or light grounds</div>
+<div style="display:flex;gap:var(--s5);align-items:flex-end;flex-wrap:wrap">
+<sc-for list="{{ sizes }}" as="row" hint-placeholder-count="5">
+<div style="display:flex;flex-direction:column;gap:var(--s2);align-items:flex-start">
+<div style="display:flex;line-height:0;height:180px;align-items:flex-end"><dc-import name="Symbol" size="{{ row.px }}" crop="{{ row.crop }}" variant="{{ row.light }}" background="{{ row.bg }}" small="{{ row.small }}" hint-size="180px,180px"></dc-import></div>
+<div><div style="font-size:var(--t0);font-weight:600;color:var(--ink);line-height:var(--lh-snug)">{{ row.label }}</div><div style="font-size:var(--t-1);color:var(--ink-3);line-height:var(--lh-normal)">{{ row.slot }}</div></div>
+</div>
+</sc-for>
+</div>
+</div>
+
+<div style="box-sizing:border-box;padding:var(--s5);background:#0E2E1D">
+<div style="font-size:var(--t-1);font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:1px">The same set</div>
+<div style="font-size:var(--t-1);color:#9fb8a9;line-height:var(--lh-body);margin-top:var(--s1);margin-bottom:var(--s4)">On dark grounds</div>
+<div style="display:flex;gap:var(--s5);align-items:flex-end;flex-wrap:wrap">
+<sc-for list="{{ sizes }}" as="row" hint-placeholder-count="5">
+<div style="display:flex;flex-direction:column;gap:var(--s2);align-items:flex-start">
+<div style="display:flex;line-height:0;height:180px;align-items:flex-end"><dc-import name="Symbol" size="{{ row.px }}" crop="{{ row.crop }}" variant="{{ row.dark }}" background="{{ row.bg }}" small="{{ row.small }}" hint-size="180px,180px"></dc-import></div>
+<div><div style="font-size:var(--t0);font-weight:600;color:#fff;line-height:var(--lh-snug)">{{ row.label }}</div><div style="font-size:var(--t-1);color:#9fb8a9;line-height:var(--lh-normal)">{{ row.slot }}</div></div>
+</div>
+</sc-for>
+</div>
+<div style="font-size:var(--t0);color:#c8dbd0;line-height:var(--lh-body);margin-top:var(--s5);max-width:760px;text-wrap:pretty">{{ sameAsLight }} of the {{ setCount }} are identical to the light set. The tile carries its own ground, so the chrome never touches the ink and there is nothing for dark mode to flip. Only the bare mark changes, because it is the one asset with no ground of its own: it ships in the ink colour on light chrome and in white on dark. That single swap is the whole of the dark-mode behaviour, and an SVG favicon can do it unaided — the file carries its own <span style="font-family:'IBM Plex Mono',ui-monospace,monospace;font-size-adjust:0.5">prefers-color-scheme</span> rule.</div>
+</div>
+
+<div style="box-sizing:border-box;padding:var(--s5);border-top:1px solid var(--rule)">
+<div style="font-size:var(--t-1);font-weight:700;color:var(--ink);text-transform:uppercase;letter-spacing:1px;margin-bottom:var(--s4)">What the refinement changed</div>
+<div style="display:flex;gap:var(--s5);flex-wrap:wrap;align-items:flex-start">
+<div style="flex:0 0 auto"><div style="display:flex;line-height:0"><dc-import name="Symbol" size="240" crop="circle" variant="tonal" hint-size="240px,240px"></dc-import></div>
+<div style="font-family:'IBM Plex Mono',ui-monospace,monospace;font-size-adjust:0.5;font-size:var(--t-1);color:var(--ink-3);margin-top:var(--s1)">refined</div></div>
+<div style="flex:1 1 560px;max-width:760px">
+<div style="font-size:var(--t0);color:var(--ink-2);line-height:var(--lh-body);text-wrap:pretty;margin-bottom:var(--s3)">The silhouette is the supplied one — the refinement is corrective, not interpretive. Nothing below moves a vertex the eye would notice; each item removes an artefact that would show up as a wobble, a soft corner or a mis-registered tile.</div>
+<sc-for list="{{ changes }}" as="row" hint-placeholder-count="7">
+<div style="display:flex;gap:var(--s2);padding:var(--s1) 0">
+<div style="flex:0 0 12px;font-size:var(--t-1);color:var(--ink-3)">—</div>
+<div style="flex:1;font-size:var(--t-1);color:var(--ink-2);line-height:var(--lh-body);text-wrap:pretty">{{ row }}</div>
+</div>
+</sc-for>
+</div>
+</div>
+</div>
+
+<div style="box-sizing:border-box;padding:var(--s5);border-top:1px solid var(--rule)">
+<div style="font-size:var(--t-1);font-weight:700;color:var(--ink);text-transform:uppercase;letter-spacing:1px">Sanctioned variants</div>
+<div style="font-size:var(--t-1);color:var(--ink-3);line-height:var(--lh-body);margin-top:var(--s1);margin-bottom:var(--s4)">Two reversed tiles for grounds the tonal tile cannot sit on, and three groundless monochromes for reproduction that cannot take two colours</div>
+<div style="display:flex;gap:var(--s4);flex-wrap:wrap">
+<sc-for list="{{ variants }}" as="row" hint-placeholder-count="5">
+<div style="flex:0 0 300px">
+<div style="display:flex;line-height:0;background:{{ row.field }};padding:var(--s3);box-sizing:border-box"><dc-import name="Symbol" size="150" crop="{{ row.crop }}" variant="{{ row.variant }}" hint-size="150px,150px"></dc-import></div>
+<div style="font-size:var(--t1);font-weight:700;color:var(--ink);line-height:var(--lh-snug);margin-top:var(--s2)">{{ row.name }}</div>
+<div style="font-family:'IBM Plex Mono',ui-monospace,monospace;font-size-adjust:0.5;font-size:var(--t-1);color:var(--ink-3);margin-top:var(--s0)">{{ row.code }}</div>
+<div style="font-size:var(--t-1);color:var(--ink-2);line-height:var(--lh-body);margin-top:var(--s1);text-wrap:pretty">{{ row.use }}</div>
+</div>
+</sc-for>
+</div>
+</div>
+
+<div style="box-sizing:border-box;padding:var(--s5);border-top:1px solid var(--rule)">
+<div style="font-size:var(--t-1);font-weight:700;color:var(--ink);text-transform:uppercase;letter-spacing:1px;margin-bottom:var(--s4)">In the tab strip</div>
+<div style="display:flex;gap:var(--s5);flex-wrap:wrap">
+<div>
+<div style="background:#dee1e6;padding:10px 10px 0;display:flex;gap:2px;align-items:flex-end">
+<div style="display:flex;gap:8px;align-items:center;background:#fff;padding:9px 14px;min-width:168px;line-height:0"><div style="display:flex"><dc-import name="Symbol" size="16" crop="bleed" variant="tonal" background="transparent" small="{{ true }}" hint-size="16px,16px"></dc-import></div><span style="font-size:12px;line-height:1;color:#3c4043;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Varshil Anavadia</span></div>
+<div style="display:flex;gap:8px;align-items:center;background:#cfd3d8;padding:9px 14px;min-width:140px"><div style="flex:0 0 16px;width:16px;height:16px;background:#9aa0a6"></div><span style="font-size:12px;line-height:1;color:#5f6368;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Another tab</span></div>
+</div>
+<div style="font-family:'IBM Plex Mono',ui-monospace,monospace;font-size-adjust:0.5;font-size:var(--t-1);color:var(--ink-3);margin-top:var(--s1)">Light chrome · ink #134B2E, no ground</div>
+</div>
+<div>
+<div style="background:#202124;padding:10px 10px 0;display:flex;gap:2px;align-items:flex-end">
+<div style="display:flex;gap:8px;align-items:center;background:#35363a;padding:9px 14px;min-width:168px;line-height:0"><div style="display:flex"><dc-import name="Symbol" size="16" crop="bleed" variant="white" small="{{ true }}" hint-size="16px,16px"></dc-import></div><span style="font-size:12px;line-height:1;color:#e8eaed;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Varshil Anavadia</span></div>
+<div style="display:flex;gap:8px;align-items:center;background:#2a2b2e;padding:9px 14px;min-width:140px"><div style="flex:0 0 16px;width:16px;height:16px;background:#5f6368"></div><span style="font-size:12px;line-height:1;color:#9aa0a6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Another tab</span></div>
+</div>
+<div style="font-family:'IBM Plex Mono',ui-monospace,monospace;font-size-adjust:0.5;font-size:var(--t-1);color:var(--ink-3);margin-top:var(--s1)">Dark chrome · white, no ground</div>
+</div>
+</div>
+<div style="font-size:var(--t0);color:var(--ink-2);line-height:var(--lh-body);margin-top:var(--s4);max-width:760px;text-wrap:pretty">The ground is absent in the tab on purpose. A <span style="font-family:'IBM Plex Mono',ui-monospace,monospace;font-size-adjust:0.5">#D3F0DE</span> plate on a white active tab is a 1.21:1 boundary — no perceptible edge, so the mark appears to float rather than sit on a tile. With no plate there is nothing to float on, and the mark gets the full 16 pixels instead of 0.86 of them.</div>
+<div style="font-size:var(--t0);color:var(--ink-2);line-height:var(--lh-body);margin-top:var(--s2);max-width:760px;text-wrap:pretty">That rule holds at every tab size, which settles what actually lands in a tab. Every current browser prefers the SVG favicon and scales it to the strip, so <span style="font-family:'IBM Plex Mono',ui-monospace,monospace;font-size-adjust:0.5">favicon-16.svg</span> — the groundless small master — is what appears at any tab size, HiDPI included. The circle tile never ships to a tab, and neither does the main drawing; the tile's slots are the app icon, the avatar and social, and the main drawing starts above tab scale. The one path that can size-switch is a legacy reach for <span style="font-family:'IBM Plex Mono',ui-monospace,monospace;font-size-adjust:0.5">favicon.ico</span>, and that file carries a circle 32 and a circle 48 with no 16 frame, so a true-16 request downscales the 32. The 32-pixel tile in the set above is that ICO frame, not a live favicon.</div>
+</div>
+
+<div style="box-sizing:border-box;padding:var(--s5);border-top:1px solid var(--rule)">
+<div style="font-size:var(--t-1);font-weight:700;color:var(--ink);text-transform:uppercase;letter-spacing:1px;margin-bottom:var(--s3)">Files</div>
+<div style="display:flex;gap:var(--s3);padding:var(--s1) 0;border-bottom:1px solid var(--rule-strong)">
+<div style="flex:0 0 200px;font-size:var(--t-1);font-weight:700;text-transform:uppercase;letter-spacing:0.5px">File</div>
+<div style="flex:0 0 200px;font-size:var(--t-1);font-weight:700;text-transform:uppercase;letter-spacing:0.5px">Crop</div>
+<div style="flex:1;font-size:var(--t-1);font-weight:700;text-transform:uppercase;letter-spacing:0.5px">Slot</div>
+</div>
+<sc-for list="{{ files }}" as="row" hint-placeholder-count="6">
+<div style="display:flex;gap:var(--s3);padding:var(--s2) 0;border-bottom:1px solid var(--rule-faint)">
+<div style="flex:0 0 200px;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size-adjust:0.5;font-size:var(--t-1);color:var(--ink)">{{ row.file }}</div>
+<div style="flex:0 0 200px;font-size:var(--t-1);color:var(--ink-2);line-height:var(--lh-body)">{{ row.crop }}</div>
+<div style="flex:1;font-size:var(--t-1);color:var(--ink-2);line-height:var(--lh-body);text-wrap:pretty">{{ row.slot }}</div>
+</div>
+</sc-for>
+<div style="font-size:var(--t-1);color:var(--ink-3);line-height:var(--lh-body);margin-top:var(--s3);max-width:760px;text-wrap:pretty">All nine are on disk. Eight SVGs in <span style="font-family:'IBM Plex Mono',ui-monospace,monospace;font-size-adjust:0.5">assets/</span>, generated from the two drawings, plus <span style="font-family:'IBM Plex Mono',ui-monospace,monospace;font-size-adjust:0.5">og-card.png</span> exported from <a href="Share Card.dc.html">Share Card.dc.html</a>. The rasters below are built too, and <span style="font-family:'IBM Plex Mono',ui-monospace,monospace;font-size-adjust:0.5">favicon.ico</span> and <span style="font-family:'IBM Plex Mono',ui-monospace,monospace;font-size-adjust:0.5">site.webmanifest</span> sit at the project root where browsers probe for them. Nothing is referenced by a page yet — wiring the head is the remaining step. Each has one source and only one: the eight SVGs come from <a href="Symbol.dc.html">Symbol.dc.html</a>, <span style="font-family:'IBM Plex Mono',ui-monospace,monospace;font-size-adjust:0.5">og-card.png</span> from <a href="Share Card.dc.html">Share Card.dc.html</a>, the rasters from the sources named below, and <span style="font-family:'IBM Plex Mono',ui-monospace,monospace;font-size-adjust:0.5">site.webmanifest</span> is hand-authored JSON with no generator. Regenerate from the right source rather than editing any of them by hand.</div>
+</div>
+
+<div style="box-sizing:border-box;padding:var(--s5);border-top:1px solid var(--rule)">
+<div style="font-size:var(--t-1);font-weight:700;color:var(--ink);text-transform:uppercase;letter-spacing:1px;margin-bottom:var(--s3)">Colour</div>
+<div style="display:flex;gap:var(--s5);flex-wrap:wrap;align-items:flex-start">
+<div style="display:flex;gap:var(--s3)">
+<div><div style="width:120px;height:120px;background:#134B2E"></div><div style="font-family:'IBM Plex Mono',ui-monospace,monospace;font-size-adjust:0.5;font-size:var(--t-1);color:var(--ink);margin-top:var(--s1)">#134B2E</div><div style="font-size:var(--t-1);color:var(--ink-3)">ink</div></div>
+<div><div style="width:120px;height:120px;background:#D3F0DE"></div><div style="font-family:'IBM Plex Mono',ui-monospace,monospace;font-size-adjust:0.5;font-size:var(--t-1);color:var(--ink);margin-top:var(--s1)">#D3F0DE</div><div style="font-size:var(--t-1);color:var(--ink-3)">ground</div></div>
+</div>
+<div style="flex:1 1 420px;max-width:760px">
+<div style="font-size:var(--t0);color:var(--ink-2);line-height:var(--lh-body);text-wrap:pretty">Two values, 8.3:1 against each other, both taken from the supplied artwork. Against white the ink is 10.1:1 and the ground is 1.21:1 — which is why the ground is absent from the tab and why the inverse variant exists for placements on white.</div>
+<div style="font-size:var(--t0);color:var(--ink-2);line-height:var(--lh-body);margin-top:var(--s2);text-wrap:pretty">The tonal pair does not change between light and dark chrome. A second, inverted colourway would make the identity two marks, and the fixed rasters — app icon, avatar, share image — could not follow a flip anyway. The two named exceptions are the bare mark, which has no ground to preserve, and the Safari mask, which Safari recolours.</div>
+<div style="font-size:var(--t0);color:var(--ink-2);line-height:var(--lh-body);margin-top:var(--s2);text-wrap:pretty">The grey variant is 3.5:1 on white. It is sanctioned at tile scale only and must not be used below 64 pixels.</div>
+</div>
+</div>
+</div>
+
+<div style="box-sizing:border-box;padding:var(--s5);border-top:1px solid var(--rule)">
+<div style="font-size:var(--t-1);font-weight:700;color:var(--ink);text-transform:uppercase;letter-spacing:1px;margin-bottom:var(--s3)">Rules</div>
+<sc-for list="{{ rules }}" as="row" hint-placeholder-count="8">
+<div style="display:flex;gap:var(--s3);padding:var(--s2) 0;border-bottom:1px solid var(--rule-faint)">
+<div style="flex:0 0 220px;font-size:var(--t-1);font-weight:600;color:var(--ink);line-height:var(--lh-normal)">{{ row.part }}</div>
+<div style="flex:1;font-size:var(--t-1);color:var(--ink-2);line-height:var(--lh-body);text-wrap:pretty">{{ row.spec }}</div>
+</div>
+</sc-for>
+</div>
+
+<div style="box-sizing:border-box;padding:var(--s5);border-top:1px solid var(--rule)">
+<div style="font-size:var(--t-1);font-weight:700;color:var(--ink);text-transform:uppercase;letter-spacing:1px;margin-bottom:var(--s3)">Do not</div>
+<sc-for list="{{ doNot }}" as="row" hint-placeholder-count="8">
+<div style="display:flex;gap:var(--s2);padding:var(--s1) 0;max-width:900px">
+<div style="flex:0 0 12px;font-size:var(--t-1);color:var(--ink-3)">—</div>
+<div style="flex:1;font-size:var(--t-1);color:var(--ink-2);line-height:var(--lh-body);text-wrap:pretty">{{ row }}</div>
+</div>
+</sc-for>
+</div>
+
+<div style="box-sizing:border-box;padding:var(--s5);border-top:2px solid var(--ink);background:var(--sheet-alt)">
+<div style="font-size:var(--t-1);font-weight:600;color:var(--ink-3);text-transform:uppercase;letter-spacing:1px">Settled · 17 September · nothing open</div>
+<div style="font-size:var(--t2);font-weight:700;color:var(--ink);line-height:var(--lh-snug);margin-top:var(--s2);max-width:900px;text-wrap:balance">The four calls, and what each one cost</div>
+<div style="margin-top:var(--s3);max-width:900px">
+<sc-for list="{{ decisions }}" as="row" hint-placeholder-count="4">
+<div style="display:flex;gap:var(--s3);padding:var(--s2) 0;border-bottom:1px solid var(--rule-faint)">
+<div style="flex:0 0 230px">
+<div style="font-size:var(--t-1);font-weight:700;color:var(--ink);line-height:var(--lh-normal)">{{ row.q }}</div>
+<div style="font-size:var(--t-1);color:var(--ink);font-weight:600;margin-top:var(--s0);line-height:var(--lh-normal)">{{ row.chose }}</div>
+</div>
+<div style="flex:1;font-size:var(--t-1);color:var(--ink-2);line-height:var(--lh-body);text-wrap:pretty">{{ row.consequence }}</div>
+</div>
+</sc-for>
+</div>
+<div style="font-size:var(--t0);color:var(--ink-2);line-height:var(--lh-body);margin-top:var(--s4);max-width:760px;text-wrap:pretty">Two smaller calls were mine rather than yours, and stay reversible: retiring the plain square tile, and sanctioning the grey variant. The colourway needs no decision — both hexes are the supplied artwork's own values.</div>
+<div style="font-size:var(--t0);color:var(--ink-2);line-height:var(--lh-body);margin-top:var(--s2);max-width:760px;text-wrap:pretty">The pixel evidence behind the first call is kept in <a href="Handoff Decisions.dc.html">Handoff Decisions.dc.html</a>. That page has served its purpose and can be deleted whenever you like.</div>
+</div>
+
+<div style="box-sizing:border-box;padding:var(--s5);border-top:1px solid var(--rule)">
+<div style="font-size:var(--t-1);font-weight:700;color:var(--ink);text-transform:uppercase;letter-spacing:1px">The rasters</div>
+<div style="font-size:var(--t-1);color:var(--ink-3);line-height:var(--lh-body);margin-top:var(--s1);margin-bottom:var(--s3)">All built. Regenerate from the named source rather than editing a PNG.</div>
+<div style="display:flex;gap:var(--s3);padding:var(--s1) 0;border-bottom:1px solid var(--rule-strong)">
+<div style="flex:0 0 190px;font-size:var(--t-1);font-weight:700;text-transform:uppercase;letter-spacing:0.5px">File</div>
+<div style="flex:0 0 110px;font-size:var(--t-1);font-weight:700;text-transform:uppercase;letter-spacing:0.5px">Size</div>
+<div style="flex:0 0 160px;font-size:var(--t-1);font-weight:700;text-transform:uppercase;letter-spacing:0.5px">From</div>
+<div style="flex:0 0 150px;font-size:var(--t-1);font-weight:700;text-transform:uppercase;letter-spacing:0.5px">Ground</div>
+<div style="flex:1;font-size:var(--t-1);font-weight:700;text-transform:uppercase;letter-spacing:0.5px">Why</div>
+</div>
+<sc-for list="{{ rasters }}" as="row" hint-placeholder-count="8">
+<div style="display:flex;gap:var(--s3);padding:var(--s2) 0;border-bottom:1px solid var(--rule-faint)">
+<div style="flex:0 0 190px;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size-adjust:0.5;font-size:var(--t-1);color:var(--ink)">{{ row.file }}</div>
+<div style="flex:0 0 110px;font-size:var(--t-1);color:var(--ink-2)">{{ row.size }}</div>
+<div style="flex:0 0 160px;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size-adjust:0.5;font-size:var(--t-1);color:var(--ink-2)">{{ row.from }}</div>
+<div style="flex:0 0 150px;font-size:var(--t-1);color:var(--ink-2)">{{ row.ground }}</div>
+<div style="flex:1;font-size:var(--t-1);color:var(--ink-2);line-height:var(--lh-body);text-wrap:pretty">{{ row.note }}</div>
+</div>
+</sc-for>
+</div>
+
+<div style="box-sizing:border-box;padding:var(--s5);border-top:1px solid var(--rule)">
+<div style="font-size:var(--t-1);font-weight:700;color:var(--ink);text-transform:uppercase;letter-spacing:1px">The share card</div>
+<div style="font-size:var(--t-1);color:var(--ink-3);line-height:var(--lh-body);margin-top:var(--s1);margin-bottom:var(--s4)">1200 × 630 · the layout, at half size</div>
+<div style="display:flex;gap:var(--s5);flex-wrap:wrap;align-items:flex-start">
+<div style="flex:0 0 auto">
+<div style="width:600px;height:315px;background:#D3F0DE;display:flex;align-items:center;justify-content:center;gap:30px;box-sizing:border-box;padding:0 42px;border:1px solid var(--rule);overflow:hidden">
+<div style="display:flex;flex:0 0 auto;line-height:0"><dc-import name="Symbol" size="144" crop="bleed" ink="#134B2E" background="transparent" hint-size="144px,144px"></dc-import></div>
+<div style="flex:0 0 auto"><div style="font-size:38.08px;font-weight:700;color:#134B2E;line-height:1.1;white-space:nowrap">Varshil Anavadia</div></div>
+</div>
+<div style="font-family:'IBM Plex Mono',ui-monospace,monospace;font-size-adjust:0.5;font-size:var(--t-1);color:var(--ink-3);margin-top:var(--s1)">shown at 600 × 315 — double every number below</div>
+</div>
+<div style="flex:1 1 400px;max-width:620px">
+<sc-for list="{{ ogSpec }}" as="row" hint-placeholder-count="6">
+<div style="display:flex;gap:var(--s2);padding:var(--s1) 0;border-bottom:1px solid var(--rule-faint)">
+<div style="flex:0 0 170px;font-size:var(--t-1);font-weight:600;color:var(--ink);line-height:var(--lh-normal)">{{ row.k }}</div>
+<div style="flex:1;font-size:var(--t-1);color:var(--ink-2);line-height:var(--lh-body);text-wrap:pretty">{{ row.v }}</div>
+</div>
+</sc-for>
+</div>
+</div>
+</div>
+
+<div style="box-sizing:border-box;padding:var(--s5);border-top:1px solid var(--rule)">
+<div style="font-size:var(--t-1);font-weight:700;color:var(--ink);text-transform:uppercase;letter-spacing:1px">On the page</div>
+<div style="font-size:var(--t-1);color:var(--ink-3);line-height:var(--lh-body);margin-top:var(--s1);margin-bottom:var(--s3)">How the mark behaves inside the layout, as opposed to inside a platform slot</div>
+<sc-for list="{{ inPage }}" as="row" hint-placeholder-count="8">
+<div style="display:flex;gap:var(--s3);padding:var(--s2) 0;border-bottom:1px solid var(--rule-faint)">
+<div style="flex:0 0 220px;font-size:var(--t-1);font-weight:600;color:var(--ink);line-height:var(--lh-normal)">{{ row.part }}</div>
+<div style="flex:1;font-size:var(--t-1);color:var(--ink-2);line-height:var(--lh-body);text-wrap:pretty">{{ row.spec }}</div>
+</div>
+</sc-for>
+<div style="font-size:var(--t-1);color:var(--ink-3);line-height:var(--lh-body);margin-top:var(--s3);max-width:760px;text-wrap:pretty">These are considered defaults, not constraints. The page design is not settled yet, so where the real layout disagrees, the layout wins and this section should be updated to match rather than the other way round.</div>
+</div>
+
+<div style="box-sizing:border-box;padding:var(--s5);border-top:1px solid var(--rule)">
+<div style="font-size:var(--t-1);font-weight:700;color:var(--ink);text-transform:uppercase;letter-spacing:1px;margin-bottom:var(--s3)">Caching and screen readers</div>
+<sc-for list="{{ practices }}" as="row" hint-placeholder-count="4">
+<div style="display:flex;gap:var(--s3);padding:var(--s2) 0;border-bottom:1px solid var(--rule-faint)">
+<div style="flex:0 0 220px;font-size:var(--t-1);font-weight:600;color:var(--ink);line-height:var(--lh-normal)">{{ row.part }}</div>
+<div style="flex:1;font-size:var(--t-1);color:var(--ink-2);line-height:var(--lh-body);text-wrap:pretty">{{ row.spec }}</div>
+</div>
+</sc-for>
+</div>
+
+<div style="box-sizing:border-box;padding:var(--s5);border-top:1px solid var(--rule)">
+<div style="font-size:var(--t-1);font-weight:700;color:var(--ink);text-transform:uppercase;letter-spacing:1px;margin-bottom:var(--s3)">In the document head</div>
+<div style="font-family:'IBM Plex Mono',ui-monospace,monospace;font-size-adjust:0.5;font-size:var(--t-1);line-height:var(--lh-mono);color:var(--ink-2);background:var(--sheet-alt);padding:var(--s3);box-sizing:border-box;white-space:pre-wrap;word-break:break-word">{{ headSnippet }}</div>
+<div style="font-size:var(--t-1);color:var(--ink-3);line-height:var(--lh-body);margin-top:var(--s3);margin-bottom:var(--s2);max-width:760px;text-wrap:pretty">One value in that block must be substituted: <span style="font-family:'IBM Plex Mono',ui-monospace,monospace;font-size-adjust:0.5">og:image</span> takes an absolute URL, and a relative path yields no share card at all rather than a broken one. Everything else is ready as written.</div>
+<div style="font-size:var(--t-1);color:var(--ink-3);line-height:var(--lh-body);margin-top:var(--s3);margin-bottom:var(--s2);max-width:760px;text-wrap:pretty">And <span style="font-family:'IBM Plex Mono',ui-monospace,monospace;font-size-adjust:0.5">site.webmanifest</span>, already written to the project root — this is its contents. Without it an install falls back to a screenshot of the page or a letter in a circle:</div>
+<div style="font-family:'IBM Plex Mono',ui-monospace,monospace;font-size-adjust:0.5;font-size:var(--t-1);line-height:var(--lh-mono);color:var(--ink-2);background:var(--sheet-alt);padding:var(--s3);box-sizing:border-box;white-space:pre-wrap;word-break:break-word">{{ manifestSnippet }}</div>
+<div style="font-size:var(--t-1);color:var(--ink-3);line-height:var(--lh-body);margin-top:var(--s3);margin-bottom:var(--s2);max-width:760px;text-wrap:pretty">Both <span style="font-family:'IBM Plex Mono',ui-monospace,monospace;font-size-adjust:0.5">favicon-16.svg</span> and <span style="font-family:'IBM Plex Mono',ui-monospace,monospace;font-size-adjust:0.5">favicon.svg</span> carry their own dark-mode rule. This is the whole of the dark-mode behaviour:</div>
+<div style="font-family:'IBM Plex Mono',ui-monospace,monospace;font-size-adjust:0.5;font-size:var(--t-1);line-height:var(--lh-mono);color:var(--ink-2);background:var(--sheet-alt);padding:var(--s3);box-sizing:border-box;white-space:pre-wrap;word-break:break-word">{{ svgSnippet }}</div>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:1200}}">
+class Component extends DCLogic {
+  renderVals() {
+    const WORD = ['none','One','Two','Three','Four','Five','Six','Seven'];
+    const vals = {
+      sizes: [
+        { px: 180, crop: 'circle',  light: 'tonal', dark: 'tonal', bg: '', small: false, label: '180 × 180', slot: 'Profile and social' },
+        { px: 180, crop: 'rounded', light: 'tonal', dark: 'tonal', bg: '', small: false, label: '180 × 180 · rounded', slot: 'OS app icon — the slot masks it' },
+        { px: 64,  crop: 'circle',  light: 'tonal', dark: 'tonal', bg: '', small: false, label: '64 × 64',   slot: 'Avatar and inline' },
+        { px: 32,  crop: 'circle',  light: 'tonal', dark: 'tonal', bg: '', small: false, label: '32 × 32',   slot: 'ICO 32 and 48, legacy path' },
+        { px: 16,  crop: 'bleed',   light: 'tonal', dark: 'white', bg: 'transparent', small: true, label: '16 × 16 · small master', slot: 'Browser tab — the second drawing' }
+      ],
+      changes: [
+        'The ground was an ellipse, not a circle: rx 559.5 against ry 558.5, centred at (623.5, 626.5) in a 1254 box. One unit out of round and three and a half units off centre — invisible alone, but it misaligns every tile built from it. It is now a true circle, r 446 at (500, 500) on a 1000-unit artboard.',
+        'The path carried a 0.175 hairline stroke in the ink colour, used to fatten the fill. Removed, so the silhouette is the path alone. A stroke that thin also renders inconsistently across rasterisers, which is its own reason to drop it.',
+        'The V\u2019s right side was two separate lines meeting at a 1.3 degree kink — the sort of thing that reads as a dent in a long edge without being identifiable. Merged into one straight edge at 111.33 degrees.',
+        'The A crown and the A counter\u2019s top edge were each a fraction off horizontal. Both are now exactly level, which matters because a flat top is one of the mark\u2019s identifying features and a near-flat one just looks like a mistake.',
+        'The A\u2019s right leg tapered by 0.15 degrees — outer edge at 73.19, counter edge at 73.34. The counter edge is now exactly parallel to the outer, so the leg holds one width down its length.',
+        'Five joins where the ribbon is meant to read as one continuous sweep carried kinks of up to 1.5 degrees. All five are now tangent-continuous. The largest angular residual anywhere in the path is 0.2 degrees, down from 1.5.',
+        'Coordinates were three-decimal trace noise — 705.493, 1054.711, 870.872. Anchors now sit on a 0.5 grid and handles on 0.1, which makes the numbers legible to a person editing them. The path is 519 characters, down from 771, with no loss of shape.'
+      ],
+      variants: [
+        { name: 'Inverse', code: 'variant="inverse" · circle', crop: 'circle', variant: 'inverse', field: '#fff', use: 'Ground in #134B2E, mark in #D3F0DE. The sanctioned tile for placements on white, where the tonal ground has no edge. Also the strongest of the set in small print.' },
+        { name: 'Green on white', code: 'variant="on-white" · circle', crop: 'circle', variant: 'on-white', field: '#0E2E1D', use: 'A white tile for light elements sitting on dark grounds — a dark header, a dark document. Not a dark-mode replacement for the tonal tile.' },
+        { name: 'Black', code: 'variant="black" · bleed', crop: 'bleed', variant: 'black', field: '#fff', use: 'One-colour reproduction on light: stamps, fax-grade print, embossing, anywhere colour is unavailable. No ground.' },
+        { name: 'White', code: 'variant="white" · bleed', crop: 'bleed', variant: 'white', field: '#0E2E1D', use: 'One-colour reproduction on dark, and the small master under prefers-color-scheme: dark. No ground.' },
+        { name: 'Grey', code: 'variant="gray" · bleed', crop: 'bleed', variant: 'gray', field: '#fff', use: '#8A8A8A, 3.5:1 on white. For watermarks and secondary placements where black is too heavy. Tile scale only — never below 64 pixels.' }
+      ],
+      files: [
+        { file: 'favicon-16.svg', crop: 'Small master · no ground', slot: 'The browser tab. The second drawing — blunted ribbon, opened counters. #134B2E, swapping to white under prefers-color-scheme: dark. This is what ships as rel="icon".' },
+        { file: 'favicon.svg', crop: 'Bleed · no ground', slot: 'The main drawing, groundless. For anywhere the mark appears small but above tab scale — inline in the page, in email signatures, in documents.' },
+        { file: 'icon-maskable.svg', crop: 'Maskable · -6.7 -6.7 1013.4 1013.4', slot: 'Android adaptive and any slot that applies its own mask. Ground bleeds to the full square; the mark sits inside the inner 80% safe circle so the OS crop cannot cut it.' },
+        { file: 'icon-circle.svg', crop: 'Circle · 54 54 892 892', slot: 'The primary tile — a #D3F0DE circle on transparency, so rasters from it keep transparent corners. Profile, avatar, social, and the source for avatar-180.png, the manifest\u2019s 192 and 512, and the ICO\u2019s 32 and 48.' },
+        { file: 'icon-rounded.svg', crop: 'Rounded · 96 124 804 804', slot: 'The Apple touch icon and desktop shortcut. Source for apple-touch-180.png. Android adaptive now uses icon-maskable.svg instead \u2014 this frame would be cropped by the OS mask.' },
+        { file: 'icon-inverse.svg', crop: 'Circle · 54 54 892 892', slot: 'The inverse tile. Placements on white, and small-print reproduction.' },
+        { file: 'lockup-wide.svg', crop: 'Wide · 5:4, no ground', slot: 'Header and signature. Not an icon slot, and the only SVG whose frame is chosen rather than derived from the drawing — viewBox 55.7 172.5 885.1 708.1.' },
+        { file: 'mask-icon.svg', crop: 'Bleed · no ground', slot: 'Safari pinned tab. Black on transparent; Safari recolours it.' },
+        { file: 'og-card.png', crop: 'Raster · 1200 × 630', slot: 'Open Graph and Twitter card. The only asset that cannot be an SVG, because social scrapers do not render SVG, and the only one containing type. Built from Share Card.dc.html \u2014 re-export from there rather than editing the PNG.' }
+      ],
+      rules: [
+        { part: 'One compound path', spec: 'A single filled path with fill-rule evenodd on a 1000 x 1000 artboard: the outer contour with the two counters punched out. No strokes, no caps, no joins, no effects, no font. 25 segments in total — 17 outer, 5 in the A counter, 3 in the V counter.' },
+        { part: 'There are two drawings', spec: 'The main drawing, and a 16-pixel master with the ribbon blunted at x 201 and the counters opened 1.25x and 1.12x. The small master is the browser-tab asset; everything else uses the main drawing. This is a real maintenance cost, accepted deliberately: any change to one has to be mirrored in the other. Symbol.dc.html holds both, selected by small="true".' },
+        { part: 'Why the small master exists', spec: 'At 16 px the main drawing\u2019s V counter is 3 pixels at 191/255 and reads as a smudge. Trimming the ribbon narrows the ink to 643 units, so one pixel covers 40.2 instead of 43.3 — which pays for the opened counters without thinning anything: V stem holds at 1.55 px, A leg gains from 1.67 to 1.92. Result at 16 px is a 6-pixel V counter and an 11-pixel A counter, both at full contrast.' },
+        { part: 'The shape is the user\u2019s', spec: 'It comes from the supplied vector artwork, and the refinement was corrective only: kinks, tapers, off-horizontals, hairline stroke, coordinate noise. No vertex moved far enough to change the silhouette. Refine further only against the supplied file, never against a recollection of it.' },
+        { part: 'The crops are windows', spec: 'circle 54 54 892 892; square and rounded 96 124 804 804; bleed 151.58 180.29 692.42 692.42. A crop is a viewBox window onto the same path — the drawing never moves and carries no per-crop transform, so no two placements can drift out of step. Do not mix a window with the wrong crop.' },
+        { part: 'Measure from the curve, not the anchors', spec: 'The path\u2019s true bounds are 692.42 x 589 at (151.58, 232), solved from the cubic extrema. The ribbon\u2019s left curl bulges 0.915 units past its own anchor points, so a bbox taken over segment anchors under-reports the left extent — which is exactly how an earlier bleed window came to clip the curl. Any future re-measurement has to solve the extrema.' },
+        { part: 'Clear space', spec: 'On every tile. The mark spans 77.6% of the circle\u2019s 892 diameter, leaving roughly 100 units of breathing room around its outermost parts. That is the supplied artwork\u2019s own ratio and it is deliberate, not left over. Only the bare mark and the wide lockup run ink to the edge.' },
+        { part: 'Not bounding-box centred', spec: 'Circle centre (500, 500); ink box centre (497.8, 526.5). The mark sits a little above its own vertical middle, because the V apex hangs to y 821 and contributes bounding box but almost no ink. Box-centring would hang the weight high and leave the bottom of the tile reading empty. This is the source artwork\u2019s optical placement — do not correct it.' },
+        { part: 'Minimum size', spec: 'The circle tile\u2019s floor is 32. The main drawing\u2019s floor as a bare mark is 24 — below that use the small master, which is drawn for 16 and holds down to it. Nothing goes below 16 in either drawing. All measured on real rasters, not estimated.' },
+        { part: 'The ICO', spec: 'Two frames, 32 and 48, both from icon-circle.svg. No 16 frame: a true-16 request downscales the 32 more gracefully than a 16-pixel ICO frame renders, and the SVG covers the tab in every current browser. The ICO exists for older browsers and for crawlers that still ask for it by convention.' },
+        { part: 'Corner radius', spec: '22% of the tile on the rounded crop, matching the iOS and Android masks. The plain square tile is retired as a shipped file; if it is ever revived it keeps square corners — do not round it lightly as a compromise.' },
+        { part: 'Source of truth', spec: 'Both paths live in Symbol.dc.html, and the eight SVGs are regenerated from there rather than edited by hand. It is not the source for everything: og-card.png comes from Share Card.dc.html, the rasters from the SVGs named in the rasters table, and site.webmanifest is hand-authored. uploads/logo-traced.svg is the supplied original and stays as the provenance record; do not ship it — it still carries the ellipse and the hairline stroke.' }
+      ],
+      doNot: [
+        'Add a stroke back to the path, at any width. The supplied 0.175 hairline was a fill-fattening trick; the refined path needs no stroke and renders consistently without one.',
+        'Invert the tonal colourway for dark chrome. The tile carries its own ground, and the fixed rasters cannot follow a flip. The two exceptions are named: the bare mark and the Safari mask.',
+        'Put the tonal tile on a white ground. Its #D3F0DE edge is 1.21:1 there and the mark appears to float. Use the inverse variant or the bare mark instead.',
+        'Add a keyline, shadow, gradient or bevel to any tile. The edge question is settled by choosing the right variant for the ground, not by decorating the tile.',
+        'Use the grey variant below 64 pixels, or anywhere the black or white variant would do. At 3.5:1 it is the weakest asset in the set.',
+        'Use the wide lockup in an icon slot, or pad it back to square. Its whole purpose is a horizontal proportion nothing else here can take.',
+        'Recolour the mask icon. Safari fills it with the user\u2019s accent, so anything other than black is discarded or blended.',
+        'Regularise the asymmetries. The V leans left, its two sides are not mirrors, the A is more upright than the V, and the ribbon curls up at the left before running level and diving into the A. A symmetrical or mathematically uniform version loses the identity — the refinement was careful to correct only artefacts, not character.'
+      ],
+      headSnippet: [
+        '<!-- icons -->',
+        '<link rel="icon" href="/assets/favicon-16.svg?v=2" type="image/svg+xml">',
+        '<link rel="icon" href="/favicon.ico?v=2" sizes="32x32 48x48">',
+        '<link rel="apple-touch-icon" href="/assets/apple-touch-180.png?v=2">',
+        '<link rel="mask-icon" href="/assets/mask-icon.svg?v=2" color="#134B2E">',
+        '<link rel="manifest" href="/site.webmanifest?v=2">',
+        '',
+        '<!-- browser chrome -->',
+        '<meta name="theme-color" content="#D3F0DE" media="(prefers-color-scheme: light)">',
+        '<meta name="theme-color" content="#0E2E1D" media="(prefers-color-scheme: dark)">',
+        '<meta name="apple-mobile-web-app-title" content="Varshil Anavadia">',
+        '',
+        '<!-- share card -->',
+        '<!-- the ONE value that must be substituted: og:image requires an absolute URL, -->',
+        '<!-- so a relative path silently yields no card at all. Replace the host below.  -->',
+        '<meta property="og:image" content="https://YOUR-DOMAIN/assets/og-card.png">',
+        '<meta property="og:image:width" content="1200">',
+        '<meta property="og:image:height" content="630">',
+        '<meta property="og:image:alt" content="The VA monogram beside the name Varshil Anavadia">',
+        '<meta name="twitter:card" content="summary_large_image">'
+      ].join('\n'),
+      manifestSnippet: [
+        '{',
+        '  "name": "Varshil Anavadia",',
+        '  "short_name": "Varshil",',
+        '  "theme_color": "#D3F0DE",',
+        '  "background_color": "#D3F0DE",',
+        '  "display": "standalone",',
+        '  "start_url": "/",',
+        '  "icons": [',
+        '    { "src": "/assets/icon-192.png",  "sizes": "192x192", "type": "image/png", "purpose": "any" },',
+        '    { "src": "/assets/icon-512.png",  "sizes": "512x512", "type": "image/png", "purpose": "any" },',
+        '    { "src": "/assets/mask-192.png",  "sizes": "192x192", "type": "image/png", "purpose": "maskable" },',
+        '    { "src": "/assets/mask-512.png",  "sizes": "512x512", "type": "image/png", "purpose": "maskable" }',
+        '  ]',
+        '}'
+      ].join('\n'),
+      rasters: [
+        { file: 'apple-touch-180.png', size: '180 × 180', from: 'icon-rounded.svg', ground: 'Opaque #D3F0DE', note: 'Must be opaque. iOS composites unspecified alpha onto black, which would put the dark mark on a near-black field.' },
+        { file: 'icon-192.png', size: '192 × 192', from: 'icon-circle.svg', ground: '#D3F0DE circle, transparent corners', note: 'The manifest\u2019s purpose "any" icon, and it must stay a circle on transparency. Do not composite a square behind it: the square would be the same #D3F0DE as the circle, so the circle would vanish and you would have rebuilt the plain square tile the rules retire.' },
+        { file: 'icon-512.png', size: '512 × 512', from: 'icon-circle.svg', ground: '#D3F0DE circle, transparent corners', note: 'Same, at the size Android uses for splash screens. Transparency here is fine — purpose "any" icons are shown as drawn, and the maskable pair below covers the slots that crop.' },
+        { file: 'mask-192.png', size: '192 × 192', from: 'icon-maskable.svg', ground: 'Opaque #D3F0DE', note: 'The purpose "maskable" icon. Ground must reach all four edges or the OS crop will show transparent corners.' },
+        { file: 'mask-512.png', size: '512 × 512', from: 'icon-maskable.svg', ground: 'Opaque #D3F0DE', note: 'Same, at splash size.' },
+        { file: 'avatar-180.png', size: '180 × 180', from: 'icon-circle.svg', ground: '#D3F0DE circle, transparent corners', note: 'For profile fields that want a file rather than an SVG. Not referenced from the page. Most of them crop to a circle anyway, so the transparent corners are never seen; where one does not crop, the circle is the intended shape.' },
+        { file: 'favicon.ico', size: '32 and 48', from: 'icon-circle.svg', ground: 'Transparent', note: 'Two PNG-encoded frames, per your call. No 16 frame: the SVG covers the tab, and a true-16 request downscales the 32 more gracefully than a 16 ICO frame renders. Lives at the project root, not in assets/, because that is where browsers probe for it.' },
+        { file: 'og-card.png', size: '1200 × 630', from: 'Share Card.dc.html', ground: 'Opaque #D3F0DE', note: 'The only asset with type in it, so the only one that needs the webfont loaded when it is captured.' }
+      ],
+      inPage: [
+        { part: 'Header', spec: 'The bare mark at 32 px tall, groundless, in #134B2E. Use the main drawing, not the small master — above tab scale the main drawing is the better of the two. Optically aligned to the text baseline rather than box-aligned, because the V apex hangs below the visual centre.' },
+        { part: 'It links home', spec: 'The header mark is a link to /. Nowhere else is the mark a link — a mark that is sometimes clickable and sometimes not is worse than one that never is.' },
+        { part: 'Clear space in a row', spec: 'At least half the mark\u2019s width between it and any adjacent text or control. In the header that is 16 px at a 32 px mark. This is looser than the tile clear space because page elements crowd from two sides rather than four.' },
+        { part: 'Minimum in a nav', spec: '24 px, matching the mark\u2019s own floor. Below that use the small master or drop the mark and keep the name.' },
+        { part: 'Footer', spec: 'The wide lockup, 120 px wide, or nothing. A second bare mark in the footer repeats the header without adding anything.' },
+        { part: 'On scroll', spec: 'If the header condenses, the mark holds its size and the name is what drops. The mark is the more recognisable of the two at small sizes and the cheaper to keep.' },
+        { part: 'Mobile', spec: 'The mark stays 32 px; it does not scale with the viewport. A 44 px minimum tap target around it, which means 6 px of padding on each side at 32 px.' },
+        { part: 'Never', spec: 'The tonal tile in the page. The tile exists for platform slots that demand a square or circle of their own. In your layout the ground has no edge against white and the mark should simply sit on the page.' }
+      ],
+      ogSpec: [
+        { k: 'Canvas', v: '1200 × 630, opaque #D3F0DE. Never transparent — several scrapers flatten alpha onto black.' },
+        { k: 'Mark', v: '288 × 288, the main drawing at the bleed window, #134B2E. Not the small master: at 288 the main drawing is the better of the two.' },
+        { k: 'Name', v: '"Varshil Anavadia" at 76.16 px / 700, #134B2E, no letter-spacing change. 8.3:1 on the ground.' },
+        { k: 'Why 76.16', v: 'That is --t6, the top step of the Type System\u2019s nine-step scale (4.76rem at a 16px root). An earlier draft of this spec said 78 px, which is not on the scale — and the Type System\u2019s own rule is that anything not named there is a gap in the system. Brought back onto --t6 rather than left as a one-off; the 2 px is invisible and it keeps one system.' },
+        { k: 'Gap', v: '60 px between mark and name.' },
+        { k: 'Arrangement', v: 'Mark and name as one horizontal block, vertically centred and centred as a group. As built the block measures 930 px, leaving 135 px either side.' },
+        { k: 'Type at build', v: 'The webfont must be loaded when the PNG is captured, or the text converted to outlines. A fallback face changes the block width and breaks the centring. Share Card.dc.html is the source; it loads Figtree itself.' },
+        { k: 'Safe area', v: 'Keep everything inside a 1080 × 510 centre box. Some platforms crop share cards to 1.91:1 and others to 1.78:1.' }
+      ],
+      decisions: [
+        { q: 'The 16-pixel mark', chose: '→ Cut a separate master',
+          consequence: 'Two drawings now exist and both are in Symbol.dc.html. The cost is permanent: every future change to the mark has to be made twice and checked for agreement. The gain is measured — at 16 px the V counter goes from 3 pixels at 191/255 to 6 at full contrast, and no stroke got thinner. The small master ships as favicon-16.svg and is the browser-tab asset.' },
+        { q: 'The share image', chose: '→ Mark and name',
+          consequence: 'A 1200 × 630 raster, built to the layout specified below. It is the only asset containing type, so it is the only one whose build needs the webfont present. You left the role line blank, so there is no third line — if you want one later it is a one-line change to the layout.' },
+        { q: 'Spec scope', chose: '→ Add in-page usage',
+          consequence: 'A new section covers the mark inside the layout: header size, what it links to, clear space, nav minimum, footer, scroll and mobile behaviour. Some of it is a considered guess until the page design is settled — it is written to be overridden by the real design, not to constrain it.' },
+        { q: 'ICO frames', chose: '→ 32 and 48',
+          consequence: 'No 16 frame, which is consistent: a true-16 request downscales the 32 more gracefully than a 16-pixel ICO frame renders, and the SVG covers the tab in every current browser. It does mean the small master is reached through the SVG rather than the ICO.' }
+      ],
+      practices: [
+        { part: 'Cache busting', spec: 'Favicons are cached far more aggressively than other assets, and browsers routinely ignore cache headers for them. When the mark changes, change the filename or bump the ?v= query — the snippets above carry ?v=2 for this reason. Replacing a file in place will leave the old icon showing for weeks.' },
+        { part: 'Decorative or not', spec: 'In the header, where the mark is the link to home and the accessible name of that link, it carries aria-label="Varshil Anavadia — home" and the SVG itself is aria-hidden="true". Everywhere else the mark is decorative: aria-hidden="true" and no label.' },
+        { part: 'Never read it twice', spec: 'When the mark sits beside the name as text, the mark is aria-hidden. A screen reader announcing "VA monogram Varshil Anavadia" is the most common mistake with a lockup like this one.' },
+        { part: 'The shipped files', spec: 'Seven of the eight SVGs carry role="img" and aria-label="VA monogram", which is correct for standalone use. mask-icon.svg deliberately carries neither: Safari consumes it as a silhouette and never presents it to a screen reader. When any of these is inlined into the page instead, the inline copy follows the rules above — strip the label wherever the mark is decorative.' }
+      ],
+      svgSnippet: [
+        '<!-- favicon-16.svg — the small master, viewBox 201 205 643 643 -->',
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="201 205 643 643">',
+        '  <style>',
+        '    path { fill: #134B2E }',
+        '    @media (prefers-color-scheme: dark) { path { fill: #ffffff } }',
+        '  </style>',
+        '  <path fill-rule="evenodd" d="M565.5 232L697.5 232L844 716.5 … Z"/>',
+        '</svg>',
+        '',
+        '<!-- icon-maskable.svg — ground bleeds to all four edges, mark inside the safe circle -->',
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="-6.7 -6.7 1013.4 1013.4">',
+        '  <rect x="-6.7" y="-6.7" width="1013.4" height="1013.4" fill="#D3F0DE"/>',
+        '  <path fill-rule="evenodd" fill="#134B2E" d="M565.5 232L697.5 232L844 716.5 … Z"/>',
+        '</svg>'
+      ].join('\n')
+    };
+    const same = vals.sizes.filter(r => r.light === r.dark).length;
+    vals.sameAsLight = WORD[same];
+    vals.setCount = WORD[vals.sizes.length].toLowerCase();
+    return vals;
+  }
+}
+</script>
+</body>
+</html>
