@@ -2,3 +2,5 @@
 # search here instead, alongside the page's noimageindex robots meta.
 User-agent: *
 Disallow: /hero-portrait.webp
+
+Sitemap: https://varshilanavadia.github.io/sitemap-index.xml

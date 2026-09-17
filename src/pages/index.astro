@@ -10,6 +10,28 @@ const links = [
   { label: 'Instagram', href: 'https://www.instagram.com/varshilanavadia/' },
 ];
 const year = new Date().getFullYear();
+const canonical = new URL('/', Astro.site).href;
+
+// Tells search engines who the page is about and which profiles are the same person, so a
+// search for the name can connect this site with LinkedIn, Strava and Instagram.
+const structuredData = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'Person',
+      '@id': `${canonical}#person`,
+      name: 'Varshil Anavadia',
+      url: canonical,
+      sameAs: links.map((link) => link.href),
+    },
+    {
+      '@type': 'WebSite',
+      name: 'Varshil Anavadia',
+      url: canonical,
+      author: { '@id': `${canonical}#person` },
+    },
+  ],
+};
 ---
 
 <html lang="en">
@@ -23,6 +45,9 @@ const year = new Date().getFullYear();
          public/robots.txt keeps crawlers off the file itself; nothing stops another site
          embedding it. -->
     <meta name="robots" content="index, follow, noimageindex" />
+    <link rel="canonical" href={canonical} />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(structuredData)} />
   </head>
   <body>
     <header class="bar">
