@@ -12,6 +12,12 @@ const links = [
 const year = new Date().getFullYear();
 const canonical = new URL('/', Astro.site).href;
 
+// Share preview strings and image, from Share Preview.dc.html (17 Sep 2026), minus its
+// description: the page carries no description line while it is a Coming Soon page.
+const title = 'Varshil Anavadia';
+const shareImage = new URL('/assets/og-card.png', Astro.site).href;
+const shareImageAlt = 'The VA monogram above the name Varshil Anavadia, pale green on dark green';
+
 // Tells search engines who the page is about and which profiles are the same person, so a
 // search for the name can connect this site with LinkedIn, Strava and Instagram.
 const structuredData = {
@@ -38,8 +44,23 @@ const structuredData = {
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Varshil Anavadia</title>
-    <meta name="description" content="Varshil Anavadia's personal site. Coming soon." />
+    <title>{title}</title>
+    <!-- Share preview, high in the head: WhatsApp reads only the start of a document. The
+         image URL must stay absolute. Ship a changed card under a new URL, never in place. -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={title} />
+    <meta property="og:title" content={title} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:image" content={shareImage} />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={shareImageAlt} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:image" content={shareImage} />
+    <meta name="twitter:image:alt" content={shareImageAlt} />
     <meta name="theme-color" content="#e7ede9" />
     <!-- Icons, per Favicon Spec.dc.html. The SVG small master is what lands in the tab; the
          ICO is the legacy path. Bump ?v= when the mark changes: browsers cache favicons hard. -->
