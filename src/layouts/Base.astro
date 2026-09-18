@@ -1,0 +1,62 @@
+---
+// The frame every page shares: head basics and icons, the bar of profile links, and the
+// footer's copyright line. Page-specific head tags go in the "head" slot, which sits right
+// after <title> so the share-preview tags stay high in the document (WhatsApp reads only
+// the start). Anything above the copyright line goes in the "foot" slot.
+import '@fontsource-variable/figtree';
+import '@fontsource/ibm-plex-mono/700.css';
+import '../styles/modernist.css';
+import '../styles/site.css';
+import { links } from '../site';
+
+interface Props {
+  title: string;
+  bodyClass?: string;
+}
+
+const { title, bodyClass } = Astro.props;
+const year = new Date().getFullYear();
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <slot name="head" />
+    <meta name="theme-color" content="#e7ede9" />
+    <!-- Icons, per Favicon Spec.dc.html. The SVG small master is what lands in the tab; the
+         ICO is the legacy path. Bump ?v= when the mark changes: browsers cache favicons hard. -->
+    <link rel="icon" href="/assets/favicon-16.svg?v=2" type="image/svg+xml" />
+    <link rel="icon" href="/favicon.ico?v=2" sizes="32x32 48x48" />
+    <link rel="apple-touch-icon" href="/assets/apple-touch-180.png?v=2" />
+    <link rel="mask-icon" href="/assets/mask-icon.svg?v=2" color="#134B2E" />
+    <link rel="manifest" href="/site.webmanifest?v=2" />
+    <meta name="apple-mobile-web-app-title" content="Varshil Anavadia" />
+  </head>
+  <body class={bodyClass}>
+    <header class="bar">
+      <nav aria-label="Elsewhere">
+        <ul class="bar-links">
+          {/* Plain https profile URLs on purpose: on a phone with the app installed, iOS
+              Universal Links and Android App Links hand these to the app; without it they
+              open in the browser. Custom app schemes would fail where the app is missing. */}
+          {links.map(({ label, href }) => (
+            <li>
+              <a href={href} target="_blank" rel="me noopener">
+                {label}<span class="sr-only"> (opens in a new tab)</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+    </header>
+
+    <slot />
+
+    <footer class="foot">
+      <slot name="foot" />
+      <p class="copyright">© {year} Varshil Anavadia</p>
+    </footer>
+  </body>
+</html>

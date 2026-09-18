@@ -1,15 +1,7 @@
 ---
-import '@fontsource-variable/figtree';
-import '@fontsource/ibm-plex-mono/700.css';
-import '../styles/modernist.css';
-import '../styles/site.css';
+import Base from '../layouts/Base.astro';
+import { links } from '../site';
 
-const links = [
-  { label: 'LinkedIn', href: 'https://www.linkedin.com/in/varshilanavadia/' },
-  { label: 'Strava', href: 'https://www.strava.com/athletes/95580455' },
-  { label: 'Instagram', href: 'https://www.instagram.com/varshilanavadia/' },
-];
-const year = new Date().getFullYear();
 const canonical = new URL('/', Astro.site).href;
 
 // Share preview strings and image, from Share Preview.dc.html (17 Sep 2026), minus its
@@ -40,11 +32,8 @@ const structuredData = {
 };
 ---
 
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>{title}</title>
+<Base title={title}>
+  <Fragment slot="head">
     <!-- Share preview, high in the head: WhatsApp reads only the start of a document. The
          image URL must stay absolute. Ship a changed card under a new URL, never in place. -->
     <meta property="og:type" content="website" />
@@ -61,15 +50,6 @@ const structuredData = {
     <meta name="twitter:title" content={title} />
     <meta name="twitter:image" content={shareImage} />
     <meta name="twitter:image:alt" content={shareImageAlt} />
-    <meta name="theme-color" content="#e7ede9" />
-    <!-- Icons, per Favicon Spec.dc.html. The SVG small master is what lands in the tab; the
-         ICO is the legacy path. Bump ?v= when the mark changes: browsers cache favicons hard. -->
-    <link rel="icon" href="/assets/favicon-16.svg?v=2" type="image/svg+xml" />
-    <link rel="icon" href="/favicon.ico?v=2" sizes="32x32 48x48" />
-    <link rel="apple-touch-icon" href="/assets/apple-touch-180.png?v=2" />
-    <link rel="mask-icon" href="/assets/mask-icon.svg?v=2" color="#134B2E" />
-    <link rel="manifest" href="/site.webmanifest?v=2" />
-    <meta name="apple-mobile-web-app-title" content="Varshil Anavadia" />
     <!-- The page may be indexed; the portrait may not. GitHub Pages cannot send headers, so
          public/robots.txt keeps crawlers off the file itself; nothing stops another site
          embedding it. -->
@@ -77,29 +57,33 @@ const structuredData = {
     <link rel="canonical" href={canonical} />
     <link rel="sitemap" href="/sitemap-index.xml" />
     <script is:inline type="application/ld+json" set:html={JSON.stringify(structuredData)} />
-  </head>
-  <body>
-    <header class="bar">
-      <nav aria-label="Elsewhere">
-        <ul class="bar-links">
-          {/* Plain https profile URLs on purpose: on a phone with the app installed, iOS
-              Universal Links and Android App Links hand these to the app; without it they
-              open in the browser. Custom app schemes would fail where the app is missing. */}
-          {links.map(({ label, href }) => (
-            <li>
-              <a href={href} target="_blank" rel="me noopener">
-                {label}<span class="sr-only"> (opens in a new tab)</span>
-              </a>
-            </li>
-          ))}
-        </ul>
-      </nav>
-    </header>
+  </Fragment>
 
-    <main>
-      <section class="hero">
-        <h1 class="sr-only">Varshil Anavadia</h1>
-        <div class="hero-name" aria-hidden="true">
+  <main>
+    <section class="hero">
+      <h1 class="sr-only">Varshil Anavadia</h1>
+      <div class="hero-name" aria-hidden="true">
+        <div class="hero-name-track">
+          {[0, 1, 2, 3].map(() => (
+            <div class="hero-name-seg">
+              Varshil Anavadia<span class="hero-name-dash"></span>
+            </div>
+          ))}
+        </div>
+      </div>
+      <!-- The box is masked by the portrait's own alpha, so the white band inside it shows
+           only across the figure. No .grayscale here: the file is already black and white
+           apart from the yellow bar, which the filter would flatten. -->
+      <div class="portrait">
+        <img
+          src="/hero-portrait.webp"
+          alt="Portrait of Varshil Anavadia"
+          draggable="false"
+          width="835"
+          height="1113"
+          fetchpriority="high"
+        />
+        <div class="hero-name hero-name--over" aria-hidden="true">
           <div class="hero-name-track">
             {[0, 1, 2, 3].map(() => (
               <div class="hero-name-seg">
@@ -108,110 +92,87 @@ const structuredData = {
             ))}
           </div>
         </div>
-        <!-- The box is masked by the portrait's own alpha, so the white band inside it shows
-             only across the figure. No .grayscale here: the file is already black and white
-             apart from the yellow bar, which the filter would flatten. -->
-        <div class="portrait">
-          <img
-            src="/hero-portrait.webp"
-            alt="Portrait of Varshil Anavadia"
-            draggable="false"
-            width="835"
-            height="1113"
-            fetchpriority="high"
-          />
-          <div class="hero-name hero-name--over" aria-hidden="true">
-            <div class="hero-name-track">
-              {[0, 1, 2, 3].map(() => (
-                <div class="hero-name-seg">
-                  Varshil Anavadia<span class="hero-name-dash"></span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
+      </div>
+    </section>
 
-      <section class="intro" aria-label="Coming soon">
-        <p class="statement">Something's being built here.</p>
-      </section>
-    </main>
+    <section class="intro" aria-label="Coming soon">
+      <p class="statement">Something's being built here.</p>
+    </section>
+  </main>
 
-    <footer class="foot">
-      <p class="block-label">Quote of the day</p>
-      <blockquote>What are you truly afraid of when nothing in the world belongs to you?</blockquote>
-      <p class="copyright">© {year} Varshil Anavadia</p>
-    </footer>
+  <Fragment slot="foot">
+    <p class="block-label">Quote of the day</p>
+    <blockquote>What are you truly afraid of when nothing in the world belongs to you?</blockquote>
+  </Fragment>
 
-    <script>
-      // Hero name marquee, ported from the wireframe. A base drift carries the name right;
-      // every scroll delta adds to a boost that decays, so scrolling down runs it faster and
-      // scrolling up drags it left. The track holds four copies of "name + dash" and the
-      // offset wraps modulo one copy's width, so the seam never shows.
-      // Two tracks: the dark green band, and its white copy masked into the figure. One loop
-      // drives both, so they can never drift apart.
-      const tracks = Array.from(document.querySelectorAll<HTMLElement>('.hero-name-track'));
-      const track = tracks[0];
-      if (track) {
-        const reduce = matchMedia('(prefers-reduced-motion: reduce)');
-        let seg = 0;
-        let mx = 0;
-        let boost = 0;
-        let dir = 1;
-        let lastY = scrollY;
-        let raf = 0;
-        let last = 0;
+  <script>
+    // Hero name marquee, ported from the wireframe. A base drift carries the name right;
+    // every scroll delta adds to a boost that decays, so scrolling down runs it faster and
+    // scrolling up drags it left. The track holds four copies of "name + dash" and the
+    // offset wraps modulo one copy's width, so the seam never shows.
+    // Two tracks: the dark green band, and its white copy masked into the figure. One loop
+    // drives both, so they can never drift apart.
+    const tracks = Array.from(document.querySelectorAll<HTMLElement>('.hero-name-track'));
+    const track = tracks[0];
+    if (track) {
+      const reduce = matchMedia('(prefers-reduced-motion: reduce)');
+      let seg = 0;
+      let mx = 0;
+      let boost = 0;
+      let dir = 1;
+      let lastY = scrollY;
+      let raf = 0;
+      let last = 0;
 
-        const measure = () => {
-          const first = track.firstElementChild as HTMLElement | null;
-          const gap = parseFloat(getComputedStyle(track).columnGap) || 0;
-          seg = first ? first.offsetWidth + gap : 0;
-        };
+      const measure = () => {
+        const first = track.firstElementChild as HTMLElement | null;
+        const gap = parseFloat(getComputedStyle(track).columnGap) || 0;
+        seg = first ? first.offsetWidth + gap : 0;
+      };
 
-        addEventListener(
-          'scroll',
-          () => {
-            const d = scrollY - lastY;
-            if (d !== 0) dir = d < 0 ? -1 : 1;
-            // 2.4px of extra travel per px scrolled, clamped so a flick cannot smear the name.
-            boost = Math.max(-800, Math.min(800, boost + d * 2.4));
-            lastY = scrollY;
-          },
-          { passive: true },
-        );
-        addEventListener('resize', () => { seg = 0; });
-        // Re-measure once the webfont has swapped in; the fallback face has different widths.
-        document.fonts.addEventListener('loadingdone', () => { seg = 0; });
+      addEventListener(
+        'scroll',
+        () => {
+          const d = scrollY - lastY;
+          if (d !== 0) dir = d < 0 ? -1 : 1;
+          // 2.4px of extra travel per px scrolled, clamped so a flick cannot smear the name.
+          boost = Math.max(-800, Math.min(800, boost + d * 2.4));
+          lastY = scrollY;
+        },
+        { passive: true },
+      );
+      addEventListener('resize', () => { seg = 0; });
+      // Re-measure once the webfont has swapped in; the fallback face has different widths.
+      document.fonts.addEventListener('loadingdone', () => { seg = 0; });
 
-        const tick = (t: number) => {
-          const dt = Math.min(0.064, (t - last) / 1000);
-          last = t;
-          if (!seg) measure();
-          if (seg > 0) {
-            mx = (((mx + (100 * dir + boost) * dt) % seg) + seg) % seg;
-            boost *= Math.pow(0.02, dt); // decays to nothing in about a third of a second
-            // Direction eases back to rightward once the gesture stops.
-            dir += (1 - dir) * (1 - Math.pow(0.15, dt));
-            const shift = `translate3d(${mx - seg}px,0,0)`;
-            for (const el of tracks) el.style.transform = shift;
-          }
-          raf = requestAnimationFrame(tick);
-        };
+      const tick = (t: number) => {
+        const dt = Math.min(0.064, (t - last) / 1000);
+        last = t;
+        if (!seg) measure();
+        if (seg > 0) {
+          mx = (((mx + (100 * dir + boost) * dt) % seg) + seg) % seg;
+          boost *= Math.pow(0.02, dt); // decays to nothing in about a third of a second
+          // Direction eases back to rightward once the gesture stops.
+          dir += (1 - dir) * (1 - Math.pow(0.15, dt));
+          const shift = `translate3d(${mx - seg}px,0,0)`;
+          for (const el of tracks) el.style.transform = shift;
+        }
+        raf = requestAnimationFrame(tick);
+      };
 
-        const start = () => {
-          if (raf || reduce.matches) return;
-          last = performance.now();
-          raf = requestAnimationFrame(tick);
-        };
-        const stop = () => {
-          cancelAnimationFrame(raf);
-          raf = 0;
-        };
+      const start = () => {
+        if (raf || reduce.matches) return;
+        last = performance.now();
+        raf = requestAnimationFrame(tick);
+      };
+      const stop = () => {
+        cancelAnimationFrame(raf);
+        raf = 0;
+      };
 
-        // Run only while the band is on screen, and not at all under reduced motion.
-        new IntersectionObserver(([entry]) => (entry?.isIntersecting ? start() : stop())).observe(track);
-        reduce.addEventListener('change', () => (reduce.matches ? stop() : start()));
-      }
-    </script>
-  </body>
-</html>
+      // Run only while the band is on screen, and not at all under reduced motion.
+      new IntersectionObserver(([entry]) => (entry?.isIntersecting ? start() : stop())).observe(track);
+      reduce.addEventListener('change', () => (reduce.matches ? stop() : start()));
+    }
+  </script>
+</Base>

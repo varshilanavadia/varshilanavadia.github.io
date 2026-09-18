@@ -79,8 +79,25 @@ a:hover{color:var(--ink)}
    interpolates with the viewport, two steps down to t2 at the 320 floor. */
 .statement{margin:0;font-size:clamp(1.95rem, calc(1.636rem + 1.5714vw), 3.05rem);font-weight:700;line-height:var(--lh-tight);color:var(--ink);max-width:56.25rem;text-wrap:balance}
 
+/* ── 404 ──────────────────────────────────────────────────────────────────── */
+/* A short page: the main column takes the spare height so the footer sits at the foot of
+   the window, not halfway up it. Inside it the map takes that height, not the line below,
+   so the line keeps equal space above and below. The map carries its own rule. */
+.page-short{display:flex;flex-direction:column;min-height:100dvh}
+.page-short main{flex:1}
+.lost{display:flex;flex-direction:column}
+/* One line, not a content section, so it takes the footer's frame: s4 above and below
+   (one body line box, Type System §05), where a full section would take s5. */
+.lost .intro{padding-block:var(--s4);border-top:0}
+.lost-note{margin:0;font-size:var(--t1);line-height:var(--lh-snug);color:var(--ink-2)}
+/* The one body link on the site, so it carries the underline the bar links do without. */
+.lost-note a{text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:0.18em}
+.lost-note a:hover{color:var(--color-accent)}
+
 /* ── Footer ───────────────────────────────────────────────────────────────── */
 .foot{padding:var(--s4) var(--gutter);border-top:2px solid var(--rule)}
 /* No --measure while this is a landing-only page: the one quote runs the full column. */
 .foot blockquote{margin:var(--s2) 0 0;font-size:var(--t1);font-weight:400;line-height:var(--lh-snug);color:var(--ink);text-wrap:pretty}
 .copyright{margin:var(--s4) 0 0;padding-top:var(--s2);border-top:1px solid var(--rule);font-size:var(--t-1);font-weight:400;line-height:var(--lh-normal);color:var(--ink-3)}
+/* Alone in the footer (the 404), the footer's own rule is enough. */
+.copyright:first-child{margin-top:0;padding-top:0;border-top:0}

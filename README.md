@@ -19,7 +19,9 @@ Every push to `main` builds the site and publishes it to GitHub Pages through `.
 
 ## Layout
 
-- `src/pages/index.astro` is the page, including the hero name marquee script.
+- `src/layouts/Base.astro` is the frame every page shares: head basics and icons, the bar of profile links, and the footer's copyright line. The profile links themselves live in `src/site.ts`.
+- `src/pages/index.astro` is the home page, including the hero name marquee script.
+- `src/pages/404.astro` is the not-found page. GitHub Pages serves it, with a 404 status, for any address that has no file. It is kept out of search results and the sitemap.
 - `src/styles/modernist.css` is the Modernist design system stylesheet, copied from Claude Design with its Google Fonts import removed, since fonts are self-hosted through Fontsource.
 - `src/styles/site.css` holds the wireframe's tokens (type scale, spacing, leading, ink roles) and the page layout.
 - `public/assets/`, `public/favicon.ico` and `public/site.webmanifest` are the icon set from Claude Design's Favicon Spec (VA monogram, #134B2E ink on #D3F0DE). Regenerate them from the drawings in Symbol.dc.html rather than editing them by hand.
