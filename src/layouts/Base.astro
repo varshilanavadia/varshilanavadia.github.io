@@ -8,6 +8,7 @@ import '@fontsource/ibm-plex-mono/700.css';
 import '../styles/modernist.css';
 import '../styles/site.css';
 import { links } from '../site';
+import DevPanel from '../components/DevPanel.astro';
 
 interface Props {
   title: string;
@@ -16,6 +17,9 @@ interface Props {
 
 const { title, bodyClass } = Astro.props;
 const year = new Date().getFullYear();
+// The dev panel is for local work only: `npm run dev`, or a build with PUBLIC_DEV_PANEL=1
+// (`npm run preview:local`). The GitHub Pages build sets neither, so it never ships.
+const devPanel = import.meta.env.DEV || import.meta.env.PUBLIC_DEV_PANEL === '1';
 ---
 
 <html lang="en">
@@ -35,6 +39,7 @@ const year = new Date().getFullYear();
     <link rel="mask-icon" href="/assets/mask-icon.svg?v=2" color="#134B2E" />
     <link rel="manifest" href="/site.webmanifest?v=2" />
     <meta name="apple-mobile-web-app-title" content="Varshil Anavadia" />
+    {devPanel && <DevPanel />}
   </head>
   <body class={bodyClass}>
     <header class="bar">

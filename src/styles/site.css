@@ -12,11 +12,14 @@ html{--scrim:var(--color-text)}
 /* ── Dark ─────────────────────────────────────────────────────────────────── */
 /* Follows the device setting. The inverted set (§08) supplies the inks; the ground is the
    deep green the favicon and share card already use in the dark. Everything downstream
-   reads the DS base tokens, so swapping those flips the page. */
+   reads the DS base tokens, so swapping those flips the page. data-theme on <html> forces
+   a mode (the local dev panel sets it), so the dark set is declared twice: keep the two
+   declarations identical. */
 :root{color-scheme:light;--ground-dark:#0E2E1D;--hero-over:#fff;--on-paper:var(--color-text);--lift:color-mix(in srgb, var(--color-text) 30%, transparent)}
 @media (prefers-color-scheme: dark){
-  :root{color-scheme:dark;--color-bg:var(--ground-dark);--color-surface:color-mix(in srgb, var(--ground-dark), #f0f8f2 6%);--color-text:var(--color-neutral-100);--color-accent:var(--color-accent-400);--color-divider:color-mix(in srgb, #f0f8f2 35%, transparent);--ink-2:var(--ink-inv-2);--ink-3:var(--ink-inv-3);--hero-over:var(--ground-dark);--on-paper:var(--ground-dark);--lift:rgba(0,0,0,.55)}
+  :root:not([data-theme="light"]){color-scheme:dark;--color-bg:var(--ground-dark);--color-surface:color-mix(in srgb, var(--ground-dark), #f0f8f2 6%);--color-text:var(--color-neutral-100);--color-accent:var(--color-accent-400);--color-divider:color-mix(in srgb, #f0f8f2 35%, transparent);--ink-2:var(--ink-inv-2);--ink-3:var(--ink-inv-3);--hero-over:var(--ground-dark);--on-paper:var(--ground-dark);--lift:rgba(0,0,0,.55)}
 }
+:root[data-theme="dark"]{color-scheme:dark;--color-bg:var(--ground-dark);--color-surface:color-mix(in srgb, var(--ground-dark), #f0f8f2 6%);--color-text:var(--color-neutral-100);--color-accent:var(--color-accent-400);--color-divider:color-mix(in srgb, #f0f8f2 35%, transparent);--ink-2:var(--ink-inv-2);--ink-3:var(--ink-inv-3);--hero-over:var(--ground-dark);--on-paper:var(--ground-dark);--lift:rgba(0,0,0,.55)}
 /* Page margin: the wireframe's s5 at the 1440 design width, down to 24px at the 320 floor
    (Type System §14). Interpolated, so there is no breakpoint to maintain. */
 html{--gutter:clamp(1.5rem, 4.1667vw, 3.75rem)}

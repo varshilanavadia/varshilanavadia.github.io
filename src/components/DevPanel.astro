@@ -1,0 +1,71 @@
+---
+// Local-only panel of page controls, rendered by Base.astro when devPanel is on. Each
+// control sets a data-* attribute on <html> that the stylesheets can read; choices persist
+// in localStorage. Script and styles are inline, so none of it reaches the published
+// bundle when the panel is off. To add a control, add an entry to CONTROLS: key, label, and
+// options as [value, label] pairs, the first being the default (which clears the attribute).
+---
+<script is:inline>
+  (() => {
+    const CONTROLS = [
+      { key: 'theme', label: 'Theme', options: [['device', 'Device'], ['light', 'Light'], ['dark', 'Dark']] },
+    ];
+    const root = document.documentElement;
+    const STORE = 'devPanel';
+    let state = {};
+    try { state = JSON.parse(localStorage.getItem(STORE) || '{}'); } catch {}
+    const save = () => { try { localStorage.setItem(STORE, JSON.stringify(state)); } catch {} };
+    const apply = (c, v) => {
+      if (v === c.options[0][0]) delete root.dataset[c.key];
+      else root.dataset[c.key] = v;
+    };
+    // Applied before first paint, so a forced theme never flashes the other one.
+    for (const c of CONTROLS) if (state[c.key]) apply(c, state[c.key]);
+
+    addEventListener('DOMContentLoaded', () => {
+      const panel = document.createElement('aside');
+      panel.className = 'dev-panel';
+      panel.setAttribute('aria-label', 'Local dev panel');
+      if (state._open === false) panel.dataset.closed = '';
+      const head = document.createElement('button');
+      head.className = 'dev-panel-head';
+      head.textContent = 'Local';
+      head.addEventListener('click', () => {
+        panel.toggleAttribute('data-closed');
+        state._open = !panel.hasAttribute('data-closed');
+        save();
+      });
+      panel.append(head);
+      for (const c of CONTROLS) {
+        const row = document.createElement('div');
+        row.className = 'dev-panel-row';
+        row.innerHTML = `<span>${c.label}</span>`;
+        const cur = () => state[c.key] || c.options[0][0];
+        for (const [v, text] of c.options) {
+          const b = document.createElement('button');
+          b.textContent = text;
+          b.addEventListener('click', () => {
+            state[c.key] = v; apply(c, v); save();
+            row.querySelectorAll('button').forEach((x, i) => x.setAttribute('aria-pressed', String(c.options[i][0] === v)));
+          });
+          b.setAttribute('aria-pressed', String(cur() === v));
+          row.append(b);
+        }
+        panel.append(row);
+      }
+      document.body.append(panel);
+    });
+  })();
+</script>
+<style is:inline>
+  .dev-panel{position:fixed;left:12px;bottom:12px;z-index:1000;display:grid;gap:6px;padding:8px;background:var(--sheet);color:var(--ink);border:2px solid var(--ink);font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;box-shadow:0 4px 14px rgba(0,0,0,.18)}
+  .dev-panel button{font:inherit;letter-spacing:inherit;text-transform:inherit;padding:6px 8px;border:1px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+  .dev-panel button[aria-pressed="true"]{background:var(--ink);color:var(--sheet)}
+  .dev-panel-head{border:0 !important;padding:0 0 2px !important;text-align:left}
+  .dev-panel-head::after{content:' ▾'}
+  .dev-panel[data-closed] .dev-panel-head::after{content:' ▸'}
+  .dev-panel[data-closed] .dev-panel-row{display:none}
+  .dev-panel[data-closed] .dev-panel-head{padding:0 !important}
+  .dev-panel-row{display:flex;align-items:center;gap:4px}
+  .dev-panel-row span{min-width:4.5em;color:var(--ink-3)}
+</style>

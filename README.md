@@ -11,7 +11,10 @@ npm install
 npm run dev      # http://localhost:4321
 npm run build    # outputs to dist/
 npm run preview  # serve the build locally
+npm run preview:local  # build with the local dev panel and serve it on your network
 ```
+
+The local dev panel (bottom-left, collapsible) holds page controls for checking the site, starting with a Light / Dark / Device theme switch. It appears in `npm run dev` and `npm run preview:local` only; the GitHub Pages build never includes it. Add controls in `src/components/DevPanel.astro`.
 
 ## Deploy
 

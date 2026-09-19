@@ -7,6 +7,7 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
+    "preview:local": "PUBLIC_DEV_PANEL=1 astro build && astro preview --host",
     "astro": "astro"
   },
   "dependencies": {

@@ -242,8 +242,11 @@ import Base from '../layouts/Base.astro';
   // Watch the stage itself, not the window: on a phone its height settles after load (the
   // browser bars move), and a canvas sized to a stale height gets stretched to fit.
   new ResizeObserver(() => { layout(); seg = 0; if (reduce) still(); }).observe(stage);
-  // Re-read the colours when the device switches between light and dark.
-  matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { readColours(); if (reduce) still(); });
+  // Re-read the colours when the mode changes: the device setting, or data-theme on <html>
+  // (set by the local dev panel).
+  const recolour = () => { readColours(); if (reduce) still(); };
+  matchMedia('(prefers-color-scheme: dark)').addEventListener('change', recolour);
+  new MutationObserver(recolour).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 
   if (reduce) {
     still();
