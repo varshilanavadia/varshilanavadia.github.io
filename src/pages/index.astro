@@ -71,25 +71,41 @@ const structuredData = {
           ))}
         </div>
       </div>
-      <!-- The box is masked by the portrait's own alpha, so the white band inside it shows
-           only across the figure. No .grayscale here: the file is already black and white
-           apart from the yellow bar, which the filter would flatten. -->
-      <div class="portrait">
-        <img
-          src="/hero-portrait.webp"
-          alt="Portrait of Varshil Anavadia"
-          draggable="false"
-          width="835"
-          height="1113"
-          fetchpriority="high"
-        />
-        <div class="hero-name hero-name--over" aria-hidden="true">
-          <div class="hero-name-track">
-            {[0, 1, 2, 3].map(() => (
-              <div class="hero-name-seg">
-                Varshil Anavadia<span class="hero-name-dash"></span>
-              </div>
-            ))}
+      <!-- The portrait as a paper cutout. Back to front: the paper (the figure's outline grown
+           outward, scripts/make-paper.py), the band, a copy of the band masked to the paper that
+           redraws the letters in ink where they cross it, the portrait, and a copy masked to the
+           figure. No .grayscale: the file is already black and white apart from the yellow bar,
+           which the filter would flatten. -->
+      <div class="portrait-frame">
+        <div class="paper" aria-hidden="true"><div class="paper-shape"></div></div>
+        <div class="paper-ink" aria-hidden="true">
+          <div class="hero-name hero-name--over hero-name--paper">
+            <div class="hero-name-track">
+              {[0, 1, 2, 3].map(() => (
+                <div class="hero-name-seg">
+                  Varshil Anavadia<span class="hero-name-dash"></span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+        <div class="portrait">
+          <img
+            src="/hero-portrait.webp"
+            alt="Portrait of Varshil Anavadia"
+            draggable="false"
+            width="835"
+            height="1113"
+            fetchpriority="high"
+          />
+          <div class="hero-name hero-name--over" aria-hidden="true">
+            <div class="hero-name-track">
+              {[0, 1, 2, 3].map(() => (
+                <div class="hero-name-seg">
+                  Varshil Anavadia<span class="hero-name-dash"></span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -110,8 +126,8 @@ const structuredData = {
     // every scroll delta adds to a boost that decays, so scrolling down runs it faster and
     // scrolling up drags it left. The track holds four copies of "name + dash" and the
     // offset wraps modulo one copy's width, so the seam never shows.
-    // Two tracks: the dark green band, and its white copy masked into the figure. One loop
-    // drives both, so they can never drift apart.
+    // Three tracks: the band, its copy on the paper, and its copy on the figure. One loop
+    // drives all three, so they can never drift apart.
     const tracks = Array.from(document.querySelectorAll<HTMLElement>('.hero-name-track'));
     const track = tracks[0];
     if (track) {

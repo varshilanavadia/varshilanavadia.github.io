@@ -8,7 +8,15 @@ html{--ink:var(--color-text);--ink-2:var(--color-neutral-900);--ink-3:var(--colo
 /* Inverted set, §08: the dark ground is --ink itself. */
 html{--ink-inv:var(--color-neutral-100);--ink-inv-2:var(--color-neutral-300);--ink-inv-3:var(--color-neutral-500);--rule-inv:var(--color-accent-900)}
 html{--scrim:var(--color-text)}
-html{--lh-tight:1.05;--lh-snug:1.15;--lh-normal:1.3;--lh-body:1.5;--lh-mono:1.6}
+
+/* ── Dark ─────────────────────────────────────────────────────────────────── */
+/* Follows the device setting. The inverted set (§08) supplies the inks; the ground is the
+   deep green the favicon and share card already use in the dark. Everything downstream
+   reads the DS base tokens, so swapping those flips the page. */
+:root{color-scheme:light;--ground-dark:#0E2E1D;--hero-over:#fff;--on-paper:var(--color-text);--lift:color-mix(in srgb, var(--color-text) 30%, transparent)}
+@media (prefers-color-scheme: dark){
+  :root{color-scheme:dark;--color-bg:var(--ground-dark);--color-surface:color-mix(in srgb, var(--ground-dark), #f0f8f2 6%);--color-text:var(--color-neutral-100);--color-accent:var(--color-accent-400);--color-divider:color-mix(in srgb, #f0f8f2 35%, transparent);--ink-2:var(--ink-inv-2);--ink-3:var(--ink-inv-3);--hero-over:var(--ground-dark);--on-paper:var(--ground-dark);--lift:rgba(0,0,0,.55)}
+}
 /* Page margin: the wireframe's s5 at the 1440 design width, down to 24px at the 320 floor
    (Type System §14). Interpolated, so there is no breakpoint to maintain. */
 html{--gutter:clamp(1.5rem, 4.1667vw, 3.75rem)}
@@ -44,11 +52,11 @@ a:hover{color:var(--ink)}
 /* ── Hero ─────────────────────────────────────────────────────────────────── */
 /* A container, so the masked copy of the band inside the portrait can size itself to the
    hero rather than to the viewport — cqw ignores the scrollbar, vw does not. */
-.hero{position:relative;display:flex;justify-content:center;overflow:hidden;container-type:inline-size}
+.hero{position:relative;display:flex;justify-content:center;overflow:hidden;container-type:inline-size;--band-bottom:clamp(1.5rem, 5.5556vw, 5rem)}
 /* The name is a band across the foot of the hero, in front of the figure, bleeding off both
    edges. 260px at 1440 is 18.06vw; the band keeps that proportion down to a 96px floor. */
 /* The marquee runs at every width, by decision (12 Sep 2026); only the size scales. */
-.hero-name{position:absolute;left:0;right:0;bottom:clamp(1.5rem, 5.5556vw, 5rem);z-index:1;pointer-events:none;overflow:hidden;font-size:clamp(6rem, 18.0556vw, 16.25rem);font-weight:500;line-height:var(--lh-tight);letter-spacing:-0.035em;color:var(--ink)}
+.hero-name{position:absolute;left:0;right:0;bottom:var(--band-bottom);z-index:1;pointer-events:none;overflow:hidden;font-size:clamp(6rem, 18.0556vw, 16.25rem);font-weight:500;line-height:var(--lh-tight);letter-spacing:-0.035em;color:var(--ink)}
 .hero-name-track{display:flex;align-items:center;gap:0.16em;white-space:nowrap;width:max-content;will-change:transform}
 .hero-name-seg{display:flex;align-items:center;gap:0.16em}
 .hero-name-dash{display:block;width:0.62em;height:0.105em;background:currentColor}/* 42% of the column at 1440 (605px), never narrower than 280px on a phone. The box is
@@ -58,18 +66,34 @@ a:hover{color:var(--ink)}
    portrait means replacing one 3:4 file. */
 /* Above the dark band, not behind it: the figure hides the dark letters where it covers
    them, and the white copy inside this box draws them back in white. */
-.portrait{position:relative;z-index:2;align-self:flex-end;width:clamp(17.5rem, 42%, 37.8rem);aspect-ratio:3/4;overflow:hidden;
+.portrait-frame{position:relative;align-self:flex-end;width:clamp(17.5rem, 42%, 37.8rem);aspect-ratio:3/4}
+.portrait{position:absolute;inset:0;z-index:2;overflow:hidden;
   -webkit-mask-image:url('/hero-portrait.webp');mask-image:url('/hero-portrait.webp');
   -webkit-mask-size:100% 100%;mask-size:100% 100%;
   -webkit-mask-repeat:no-repeat;mask-repeat:no-repeat}
 /* The hero is a picture, not content to handle: no selection, no drag, and the image takes
    no pointer events, so a double-click or a right-click lands on the page rather than on it. */
-.portrait, .hero-name{-webkit-user-select:none;user-select:none}
+.portrait-frame, .hero-name{-webkit-user-select:none;user-select:none}
 .portrait img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none;-webkit-user-drag:none}
 /* The white copy of the band. It lives inside the masked portrait box but is laid out in
    the hero's coordinates — the box is centred in the hero and its foot is the hero's foot,
-   so the two bands sit on the same line and scroll together. */
-.hero-name--over{left:calc((100% - 100cqw) / 2);right:auto;width:100cqw;z-index:3;color:#fff}
+   so the two bands sit on the same line and scroll together. White on the light page; in
+   the dark the band turns pale, so this copy flips to the ground colour. */
+.hero-name--over{left:calc((100% - 100cqw) / 2);right:auto;width:100cqw;z-index:3;color:var(--hero-over)}
+
+/* The paper cutout. The paper is the portrait's outline grown outward, pre-rendered by
+   scripts/make-paper.py onto a canvas padded 24px a side (2.8743% of the width, 2.1563% of
+   the height, hence the insets). It sits under the band; .paper-ink holds a copy of the band
+   masked to the same outline, so letters crossing the paper are redrawn in ink rather than
+   hidden by it. The frame sets no z-index, so these layers stack with the band in the hero.
+   The shadow sits on a wrapper: on the masked element itself the mask would cut it away. */
+.paper,.paper-ink{position:absolute;inset:-2.1563% -2.8743%;pointer-events:none}
+.paper{z-index:0;filter:drop-shadow(0 6px 10px var(--lift))}
+.paper-shape{position:absolute;inset:0;background:#fff}
+.paper-shape,.paper-ink{-webkit-mask-image:url('/hero-paper.png');mask-image:url('/hero-paper.png');-webkit-mask-size:100% 100%;mask-size:100% 100%;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat}
+.paper-ink{z-index:1}
+/* The band's foot sits on the hero's foot; this box reaches 24/1161 of its height lower. */
+.hero-name--paper{bottom:calc(var(--band-bottom) + 2.0672%);color:var(--on-paper)}
 
 /* ── Sections ─────────────────────────────────────────────────────────────── */
 .block-label{margin:0;font-size:var(--t-1);font-weight:600;line-height:var(--lh-normal);color:var(--ink-3);text-transform:uppercase;letter-spacing:1px}

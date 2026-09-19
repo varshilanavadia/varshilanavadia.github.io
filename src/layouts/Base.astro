@@ -24,7 +24,9 @@ const year = new Date().getFullYear();
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
     <slot name="head" />
-    <meta name="theme-color" content="#e7ede9" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#e7ede9" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0E2E1D" media="(prefers-color-scheme: dark)" />
     <!-- Icons, per Favicon Spec.dc.html. The SVG small master is what lands in the tab; the
          ICO is the legacy path. Bump ?v= when the mark changes: browsers cache favicons hard. -->
     <link rel="icon" href="/assets/favicon-16.svg?v=2" type="image/svg+xml" />

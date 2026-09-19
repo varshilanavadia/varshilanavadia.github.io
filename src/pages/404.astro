@@ -48,8 +48,15 @@ import Base from '../layouts/Base.astro';
   const here = document.getElementById('here') as HTMLElement;
   const ctx = canvas.getContext('2d')!;
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const INK = '28,56,37';      // --color-text #1c3825, as r,g,b for the line alphas
-  const ACCENT = '#1e7a47';    // --color-accent
+  // Colours come from the page, so the map follows light and dark: ink from the inherited
+  // text colour, the route from the accent token, the dot's ring from the ground.
+  let INK = '', ACCENT = '', SHEET = '';
+  const readColours = () => {
+    INK = getComputedStyle(canvas).color;
+    ACCENT = getComputedStyle(document.documentElement).getPropertyValue('--color-accent').trim();
+    SHEET = getComputedStyle(document.body).backgroundColor;
+  };
+  readColours();
 
   // ── Seeded value noise ────────────────────────────────────────────────────
   let seed = 404;
@@ -161,9 +168,11 @@ import Base from '../layouts/Base.astro';
           }
         }
       }
-      ctx.strokeStyle = `rgba(${INK},${index ? 0.42 : 0.2})`;
+      ctx.strokeStyle = INK;
+      ctx.globalAlpha = index ? 0.42 : 0.2;
       ctx.lineWidth = index ? 1.5 : 1;
       ctx.stroke();
+      ctx.globalAlpha = 1;
     }
   };
 
@@ -185,16 +194,18 @@ import Base from '../layouts/Base.astro';
         const p = (t % 2000) / 2000;
         ctx.beginPath();
         ctx.arc(ex * W, ey * H, 7 + p * 26, 0, Math.PI * 2);
-        ctx.strokeStyle = `rgba(30,122,71,${0.55 * (1 - p)})`;
+        ctx.strokeStyle = ACCENT;
+        ctx.globalAlpha = 0.55 * (1 - p);
         ctx.lineWidth = 2;
         ctx.stroke();
+        ctx.globalAlpha = 1;
       }
       ctx.beginPath();
       ctx.arc(ex * W, ey * H, 7, 0, Math.PI * 2);
       ctx.fillStyle = ACCENT;
       ctx.fill();
       ctx.lineWidth = 2.5;
-      ctx.strokeStyle = '#e7ede9';
+      ctx.strokeStyle = SHEET;
       ctx.stroke();
       here.style.left = `${ex * W}px`;
       here.style.top = `${ey * H}px`;
@@ -231,6 +242,8 @@ import Base from '../layouts/Base.astro';
   // Watch the stage itself, not the window: on a phone its height settles after load (the
   // browser bars move), and a canvas sized to a stale height gets stretched to fit.
   new ResizeObserver(() => { layout(); seg = 0; if (reduce) still(); }).observe(stage);
+  // Re-read the colours when the device switches between light and dark.
+  matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { readColours(); if (reduce) still(); });
 
   if (reduce) {
     still();
