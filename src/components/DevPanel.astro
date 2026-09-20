@@ -11,6 +11,9 @@
   (() => {
     const CONTROLS = [
       { key: 'theme', label: 'Theme', options: [['device', 'Device'], ['light', 'Light'], ['dark', 'Dark']] },
+      // Placement: a strip along the head of the window, or along its foot. Either way the
+      // page is shortened by the strip's height rather than covered by it.
+      { key: 'panel', label: 'Panel', options: [['top', 'Top'], ['foot', 'Foot']] },
     ];
     const root = document.documentElement;
     const STORE = 'devPanel';
@@ -33,11 +36,12 @@
     addEventListener('DOMContentLoaded', () => {
       const panel = document.createElement('aside');
       panel.className = 'dev-panel';
-      panel.setAttribute('aria-label', 'Local dev panel');
-      if (state._open === false) panel.dataset.closed = '';
+      panel.setAttribute('aria-label', 'Top Secret Tools, local dev panel');
+      // Closed unless it was left open: the page should be the first thing you see.
+      if (state._open !== true) panel.dataset.closed = '';
       const head = document.createElement('button');
       head.className = 'dev-panel-head';
-      head.textContent = 'Local';
+      head.textContent = 'Top Secret Tools';
       head.addEventListener('click', () => {
         panel.toggleAttribute('data-closed');
         state._open = !panel.hasAttribute('data-closed');
@@ -71,11 +75,34 @@
         row.innerHTML = '<span>Day</span>';
         const shown = document.createElement('span');
         shown.className = 'dev-panel-date';
+        // Quotes differ in length, so swapping one changes the page's height and the view
+        // drifts under you. Two things keep it still: a spacer that stops the page ever
+        // getting shorter during a session (at the foot of the page the browser would
+        // otherwise pull the view up, and no amount of scrolling could correct it), and a
+        // scroll nudge by however far the quote itself moved. Both are local only.
+        const el = document.querySelector('.foot blockquote');
+        const spacer = document.createElement('div');
+        spacer.setAttribute('aria-hidden', 'true');
+        document.body.append(spacer);
+        let peak = 0;
+        const hold = () => {
+          spacer.style.height = '0px';
+          const h = document.documentElement.scrollHeight;
+          peak = Math.max(peak, h);
+          spacer.style.height = `${peak - h}px`;
+        };
+        hold();
         const step = (by) => {
           state.dayOffset = by === 0 ? 0 : (state.dayOffset || 0) + by;
           window.__dayOffset = state.dayOffset;
           save();
+          const before = el ? el.getBoundingClientRect().top : 0;
           quote.render();
+          hold();
+          if (el) {
+            const moved = el.getBoundingClientRect().top - before;
+            if (moved) scrollBy({ top: moved, behavior: 'instant' });
+          }
           shown.textContent = quote.label();
         };
         for (const [text, by] of [['\u2039', -1], ['Today', 0], ['\u203a', 1]]) {
@@ -92,19 +119,43 @@
       }
 
       document.body.append(panel);
+
+      // Dock mode shortens the page by the strip's height rather than covering it, so the
+      // measurement has to follow the panel as controls are added or it wraps.
+      const measure = () => root.style.setProperty('--dev-panel-h', `${panel.offsetHeight}px`);
+      new ResizeObserver(measure).observe(panel);
+      measure();
+
+      // Backtick opens and closes the panel, so the page can be read unobstructed.
+      addEventListener('keydown', (e) => {
+        if (e.key !== '`' || e.metaKey || e.ctrlKey || e.altKey) return;
+        const tag = document.activeElement && document.activeElement.tagName;
+        if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+        panel.toggleAttribute('data-closed');
+        state._open = !panel.hasAttribute('data-closed');
+        save();
+        measure();
+      });
     });
   })();
 </script>
 <style is:inline>
-  .dev-panel{position:fixed;left:12px;bottom:12px;z-index:1000;display:grid;gap:6px;padding:8px;background:var(--sheet);color:var(--ink);border:2px solid var(--ink);font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;box-shadow:0 4px 14px rgba(0,0,0,.18)}
+  /* Docked along the head of the window, and shortening the page by its own height so it
+     never covers anything; the site's own sticky bar is pushed down by that height so the
+     two cannot overlap. data-panel="foot" moves the strip to the foot instead. */
+  .dev-panel{position:fixed;left:0;right:0;top:0;z-index:1000;display:flex;flex-wrap:wrap;align-items:center;gap:6px 16px;padding:8px var(--gutter);background:var(--sheet);color:var(--ink);border:2px solid var(--ink);border-width:0 0 2px;font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;box-shadow:0 4px 14px rgba(0,0,0,.12)}
+  body{padding-top:var(--dev-panel-h, 0px)}
+  .bar{top:var(--dev-panel-h, 0px)}
   .dev-panel button{font:inherit;letter-spacing:inherit;text-transform:inherit;padding:6px 8px;border:1px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
   .dev-panel button[aria-pressed="true"]{background:var(--ink);color:var(--sheet)}
-  .dev-panel-head{border:0 !important;padding:0 0 2px !important;text-align:left}
+  .dev-panel-head{border:0 !important;padding:0 !important;text-align:left}
   .dev-panel-head::after{content:' ▾'}
   .dev-panel[data-closed] .dev-panel-head::after{content:' ▸'}
   .dev-panel[data-closed] .dev-panel-row{display:none}
-  .dev-panel[data-closed] .dev-panel-head{padding:0 !important}
   .dev-panel-row{display:flex;align-items:center;gap:4px}
-  .dev-panel-row span{min-width:4.5em;color:var(--ink-3)}
-  .dev-panel-date{min-width:0 !important;margin-left:4px;white-space:nowrap}
+  .dev-panel-row span{color:var(--ink-3)}
+  .dev-panel-date{margin-left:4px;white-space:nowrap}
+  :root[data-panel="foot"] .dev-panel{top:auto;bottom:0;border-width:2px 0 0;box-shadow:0 -4px 14px rgba(0,0,0,.12)}
+  :root[data-panel="foot"] body{padding-top:0;padding-bottom:var(--dev-panel-h, 0px)}
+  :root[data-panel="foot"] .bar{top:0}
 </style>

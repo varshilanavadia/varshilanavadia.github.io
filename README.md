@@ -14,7 +14,7 @@ npm run preview  # serve the build locally
 npm run preview:local  # build with the local dev panel and serve it on your network
 ```
 
-The local dev panel (bottom-left, collapsible) holds page controls for checking the site, starting with a Light / Dark / Device theme switch. It appears in `npm run dev` and `npm run preview:local` only; the GitHub Pages build never includes it. Add controls in `src/components/DevPanel.astro`.
+The local dev panel, "Top Secret Tools", is a strip docked along the top of the window, closed by default (tap its label, or press the backtick key). It shortens the page rather than covering it, and holds controls for checking the site: a Light / Dark / Device theme switch, the panel's own placement (top or foot), and a day stepper that previews any day's quote of the day. It appears in `npm run dev` and `npm run preview:local` only; the GitHub Pages build never includes it. Add controls in `src/components/DevPanel.astro`.
 
 ## Deploy
 
