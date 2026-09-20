@@ -1,6 +1,6 @@
-/* Site layer over the Modernist design system (modernist.css). Tokens are the wireframe's:
+/* Site layer over the Personal Portfolio Design System (design-system.css). Tokens are the wireframe's:
    the Type System scale, the 8px spacing ladder, the leading set, and the ink roles
-   resolved to Modernist values (the wireframe's "DS PEEK" block). */
+   resolved to the design system's values (the wireframe's "DS PEEK" block). */
 html{--s0:0.25rem;--s1:0.5rem;--s2:1rem;--s3:1.5rem;--s4:1.875rem;--s5:3.75rem}
 html{--t-1:1rem;--t0:1.25rem;--t1:1.56rem;--t2:1.95rem;--t3:2.44rem;--t4:3.05rem;--t5:3.81rem;--t6:4.76rem}
 html{--measure:46ch}

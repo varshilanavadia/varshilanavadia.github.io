@@ -19,6 +19,10 @@ Project instructions for Claude Code in this repository.
 - **Check visual changes at phone width (390px) and in both light and dark mode** before calling them done. The dev panel's theme switch forces either mode.
 - **Whenever the dev panel changes, confirm the production build contains nothing from it:** no `dev-panel` anywhere in `dist/` after `npm run build`.
 
+## Design
+
+- **The design source of truth is the Personal Portfolio Design System in Claude Design** (project id `d708aeee-8a4f-4afd-9a63-76771f71ba00`, a copy of Modernist), with the Type System and wireframes snapshotted in `design/`. `src/styles/design-system.css` is its stylesheet. Prototype new visual ideas locally, then record the result in Claude Design.
+
 ## Data and privacy
 
 - **The repository is public.** Never commit private data. Quote authors stay out of `src/data/quotes.json`.

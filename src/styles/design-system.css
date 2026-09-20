@@ -1,4 +1,6 @@
-/* Modernist — design-system tokens and component classes. This file is the source of truth for the system's look; retune it here and see readme.md. */
+/* Personal Portfolio Design System — tokens and component classes, copied from the Claude Design
+   project (a copy of Modernist) with its Google Fonts import removed. Claude Design is the source
+   of truth: change the system there, then copy it here. */
 
 :root {
   --color-bg: #e7ede9;
