@@ -1,8 +1,19 @@
 ---
 import Base from '../layouts/Base.astro';
 import { links } from '../site';
+import quotes from '../data/quotes.json';
 
 const canonical = new URL('/', Astro.site).href;
+
+// Quote of the day. A day number is whole days since 1 Jan 2026, which is the arithmetic
+// the picker below runs on the visitor's local date. Working the dates out here keeps them
+// out of the page: the browser is handed a text and a number per quote and nothing else.
+const EPOCH = Date.UTC(2026, 0, 1);
+const dayNumber = (iso: string) => {
+  const [y, m, d] = iso.split('-').map(Number);
+  return Math.floor((Date.UTC(y, m - 1, d) - EPOCH) / 86400000);
+};
+const quoteData = quotes.map((q) => [q.text, dayNumber(q.added)]);
 
 // Share preview strings and image, from Share Preview.dc.html (17 Sep 2026), minus its
 // description: the page carries no description line while it is a Coming Soon page.
@@ -118,7 +129,86 @@ const structuredData = {
 
   <Fragment slot="foot">
     <p class="block-label">Quote of the day</p>
-    <blockquote>What are you truly afraid of when nothing in the world belongs to you?</blockquote>
+    {/* The first quote in the file is what ships in the HTML: what a visitor without
+        JavaScript reads, and what a crawler indexes. The script below replaces it. */}
+    <blockquote id="quote-of-the-day">{quotes[0].text}</blockquote>
+    <script is:inline define:vars={{ QUOTES: quoteData }}>
+      // The day is the visitor's own: the quote is picked here from their local date, so it
+      // turns over at their midnight and publishing needs no daily rebuild. Everyone whose
+      // local date is the same reads the same quote, and it cannot change during their day.
+      //
+      // Inline and in the parser's path, immediately after the <blockquote>, so the text is
+      // replaced before the page is painted and no other quote is ever visible.
+      (() => {
+        const DAY = 86400000;
+        const EPOCH = Date.UTC(2026, 0, 1);
+        // window.__dayOffset is the dev panel's day stepper. The panel never ships, so in
+        // the published build the offset is always nothing.
+        const today = () => {
+          const d = new Date();
+          return (
+            Math.floor((Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) - EPOCH) / DAY) +
+            (window.__dayOffset || 0)
+          );
+        };
+
+        // mulberry32, the generator the 404 map draws its noise from.
+        const rng = (seed) => () => {
+          seed = (seed + 0x6d2b79f5) | 0;
+          let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+          t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+          return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+        };
+
+        const pick = (day) => {
+          // A quote joins the rotation at the midnight after the date it was added, so
+          // publishing never changes the quote someone has already been shown that day.
+          const pool = QUOTES.filter(([, added]) => added < day);
+          if (!pool.length) return null;
+          const n = pool.length;
+          // A cycle is one pass through the whole pool: the quotient is which cycle, the
+          // remainder the place within it. Seeding the shuffle with the cycle number shows
+          // every quote once before any repeat, in a fresh order each cycle.
+          //
+          // Pool order is file order, the only stable identity a quote has here. Append to
+          // quotes.json rather than rearranging it, or the rotation moves for everyone.
+          //
+          // When quotes become eligible n changes, and both numbers jump with it: "once
+          // each" holds within a cycle, not across a change of pool. That only ever happens
+          // at a midnight, when the quote is due to turn over anyway.
+          const cycle = Math.floor(day / n);
+          const order = pool.slice();
+          const rand = rng(cycle);
+          for (let i = n - 1; i > 0; i--) {
+            const j = Math.floor(rand() * (i + 1));
+            [order[i], order[j]] = [order[j], order[i]];
+          }
+          return order[((day % n) + n) % n];
+        };
+
+        const el = document.getElementById('quote-of-the-day');
+        // What the markup shipped, so a previewed day with nothing eligible yet puts it back
+        // rather than leaving another day's quote on screen.
+        const shipped = el.textContent;
+        const render = () => {
+          const q = pick(today());
+          el.textContent = q ? q[0] : shipped;
+        };
+        render();
+
+        // Read by the dev panel's day stepper, which is local-only.
+        window.__quoteOfTheDay = {
+          render,
+          // Fixed to en-GB so the readout reads "20 Sep" whatever the machine's locale is.
+          label: () =>
+            new Date(EPOCH + today() * DAY).toLocaleDateString('en-GB', {
+              day: 'numeric',
+              month: 'short',
+              timeZone: 'UTC',
+            }),
+        };
+      })();
+    </script>
   </Fragment>
 
   <script>

@@ -4,6 +4,8 @@
 // in localStorage. Script and styles are inline, so none of it reaches the published
 // bundle when the panel is off. To add a control, add an entry to CONTROLS: key, label, and
 // options as [value, label] pairs, the first being the default (which clears the attribute).
+// The day stepper below is not one of those: it previews another date rather than setting an
+// attribute, so it is built on its own.
 ---
 <script is:inline>
   (() => {
@@ -21,6 +23,12 @@
     };
     // Applied before first paint, so a forced theme never flashes the other one.
     for (const c of CONTROLS) if (state[c.key]) apply(c, state[c.key]);
+
+    // The quote of the day is picked from the visitor's local date. This shifts that date by
+    // a number of days so any day's quote, and how it wraps, can be read on a phone without
+    // touching the clock. Set here, at head time, so the quote script down in the footer
+    // picks the previewed day on first paint too, rather than correcting itself afterwards.
+    window.__dayOffset = state.dayOffset || 0;
 
     addEventListener('DOMContentLoaded', () => {
       const panel = document.createElement('aside');
@@ -53,6 +61,36 @@
         }
         panel.append(row);
       }
+
+      // Day stepper, only on pages that carry a quote. Not a CONTROLS row: it steps a
+      // number rather than choosing one of a set of values.
+      const quote = window.__quoteOfTheDay;
+      if (quote) {
+        const row = document.createElement('div');
+        row.className = 'dev-panel-row';
+        row.innerHTML = '<span>Day</span>';
+        const shown = document.createElement('span');
+        shown.className = 'dev-panel-date';
+        const step = (by) => {
+          state.dayOffset = by === 0 ? 0 : (state.dayOffset || 0) + by;
+          window.__dayOffset = state.dayOffset;
+          save();
+          quote.render();
+          shown.textContent = quote.label();
+        };
+        for (const [text, by] of [['\u2039', -1], ['Today', 0], ['\u203a', 1]]) {
+          const b = document.createElement('button');
+          b.textContent = text;
+          b.addEventListener('click', () => step(by));
+          row.append(b);
+        }
+        row.append(shown);
+        panel.append(row);
+        // The offset was applied at head time, so the quote on screen is already right for
+        // the previewed day; only the date beside the buttons needs filling in.
+        shown.textContent = quote.label();
+      }
+
       document.body.append(panel);
     });
   })();
@@ -68,4 +106,5 @@
   .dev-panel[data-closed] .dev-panel-head{padding:0 !important}
   .dev-panel-row{display:flex;align-items:center;gap:4px}
   .dev-panel-row span{min-width:4.5em;color:var(--ink-3)}
+  .dev-panel-date{min-width:0 !important;margin-left:4px;white-space:nowrap}
 </style>
