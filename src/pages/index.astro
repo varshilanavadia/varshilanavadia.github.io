@@ -160,30 +160,42 @@ const structuredData = {
           return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
         };
 
-        const pick = (day) => {
-          // A quote joins the rotation at the midnight after the date it was added, so
-          // publishing never changes the quote someone has already been shown that day.
-          const pool = QUOTES.filter(([, added]) => added < day);
-          if (!pool.length) return null;
-          const n = pool.length;
-          // A cycle is one pass through the whole pool: the quotient is which cycle, the
-          // remainder the place within it. Seeding the shuffle with the cycle number shows
-          // every quote once before any repeat, in a fresh order each cycle.
-          //
-          // Pool order is file order, the only stable identity a quote has here. Append to
-          // quotes.json rather than rearranging it, or the rotation moves for everyone.
-          //
-          // When quotes become eligible n changes, and both numbers jump with it: "once
-          // each" holds within a cycle, not across a change of pool. That only ever happens
-          // at a midnight, when the quote is due to turn over anyway.
-          const cycle = Math.floor(day / n);
+        // Rounds. The rotation runs in rounds from the first day any quote is eligible: a
+        // round takes the pool as it stands on its first day and shows each of those quotes
+        // once, in an order shuffled from the round's number. A quote added mid-round waits
+        // for the next round, so adding quotes never reshuffles the round in progress and
+        // "every quote once before any repeat" holds while the list grows.
+        //
+        // Walking the rounds from the start keeps this a pure function of the date: the same
+        // day always lands in the same round with the same order. That holds only if the past
+        // never changes, so quotes are appended to quotes.json with the date they are added,
+        // never backdated, reordered or deleted. (A round is about as many days as there are
+        // quotes, so even decades out this is a few hundred short shuffles.)
+        const FIRST = Math.min(...QUOTES.map(([, added]) => added)) + 1;
+        const shuffle = (pool, round, prevLast) => {
           const order = pool.slice();
-          const rand = rng(cycle);
-          for (let i = n - 1; i > 0; i--) {
+          const rand = rng(round);
+          for (let i = order.length - 1; i > 0; i--) {
             const j = Math.floor(rand() * (i + 1));
             [order[i], order[j]] = [order[j], order[i]];
           }
-          return order[((day % n) + n) % n];
+          // Backstop: a round never opens on the quote the last one closed on, so no quote
+          // shows two days running. Swapping the first two keeps every quote once per round.
+          if (order.length > 1 && order[0] === prevLast) [order[0], order[1]] = [order[1], order[0]];
+          return order;
+        };
+        const pick = (day) => {
+          if (!QUOTES.length || day < FIRST) return null;
+          let start = FIRST;
+          let prevLast = null;
+          for (let round = 0; ; round++) {
+            // A quote joins at the midnight after the date it was added.
+            const pool = QUOTES.filter(([, added]) => added < start);
+            const order = shuffle(pool, round, prevLast);
+            if (day < start + order.length) return order[day - start];
+            prevLast = order[order.length - 1];
+            start += order.length;
+          }
         };
 
         const el = document.getElementById('quote-of-the-day');
@@ -199,13 +211,12 @@ const structuredData = {
         // Read by the dev panel's day stepper, which is local-only.
         window.__quoteOfTheDay = {
           render,
-          // Fixed to en-GB so the readout reads "20 Sep" whatever the machine's locale is.
-          label: () =>
-            new Date(EPOCH + today() * DAY).toLocaleDateString('en-GB', {
-              day: 'numeric',
-              month: 'short',
-              timeZone: 'UTC',
-            }),
+          // "20 Sep": month names spelled out here, since locale data differs by browser (a
+          // current one gives UK English "Sept").
+          label: () => {
+            const d = new Date(EPOCH + today() * DAY);
+            return `${d.getUTCDate()} ${'Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec'.split(' ')[d.getUTCMonth()]}`;
+          },
         };
       })();
     </script>
