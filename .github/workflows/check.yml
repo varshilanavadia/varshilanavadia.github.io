@@ -27,3 +27,15 @@ jobs:
             grep -rl "dev-panel" dist/
             exit 1
           fi
+      # The site is two routes. A third means a prototype escaped into src/pages, and the
+      # repository is public, so it would publish. Update this list when a real page is added.
+      - name: Only the expected routes
+        run: |
+          found=$(find dist -name '*.html' | sort | tr '\n' ' ')
+          expected="dist/404.html dist/index.html "
+          if [ "$found" != "$expected" ]; then
+            echo "Routes changed."
+            echo "  expected: $expected"
+            echo "  found:    $found"
+            exit 1
+          fi

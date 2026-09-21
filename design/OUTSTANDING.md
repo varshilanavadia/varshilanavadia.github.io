@@ -1,7 +1,11 @@
-# Outstanding in Claude Design
+# Outstanding with Claude Design
+
+What the site and Claude Design still owe each other, in both directions. See CLAUDE.md, Design.
+
+## The site owes Claude Design
 
 Visual decisions the site has made that the Personal Portfolio Design System does not record
-yet. Each one leaves this list when Claude Design has it. See CLAUDE.md, Design.
+yet. Each one leaves this list when Claude Design has it.
 
 - **The system's name.** It is still titled after Modernist there, and the landing wireframe
   still carries the "- Modernist DS" suffix. The site calls it the Personal Portfolio Design
@@ -14,3 +18,10 @@ yet. Each one leaves this list when Claude Design has it. See CLAUDE.md, Design.
   (20 Sep 2026).
 - **Dark mode, the 404 page, the contour map and the paper cutout** as built. The handoff
   prompt covering these is in the session notes; none of it is recorded yet (20 Sep 2026).
+
+## The snapshot owes the site
+
+- **`design/` needs re-taking.** The Type System, the landing wireframe and the `_ds`
+  stylesheet are all from 12 September; the Favicon Spec is from the 17th. They predate the
+  system's rename, dark mode, the quote of the day, the docked dev panel, the contour map, the
+  portrait depth and the paper accent. Re-take after the rename lands, so it is one pass.

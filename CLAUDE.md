@@ -18,6 +18,7 @@ Project instructions for Claude Code in this repository.
 
 - **Never push to `main` without the owner's explicit go-ahead.** Every push publishes to the live site through GitHub Pages. Show changes in the local preview first.
 - **When a feature was built with options, don't pick one silently before shipping.** Ask which option is wanted.
+- **After merging, watch the deploy and confirm the change is live.** Watch the Pages run for the merge commit (`deploy.yml` queues rather than cancels, so the newest run may not be yours), then fetch the published file and look for the thing that changed. That the page loads proves nothing: until the new build lands, the old one is still being served.
 
 ## Local preview
 
@@ -35,6 +36,7 @@ Project instructions for Claude Code in this repository.
 ## Design
 
 - **The design source of truth is the Personal Portfolio Design System in Claude Design** (project id `d708aeee-8a4f-4afd-9a63-76771f71ba00`, a copy of Modernist), with the Type System and wireframes snapshotted in `design/`. `src/styles/design-system.css` is its stylesheet. Prototype new visual ideas locally, then record the result in Claude Design.
+- **`design/` is a snapshot of Claude Design, not a copy to edit.** Re-take it after anything changes there, and never hand-edit a file inside it, or the snapshot becomes a fork. It runs downstream; `design/OUTSTANDING.md` runs the other way, what the site owes Claude Design.
 - **A visual decision is not finished until Claude Design has it.** List what a pull request changes or reveals under a "To record in Claude Design" heading in its body, and move anything still outstanding after the merge into `design/OUTSTANDING.md`, so it does not leave with the branch.
 - **The paper cutout behind the portrait is `#fff` in both modes**, the one surface that does not follow the theme. Check anything drawn on it for contrast against white, not against the page. `--on-paper` in `src/styles/site.css` carries the numbers and why the semantic accent cannot be used there.
 
@@ -46,4 +48,5 @@ Project instructions for Claude Code in this repository.
 ## Assets and tools
 
 - **After replacing `public/hero-portrait.webp`, run `python3 scripts/make-paper.py`** to rebuild the paper cutout behind it.
+- **Throwaway prototypes live outside the build.** Put them in `scratch/`, which git ignores, never in `src/pages/`: every `.astro` there becomes a published route, and the repository is public. Delete them once the decision is made. The site publishes two routes, `/` and `/404`; a third in `dist/` means something escaped.
 - **Local-only tools go in the dev panel** (`src/components/DevPanel.astro`), with inline scripts and styles so they never reach the published build.
