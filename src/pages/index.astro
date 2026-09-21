@@ -268,12 +268,18 @@ const structuredData = {
       document.fonts.addEventListener('loadingdone', () => { seg = 0; });
 
       // Depth. The portrait's layers drift one way and the band the other, so they seem to
-      // sit at different distances. A mouse drives it from where the pointer is over the
-      // hero; a touchscreen has no pointer, so the phone's own tilt drives it instead.
-      // The offsets go on the layers themselves, never on .portrait-frame, which must not
-      // become a stacking context (see site.css).
+      // sit at different distances. What drives it depends on the device, and is decided
+      // here rather than asked for: a mouse uses the pointer; a phone uses its own tilt
+      // where that needs no permission, and the scroll position where it does, which is
+      // every iPhone (iOS gives no readings until asked, and asks only from a tap). So the
+      // page never raises a permission prompt — ?tilt opts in to the tilt version for
+      // testing. The offsets go on the layers themselves, never on .portrait-frame, which
+      // must not become a stacking context (see site.css).
       const hero = document.querySelector<HTMLElement>('.hero')!;
       const clamp = (v: number) => Math.max(-1, Math.min(1, v));
+      const askApi = (DeviceOrientationEvent as any)?.requestPermission;
+      const needsAsking = typeof askApi === 'function';
+      const optedIn = location.search.includes('tilt');
       let px = 0, py = 0, inside = false, dx = 0, dy = 0;
       hero.addEventListener('pointermove', (e) => {
         if (e.pointerType === 'touch') return;
@@ -281,32 +287,56 @@ const structuredData = {
       });
       hero.addEventListener('pointerleave', () => { inside = false; });
 
-      // Tilt, for phones. The first reading is taken as the rest position, so it works in
-      // any posture. iOS hands out readings only after asking, and asks only from a gesture
-      // and only over https, so the request rides on the visitor's first tap.
-      let tiltX = 0, tiltY = 0, tiltFrom: [number, number] | null = null, asked = false;
-      addEventListener('deviceorientation', (e) => {
-        if (e.gamma == null || e.beta == null) return;
-        if (!tiltFrom) tiltFrom = [e.gamma, e.beta];
-        tiltX = clamp((e.gamma - tiltFrom[0]) / 22);
-        tiltY = clamp((e.beta - tiltFrom[1]) / 22);
-      });
-      const askTilt = () => {
-        const api = (DeviceOrientationEvent as any)?.requestPermission;
-        if (asked || typeof api !== 'function') return;
-        asked = true;
-        api.call(DeviceOrientationEvent).catch(() => {});
-      };
-      addEventListener('click', askTilt, { once: true });
+      // Tilt. The first reading is the rest position, so it works in whatever posture the
+      // phone is held. Readings are only listened for where they come without asking, or
+      // where ?tilt has opted in.
+      let tiltX = 0, tiltY = 0, tiltFrom: [number, number] | null = null;
+      let permission = needsAsking ? (optedIn ? 'not asked' : 'not asked for') : 'not needed';
+      if (!needsAsking || optedIn) {
+        addEventListener('deviceorientation', (e) => {
+          if (e.gamma == null || e.beta == null) return;
+          if (!tiltFrom) tiltFrom = [e.gamma, e.beta];
+          tiltX = clamp((e.gamma - tiltFrom[0]) / 22);
+          tiltY = clamp((e.beta - tiltFrom[1]) / 22);
+        });
+      }
+      if (needsAsking && optedIn) {
+        // iOS asks only from a gesture, and a tap on a page with nothing clickable often
+        // fires no click at all, so the touch itself counts too.
+        let asked = false;
+        const ask = () => {
+          if (asked) return;
+          asked = true;
+          permission = 'asking';
+          askApi.call(DeviceOrientationEvent).then(
+            (state: string) => { permission = state; if (state !== 'granted') asked = false; },
+            (err: any) => { permission = `refused: ${err?.name || err}`; asked = false; },
+          );
+        };
+        for (const type of ['pointerdown', 'touchend', 'click']) addEventListener(type, ask);
+      }
+      // Where tilt should work without asking, give it a moment: some devices carry the
+      // event but never fire it, and those fall back to the scroll like any iPhone.
+      let tiltHopeful = !needsAsking || optedIn;
+      setTimeout(() => { if (!tiltFrom) tiltHopeful = false; }, 1500);
 
       const depth = (dt: number) => {
         let tx = 0, ty = 0;
+        let mode = 'still';
         if (inside) {
+          // The pointer's place in the hero, from its centre.
           const r = hero.getBoundingClientRect();
           tx = clamp(((px - r.left) / r.width - 0.5) * 2);
           ty = clamp(((py - r.top) / r.height - 0.5) * 2);
+          mode = 'pointer';
         } else if (tiltFrom) {
           tx = tiltX; ty = tiltY;
+          mode = 'tilt';
+        } else if (!tiltHopeful) {
+          // How far the hero has travelled up the window, from -1 below it to 1 above.
+          const r = hero.getBoundingClientRect();
+          ty = clamp(((innerHeight - r.top) / (innerHeight + r.height) - 0.5) * 2);
+          mode = 'scroll';
         }
         const k = 1 - Math.pow(0.03, dt);
         dx += (tx - dx) * k; dy += (ty - dy) * k;
@@ -315,7 +345,26 @@ const structuredData = {
         hero.style.setProperty('--dy', `${(dy * 24).toFixed(2)}px`);
         hero.style.setProperty('--bx', `${(-dx * 30).toFixed(2)}px`);
         hero.style.setProperty('--by', `${(-dy * 12).toFixed(2)}px`);
+        (window as any).__depthMode = mode;
       };
+
+      // A readout for testing on a real phone, which needs the live https site: open the
+      // page with ?motion. Nothing renders without it.
+      if (location.search.includes('motion')) {
+        const out = document.createElement('div');
+        out.style.cssText =
+          'position:fixed;left:8px;bottom:8px;z-index:9999;padding:8px 10px;background:var(--ink);color:var(--sheet);' +
+          'font-family:var(--font-mono);font-size:11px;line-height:1.5;white-space:pre;border-radius:2px';
+        addEventListener('DOMContentLoaded', () => document.body.append(out));
+        const show = () => {
+          out.textContent =
+            `driving ${(window as any).__depthMode || 'starting'}  asks ${needsAsking}  opted in ${optedIn}\n` +
+            `permission ${permission}  readings ${tiltFrom ? 'yes' : 'none'}\n` +
+            `offset ${(dx * 42).toFixed(1)}, ${(dy * 24).toFixed(1)}px  motion ${matchMedia('(prefers-reduced-motion: reduce)').matches ? 'reduced' : 'full'}`;
+          requestAnimationFrame(show);
+        };
+        show();
+      }
 
       const tick = (t: number) => {
         const dt = Math.min(0.064, (t - last) / 1000);
