@@ -89,6 +89,9 @@ const structuredData = {
            redraws the letters in ink where they cross it, the portrait, and a copy masked to the
            figure. No .grayscale: the file is already black and white apart from the yellow bar,
            which the filter would flatten. -->
+      <!-- Shown only where the tilt needs permission and has not been given it: iOS. The
+           script unhides it, and it leaves for good on the first gesture. -->
+      <p class="tilt-hint" id="tilt-hint" hidden>Tap to tilt</p>
       <div class="portrait-frame">
         <div class="paper" aria-hidden="true"><div class="paper-shape"></div></div>
         <div class="paper-ink" aria-hidden="true">
@@ -301,10 +304,19 @@ const structuredData = {
       // since a device can carry the event and never fire it.
       let waiting = true;
       if (typeof askApi === 'function') {
+        // The hint invites the gesture the prompt needs, since nothing else on the page
+        // asks to be touched. It arrives a moment after the page and leaves on the first
+        // gesture whatever the answer, rather than nagging.
+        const hint = document.getElementById('tilt-hint');
+        if (hint && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+          setTimeout(() => { if (waiting) { hint.hidden = false; requestAnimationFrame(() => hint.classList.add('on')); } }, 1500);
+        }
         let asked = false;
         const ask = () => {
           if (asked) return;
           asked = true;
+          hint?.classList.remove('on');
+          setTimeout(() => { if (hint) hint.hidden = true; }, 600);
           askApi.call(DeviceOrientationEvent).then(
             (state: string) => { if (state === 'granted') waiting = false; else asked = false; },
             () => { asked = false; },
