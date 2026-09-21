@@ -62,16 +62,13 @@ a:hover{color:var(--ink)}
 .hero-name{position:absolute;left:0;right:0;bottom:var(--band-bottom);z-index:1;pointer-events:none;overflow:hidden;font-size:clamp(6rem, 18.0556vw, 16.25rem);font-weight:500;line-height:var(--lh-tight);letter-spacing:-0.035em;color:var(--ink)}
 .hero-name-track{display:flex;align-items:center;gap:0.16em;white-space:nowrap;width:max-content;will-change:transform}
 .hero-name-seg{display:flex;align-items:center;gap:0.16em}
-.ch{white-space:pre}
-/* LAB: the letter lens's fixed-width mode sets each letter's width from the script. */
-.band-fixed .ch{display:inline-block;text-align:center}
-/* LAB: portrait depth. The script sets --dx/--dy on the hero for the portrait's layers and
-   --bx/--by for the band; each masked copy of the band undoes its layer's offset and takes
-   the band's, so all three copies stay in register. Offsets go on the layers, never on
-   .portrait-frame, which must stay a non-stacking box for the band to sit between them. */
-:root[data-depth] .paper,:root[data-depth] .paper-ink,:root[data-depth] .portrait{translate:var(--dx, 0px) var(--dy, 0px)}
-:root[data-depth] .hero > .hero-name{translate:var(--bx, 0px) var(--by, 0px)}
-:root[data-depth] .hero-name--over{translate:calc(var(--bx, 0px) - var(--dx, 0px)) calc(var(--by, 0px) - var(--dy, 0px))}
+/* Depth. The script sets --dx/--dy on the hero for the portrait's layers and --bx/--by for
+   the band; each masked copy of the band undoes its layer's offset and takes the band's, so
+   all three copies stay in register. The offsets go on the layers, never on .portrait-frame,
+   which must stay a non-stacking box for the band to sit between them. */
+.paper,.paper-ink,.portrait{translate:var(--dx, 0px) var(--dy, 0px)}
+.hero > .hero-name{translate:var(--bx, 0px) var(--by, 0px)}
+.hero-name--over{translate:calc(var(--bx, 0px) - var(--dx, 0px)) calc(var(--by, 0px) - var(--dy, 0px))}
 .hero-name-dash{display:block;width:0.62em;height:0.105em;background:currentColor}/* 42% of the column at 1440 (605px), never narrower than 280px on a phone. The box is
    masked by the portrait's own alpha, and the file is already a 3:4 cutout cropped as it
    should sit, so image and mask are the same file at the same size. Everything in this box —
@@ -112,9 +109,8 @@ a:hover{color:var(--ink)}
 .block-label{margin:0;font-size:var(--t-1);font-weight:600;line-height:var(--lh-normal);color:var(--ink-3);text-transform:uppercase;letter-spacing:1px}
 
 .intro{position:relative;padding:var(--s5) var(--gutter);border-top:2px solid var(--rule)}
+/* Everything in the section sits above the map behind it. */
 .intro > :not(.contour-map){position:relative}
-/* LAB: the home map is hidden unless the dev panel turns it on. */
-:root:not([data-map]) .intro .contour-map{display:none}
 /* Page title: t4 · 700 · --lh-tight · --ink · balance · 56.25rem. Per §14 a display role
    interpolates with the viewport, two steps down to t2 at the 320 floor. */
 .statement{margin:0;font-size:clamp(1.95rem, calc(1.636rem + 1.5714vw), 3.05rem);font-weight:700;line-height:var(--lh-tight);color:var(--ink);max-width:56.25rem;text-wrap:balance}

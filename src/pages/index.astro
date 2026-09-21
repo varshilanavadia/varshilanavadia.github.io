@@ -6,8 +6,6 @@ import quotes from '../data/quotes.json';
 
 const canonical = new URL('/', Astro.site).href;
 
-// The hero name, one span per letter, so the band can thicken the letters near the pointer.
-const nameChars = [...'Varshil Anavadia'];
 
 // Quote of the day. A day number is whole days since 1 Jan 2026, which is the arithmetic
 // the picker below runs on the visitor's local date. Working the dates out here keeps them
@@ -81,7 +79,7 @@ const structuredData = {
         <div class="hero-name-track">
           {[0, 1, 2, 3].map(() => (
             <div class="hero-name-seg">
-              <span class="hero-name-text">{nameChars.map((c) => <span class="ch">{c}</span>)}</span><span class="hero-name-dash"></span>
+              Varshil Anavadia<span class="hero-name-dash"></span>
             </div>
           ))}
         </div>
@@ -98,7 +96,7 @@ const structuredData = {
             <div class="hero-name-track">
               {[0, 1, 2, 3].map(() => (
                 <div class="hero-name-seg">
-                  <span class="hero-name-text">{nameChars.map((c) => <span class="ch">{c}</span>)}</span><span class="hero-name-dash"></span>
+                  Varshil Anavadia<span class="hero-name-dash"></span>
                 </div>
               ))}
             </div>
@@ -117,7 +115,7 @@ const structuredData = {
             <div class="hero-name-track">
               {[0, 1, 2, 3].map(() => (
                 <div class="hero-name-seg">
-                  <span class="hero-name-text">{nameChars.map((c) => <span class="ch">{c}</span>)}</span><span class="hero-name-dash"></span>
+                  Varshil Anavadia<span class="hero-name-dash"></span>
                 </div>
               ))}
             </div>
@@ -127,7 +125,8 @@ const structuredData = {
     </section>
 
     <section class="intro" aria-label="Coming soon">
-      <!-- LAB: the contour map under review, shown only when the dev panel's Map is on. -->
+      <!-- The map behind the statement, fainter than the 404's and redrawn half as often,
+           since the hero's marquee is running on the same page. -->
       <ContourMap route="start" label="Start" strength={0.6} every={2} />
       <p class="statement">Something's being built here.</p>
     </section>
@@ -268,123 +267,60 @@ const structuredData = {
       // Re-measure once the webfont has swapped in; the fallback face has different widths.
       document.fonts.addEventListener('loadingdone', () => { seg = 0; });
 
-      // ── LAB: portrait depth and the letter lens, under review in the dev panel ──
-      // Both read the pointer over the hero; both are off unless the panel turns them on.
-      const root = document.documentElement;
+      // Depth. The portrait's layers drift one way and the band the other, so they seem to
+      // sit at different distances. A mouse drives it from where the pointer is over the
+      // hero; a touchscreen has no pointer, so the phone's own tilt drives it instead.
+      // The offsets go on the layers themselves, never on .portrait-frame, which must not
+      // become a stacking context (see site.css).
       const hero = document.querySelector<HTMLElement>('.hero')!;
-      let px = 0, py = 0, inside = false;
+      const clamp = (v: number) => Math.max(-1, Math.min(1, v));
+      let px = 0, py = 0, inside = false, dx = 0, dy = 0;
       hero.addEventListener('pointermove', (e) => {
-        px = e.clientX; py = e.clientY;
-        inside = e.pointerType === 'mouse' || e.pointerType === 'pen';
+        if (e.pointerType === 'touch') return;
+        px = e.clientX; py = e.clientY; inside = true;
       });
       hero.addEventListener('pointerleave', () => { inside = false; });
 
-      // Depth: the portrait's layers drift one way and the band the other, so they seem to
-      // sit at different distances. The offsets go on the layers themselves, never on
-      // .portrait-frame, which must not become a stacking context (see site.css).
-      // Four ways to drive it, under review: the pointer (desktop only), the scroll position,
-      // the phone's tilt, or a slow drift of its own.
-      let dx = 0, dy = 0, tiltX = 0, tiltY = 0, tiltBase: [number, number] | null = null;
-      const clamp = (v: number) => Math.max(-1, Math.min(1, v));
+      // Tilt, for phones. The first reading is taken as the rest position, so it works in
+      // any posture. iOS hands out readings only after asking, and asks only from a gesture
+      // and only over https, so the request rides on the visitor's first tap.
+      let tiltX = 0, tiltY = 0, tiltFrom: [number, number] | null = null, asked = false;
       addEventListener('deviceorientation', (e) => {
         if (e.gamma == null || e.beta == null) return;
-        // The first reading is the rest position, so it works in any posture.
-        if (!tiltBase) tiltBase = [e.gamma, e.beta];
-        tiltX = clamp((e.gamma - tiltBase[0]) / 22);
-        tiltY = clamp((e.beta - tiltBase[1]) / 22);
+        if (!tiltFrom) tiltFrom = [e.gamma, e.beta];
+        tiltX = clamp((e.gamma - tiltFrom[0]) / 22);
+        tiltY = clamp((e.beta - tiltFrom[1]) / 22);
       });
-      // iOS asks before giving readings, and only from a gesture: the first tap after Tilt
-      // is chosen is that gesture.
       const askTilt = () => {
         const api = (DeviceOrientationEvent as any)?.requestPermission;
-        if (root.dataset.depth === 'tilt' && typeof api === 'function') api.call(DeviceOrientationEvent);
+        if (asked || typeof api !== 'function') return;
+        asked = true;
+        api.call(DeviceOrientationEvent).catch(() => {});
       };
-      addEventListener('pointerdown', askTilt);
+      addEventListener('click', askTilt, { once: true });
 
-      const depth = (t: number, dt: number) => {
-        const mode = root.dataset.depth || '';
+      const depth = (dt: number) => {
         let tx = 0, ty = 0;
-        if (mode === 'pointer' && inside) {
+        if (inside) {
           const r = hero.getBoundingClientRect();
           tx = clamp(((px - r.left) / r.width - 0.5) * 2);
           ty = clamp(((py - r.top) / r.height - 0.5) * 2);
-        } else if (mode === 'scroll') {
-          // How far the hero has travelled up the window, from -1 below it to 1 above.
-          const r = hero.getBoundingClientRect();
-          ty = clamp(((innerHeight - r.top) / (innerHeight + r.height) - 0.5) * 2);
-        } else if (mode === 'tilt') {
+        } else if (tiltFrom) {
           tx = tiltX; ty = tiltY;
-        } else if (mode === 'drift') {
-          tx = Math.sin(t / 5200); ty = Math.cos(t / 7100) * 0.7;
         }
         const k = 1 - Math.pow(0.03, dt);
         dx += (tx - dx) * k; dy += (ty - dy) * k;
-        hero.style.setProperty('--dx', `${(dx * 14).toFixed(2)}px`);
-        hero.style.setProperty('--dy', `${(dy * 8).toFixed(2)}px`);
-        hero.style.setProperty('--bx', `${(-dx * 10).toFixed(2)}px`);
-        hero.style.setProperty('--by', `${(-dy * 4).toFixed(2)}px`);
-      };
-
-      // Lens: letters near the pointer grow heavier on Figtree's weight axis. Heavier letters
-      // are wider (the whole name is 3% wider at 700 than at 500), so in "push" mode their
-      // neighbours move aside; in "fixed" mode every letter keeps its regular width and the
-      // heavier ones spread into their sidebearings instead. Every copy of the band gets the
-      // same weights by index, so the copies on the paper and the figure stay in register.
-      // On a touchscreen there is no hover, so a tap sends the lens once across the band.
-      const letters = tracks.map((t) => Array.from(t.querySelectorAll<HTMLElement>('.ch')));
-      const lead = letters[0];
-      const weights = new Float32Array(lead.length).fill(500);
-      let lensAmp = 0, lensX = 0, sweepFrom = -1, fixedFor = '';
-      hero.addEventListener('pointerdown', (e) => {
-        if (e.pointerType === 'touch' && root.dataset.band) sweepFrom = performance.now();
-      });
-      const setWeight = (i: number, w: number) => {
-        weights[i] = w;
-        const v = w === 500 ? '' : w.toFixed(0);
-        for (const l of letters) l[i].style.fontWeight = v;
-      };
-      const fix = (mode: string) => {
-        // Freeze each letter at its regular width, in em so it survives the band resizing.
-        const key = mode === 'fixed' ? `${innerWidth}` : '';
-        if (key === fixedFor) return;
-        fixedFor = key;
-        for (let i = 0; i < lead.length; i++) setWeight(i, 500);
-        for (const l of letters) for (const el of l) el.style.width = '';
-        if (!key) return;
-        const size = parseFloat(getComputedStyle(track).fontSize);
-        const ems = lead.map((el) => `${(el.getBoundingClientRect().width / size).toFixed(4)}em`);
-        for (const l of letters) l.forEach((el, i) => { el.style.width = ems[i]; });
-      };
-      const lens = (t: number, dt: number) => {
-        const mode = root.dataset.band || '';
-        root.classList.toggle('band-fixed', mode === 'fixed');
-        fix(mode);
-        let target = 0;
-        const band = track.parentElement!.getBoundingClientRect();
-        if (mode && sweepFrom >= 0) {
-          const p = (t - sweepFrom) / 1400;
-          if (p > 1) sweepFrom = -1;
-          else { lensX = innerWidth * (-0.1 + 1.2 * p); target = 1; }
-        } else if (mode && inside) {
-          lensX = px;
-          const cy = band.top + band.height / 2;
-          target = Math.exp(-((py - cy) ** 2) / (2 * (band.height * 0.9) ** 2));
-        }
-        lensAmp += (target - lensAmp) * (1 - Math.pow(0.004, dt));
-        if (lensAmp < 0.002 && weights.every((w) => w === 500)) return;
-        const sigma = band.height * 0.42;
-        const xs = lead.map((el) => { const r = el.getBoundingClientRect(); return r.left + r.width / 2; });
-        for (let i = 0; i < lead.length; i++) {
-          const w = lensAmp < 0.002 ? 500 : Math.round(500 + 350 * lensAmp * Math.exp(-((xs[i] - lensX) ** 2) / (2 * sigma * sigma)));
-          if (Math.abs(w - weights[i]) >= 2 || (w === 500 && weights[i] !== 500)) setWeight(i, w);
-        }
+        // 42 and 24px at the corners for the portrait, against 30 and 12 for the band.
+        hero.style.setProperty('--dx', `${(dx * 42).toFixed(2)}px`);
+        hero.style.setProperty('--dy', `${(dy * 24).toFixed(2)}px`);
+        hero.style.setProperty('--bx', `${(-dx * 30).toFixed(2)}px`);
+        hero.style.setProperty('--by', `${(-dy * 12).toFixed(2)}px`);
       };
 
       const tick = (t: number) => {
         const dt = Math.min(0.064, (t - last) / 1000);
         last = t;
-        depth(t, dt);
-        lens(t, dt);
+        depth(dt);
         if (!seg) measure();
         if (seg > 0) {
           mx = (((mx + (100 * dir + boost) * dt) % seg) + seg) % seg;
