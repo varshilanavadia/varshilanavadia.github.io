@@ -1,6 +1,8 @@
 # CLAUDE.md
 
-Project instructions for Claude Code in this repository. Rules only: the reasoning lives in commit messages and code comments. Delete a rule once it stops applying.
+Project instructions for Claude Code in this repository. Read `README.md` first: what the site is, how it is built, where things live.
+
+Rules only: the reasoning lives in commit messages and code comments. Delete a rule once it stops applying.
 
 ## Branches
 
@@ -49,5 +51,5 @@ Project instructions for Claude Code in this repository. Rules only: the reasoni
 ## Assets and tools
 
 - After replacing `public/hero-portrait.webp`, run `python3 scripts/make-paper.py`.
-- Keep throwaway prototypes in `scratch/`, which git ignores, never in `src/pages/`, where every `.astro` becomes a published route. Delete them once the decision is made.
+- Keep throwaway prototypes in `scratch/`, which git ignores, never in `src/pages/`, where every `.astro` becomes a published route. Delete them once the decision is made: a route in `dist/` other than `/` and `/404` means one escaped.
 - Put local-only tools in the dev panel (`src/components/DevPanel.astro`), with inline scripts and styles.
