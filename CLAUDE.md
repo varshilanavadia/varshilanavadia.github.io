@@ -24,7 +24,6 @@ Project instructions for Claude Code in this repository. Rules only: the reasoni
 
 - `npm run preview:local` builds with the dev panel and serves it on port 4321, reachable on the LAN. A second checkout: `PUBLIC_DEV_PANEL=1 npx astro build && npx astro preview --host --port 4322`.
 - Run it again after any `npm run build`, or the panel disappears from the preview.
-- The preview serves the last build. It does not rebuild on its own.
 - Before sharing phone links, read the current address: `ipconfig getifaddr en0`.
 
 ## Checking work
@@ -50,5 +49,5 @@ Project instructions for Claude Code in this repository. Rules only: the reasoni
 ## Assets and tools
 
 - After replacing `public/hero-portrait.webp`, run `python3 scripts/make-paper.py`.
-- Keep throwaway prototypes in `scratch/`, which git ignores, never in `src/pages/`, where every `.astro` becomes a published route. Delete them once the decision is made. The site publishes two routes, `/` and `/404`.
+- Keep throwaway prototypes in `scratch/`, which git ignores, never in `src/pages/`, where every `.astro` becomes a published route. Delete them once the decision is made.
 - Put local-only tools in the dev panel (`src/components/DevPanel.astro`), with inline scripts and styles.
