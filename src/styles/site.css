@@ -89,6 +89,10 @@ a:hover{color:var(--ink)}
 /* The hero is a picture, not content to handle: no selection, no drag, and the image takes
    no pointer events, so a double-click or a right-click lands on the page rather than on it. */
 .portrait-frame, .hero-name{-webkit-user-select:none;user-select:none}
+/* The tilt hint, iOS only: the map label's micro mono, in the hero's top corner where the
+   ground is clear of the figure, fading in late and out for good on the first gesture. */
+.tilt-hint{position:absolute;right:var(--gutter);top:var(--s3);z-index:4;margin:0;font-family:var(--font-mono);font-size:0.75rem;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;color:var(--ink-3);opacity:0;transition:opacity .6s;pointer-events:none}
+.tilt-hint.on{opacity:1}
 .portrait img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none;-webkit-user-drag:none}
 /* The white copy of the band. It lives inside the masked portrait box but is laid out in
    the hero's coordinates — the box is centred in the hero and its foot is the hero's foot,

@@ -89,6 +89,9 @@ const structuredData = {
            redraws the letters in ink where they cross it, the portrait, and a copy masked to the
            figure. No .grayscale: the file is already black and white apart from the yellow bar,
            which the filter would flatten. -->
+      <!-- Shown only where the tilt needs permission and has not been given it: iOS. The
+           script unhides it, and it leaves for good on the first gesture. -->
+      <p class="tilt-hint" id="tilt-hint" hidden>Tap to tilt</p>
       <div class="portrait-frame">
         <div class="paper" aria-hidden="true"><div class="paper-shape"></div></div>
         <div class="paper-ink" aria-hidden="true">
@@ -270,9 +273,10 @@ const structuredData = {
       // Depth. The portrait's layers drift one way and the band the other, so they seem to
       // sit at different distances. The phone's own tilt drives it; a mouse drives it from
       // where the pointer is over the hero. iOS hands out no readings until asked, and asks
-      // only from a tap, so there the scroll position drives it until the first tap anywhere
+      // only from a gesture, so there the scroll position drives it until any gesture at all
       // raises the prompt; tilt takes over for good once it is allowed, and iOS remembers
-      // the answer for the site, so it is asked once rather than on every visit.
+      // the answer for the site, so it is asked once rather than on every visit. Scrolling
+      // is not a gesture a browser will accept, which leaves the taps and key presses below.
       // The offsets go on the layers themselves, never on .portrait-frame, which must not
       // become a stacking context (see site.css).
       const hero = document.querySelector<HTMLElement>('.hero')!;
@@ -300,18 +304,30 @@ const structuredData = {
       // since a device can carry the event and never fire it.
       let waiting = true;
       if (typeof askApi === 'function') {
+        // The hint invites the gesture the prompt needs, since nothing else on the page
+        // asks to be touched. It arrives a moment after the page and leaves on the first
+        // gesture whatever the answer, rather than nagging.
+        const hint = document.getElementById('tilt-hint');
+        if (hint && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+          setTimeout(() => { if (waiting) { hint.hidden = false; requestAnimationFrame(() => hint.classList.add('on')); } }, 1500);
+        }
         let asked = false;
         const ask = () => {
           if (asked) return;
           asked = true;
+          hint?.classList.remove('on');
+          setTimeout(() => { if (hint) hint.hidden = true; }, 600);
           askApi.call(DeviceOrientationEvent).then(
             (state: string) => { if (state === 'granted') waiting = false; else asked = false; },
             () => { asked = false; },
           );
         };
-        // A tap on a page with nothing clickable often fires no click on iOS, so the touch
-        // itself counts.
-        for (const type of ['pointerdown', 'touchend', 'click']) addEventListener(type, ask);
+        // Every event a browser counts as user activation, captured so a tap on a link
+        // still raises the prompt before the page leaves. A tap on a page with nothing
+        // clickable often fires no click on iOS, hence the raw touch and pointer events;
+        // the keyboard ones are for an attached keyboard.
+        const gestures = ['pointerdown', 'pointerup', 'touchstart', 'touchend', 'mousedown', 'mouseup', 'click', 'keydown', 'keyup'];
+        for (const type of gestures) addEventListener(type, ask, { capture: true, passive: true });
       } else {
         setTimeout(() => { waiting = false; }, 1500);
       }
