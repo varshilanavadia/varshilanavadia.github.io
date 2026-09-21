@@ -27,7 +27,8 @@ Project instructions for Claude Code in this repository.
 ## Checking work
 
 - **Check visual changes at phone width (390px) and in both light and dark mode** before calling them done. The dev panel's theme switch forces either mode.
-- **Whenever the dev panel changes, confirm the production build contains nothing from it:** no `dev-panel` anywhere in `dist/` after `npm run build`.
+- **The pull request build is the gate** (`.github/workflows/check.yml`): it runs `npm run build` and fails if `dev-panel` appears anywhere in `dist/`. Do not merge a red one, and do not merge before it reports.
+- **Before opening the pull request, run the same check locally:** `npm run build`, then `grep -r dev-panel dist/`, which should find nothing. Rebuild the panel version afterwards (see Local preview).
 - **Every animation needs a still version under `prefers-reduced-motion`**, and should pause while it is off screen or the tab is hidden.
 
 ## Design
