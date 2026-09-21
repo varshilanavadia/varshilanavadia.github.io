@@ -11,9 +11,6 @@
   (() => {
     const CONTROLS = [
       { key: 'theme', label: 'Theme', options: [['device', 'Device'], ['light', 'Light'], ['dark', 'Dark']] },
-      // Placement: a strip along the head of the window, or along its foot. Either way the
-      // page is shortened by the strip's height rather than covered by it.
-      { key: 'panel', label: 'Panel', options: [['top', 'Top'], ['foot', 'Foot']] },
     ];
     const root = document.documentElement;
     const STORE = 'devPanel';
@@ -142,20 +139,19 @@
 <style is:inline>
   /* Docked along the head of the window, and shortening the page by its own height so it
      never covers anything; the site's own sticky bar is pushed down by that height so the
-     two cannot overlap. data-panel="foot" moves the strip to the foot instead. */
-  .dev-panel{position:fixed;left:0;right:0;top:0;z-index:1000;display:flex;flex-wrap:wrap;align-items:center;gap:6px 16px;padding:8px var(--gutter);background:var(--sheet);color:var(--ink);border:2px solid var(--ink);border-width:0 0 2px;font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;box-shadow:0 4px 14px rgba(0,0,0,.12)}
+     two cannot overlap. */
+  .dev-panel{position:fixed;left:0;right:0;top:0;z-index:1000;box-sizing:border-box;display:flex;flex-wrap:wrap;align-items:center;gap:6px 16px;padding:8px var(--gutter);max-width:100vw;overflow-wrap:anywhere;background:var(--sheet);color:var(--ink);border:2px solid var(--ink);border-width:0 0 2px;font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;box-shadow:0 4px 14px rgba(0,0,0,.12)}
   body{padding-top:var(--dev-panel-h, 0px)}
   .bar{top:var(--dev-panel-h, 0px)}
-  .dev-panel button{font:inherit;letter-spacing:inherit;text-transform:inherit;padding:6px 8px;border:1px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+  .dev-panel button{flex:0 0 auto;font:inherit;letter-spacing:inherit;text-transform:inherit;padding:6px 8px;white-space:nowrap;border:1px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
   .dev-panel button[aria-pressed="true"]{background:var(--ink);color:var(--sheet)}
   .dev-panel-head{border:0 !important;padding:0 !important;text-align:left}
   .dev-panel-head::after{content:' ▾'}
   .dev-panel[data-closed] .dev-panel-head::after{content:' ▸'}
   .dev-panel[data-closed] .dev-panel-row{display:none}
-  .dev-panel-row{display:flex;align-items:center;gap:4px}
-  .dev-panel-row span{color:var(--ink-3)}
-  .dev-panel-date{margin-left:4px;white-space:nowrap}
-  :root[data-panel="foot"] .dev-panel{top:auto;bottom:0;border-width:2px 0 0;box-shadow:0 -4px 14px rgba(0,0,0,.12)}
-  :root[data-panel="foot"] body{padding-top:0;padding-bottom:var(--dev-panel-h, 0px)}
-  :root[data-panel="foot"] .bar{top:0}
+  /* Rows wrap within themselves and the strip wraps between them, so nothing runs off a
+     narrow screen. The label holds a column so the rows line up while they fit. */
+  .dev-panel-row{display:flex;align-items:center;flex-wrap:wrap;gap:4px;max-width:100%}
+  .dev-panel-row > span:first-child{flex:0 0 auto;min-width:4.5em;color:var(--ink-3)}
+  .dev-panel-date{flex:1 1 auto;min-width:0;margin-left:4px;color:var(--ink-3);white-space:normal;overflow-wrap:anywhere;text-transform:none;letter-spacing:0}
 </style>

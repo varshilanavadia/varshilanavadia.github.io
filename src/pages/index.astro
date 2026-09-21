@@ -1,9 +1,11 @@
 ---
 import Base from '../layouts/Base.astro';
+import ContourMap from '../components/ContourMap.astro';
 import { links } from '../site';
 import quotes from '../data/quotes.json';
 
 const canonical = new URL('/', Astro.site).href;
+
 
 // Quote of the day. A day number is whole days since 1 Jan 2026, which is the arithmetic
 // the picker below runs on the visitor's local date. Working the dates out here keeps them
@@ -123,6 +125,9 @@ const structuredData = {
     </section>
 
     <section class="intro" aria-label="Coming soon">
+      <!-- The map behind the statement, fainter than the 404's and redrawn half as often,
+           since the hero's marquee is running on the same page. -->
+      <ContourMap route="start" label="Start" strength={0.6} every={2} />
       <p class="statement">Something's being built here.</p>
     </section>
   </main>
@@ -262,9 +267,60 @@ const structuredData = {
       // Re-measure once the webfont has swapped in; the fallback face has different widths.
       document.fonts.addEventListener('loadingdone', () => { seg = 0; });
 
+      // Depth. The portrait's layers drift one way and the band the other, so they seem to
+      // sit at different distances. A mouse drives it from where the pointer is over the
+      // hero; a touchscreen has no pointer, so the phone's own tilt drives it instead.
+      // The offsets go on the layers themselves, never on .portrait-frame, which must not
+      // become a stacking context (see site.css).
+      const hero = document.querySelector<HTMLElement>('.hero')!;
+      const clamp = (v: number) => Math.max(-1, Math.min(1, v));
+      let px = 0, py = 0, inside = false, dx = 0, dy = 0;
+      hero.addEventListener('pointermove', (e) => {
+        if (e.pointerType === 'touch') return;
+        px = e.clientX; py = e.clientY; inside = true;
+      });
+      hero.addEventListener('pointerleave', () => { inside = false; });
+
+      // Tilt, for phones. The first reading is taken as the rest position, so it works in
+      // any posture. iOS hands out readings only after asking, and asks only from a gesture
+      // and only over https, so the request rides on the visitor's first tap.
+      let tiltX = 0, tiltY = 0, tiltFrom: [number, number] | null = null, asked = false;
+      addEventListener('deviceorientation', (e) => {
+        if (e.gamma == null || e.beta == null) return;
+        if (!tiltFrom) tiltFrom = [e.gamma, e.beta];
+        tiltX = clamp((e.gamma - tiltFrom[0]) / 22);
+        tiltY = clamp((e.beta - tiltFrom[1]) / 22);
+      });
+      const askTilt = () => {
+        const api = (DeviceOrientationEvent as any)?.requestPermission;
+        if (asked || typeof api !== 'function') return;
+        asked = true;
+        api.call(DeviceOrientationEvent).catch(() => {});
+      };
+      addEventListener('click', askTilt, { once: true });
+
+      const depth = (dt: number) => {
+        let tx = 0, ty = 0;
+        if (inside) {
+          const r = hero.getBoundingClientRect();
+          tx = clamp(((px - r.left) / r.width - 0.5) * 2);
+          ty = clamp(((py - r.top) / r.height - 0.5) * 2);
+        } else if (tiltFrom) {
+          tx = tiltX; ty = tiltY;
+        }
+        const k = 1 - Math.pow(0.03, dt);
+        dx += (tx - dx) * k; dy += (ty - dy) * k;
+        // 42 and 24px at the corners for the portrait, against 30 and 12 for the band.
+        hero.style.setProperty('--dx', `${(dx * 42).toFixed(2)}px`);
+        hero.style.setProperty('--dy', `${(dy * 24).toFixed(2)}px`);
+        hero.style.setProperty('--bx', `${(-dx * 30).toFixed(2)}px`);
+        hero.style.setProperty('--by', `${(-dy * 12).toFixed(2)}px`);
+      };
+
       const tick = (t: number) => {
         const dt = Math.min(0.064, (t - last) / 1000);
         last = t;
+        depth(dt);
         if (!seg) measure();
         if (seg > 0) {
           mx = (((mx + (100 * dir + boost) * dt) % seg) + seg) % seg;

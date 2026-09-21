@@ -1,0 +1,279 @@
+---
+// A slowly drifting topographic contour map, drawn on a canvas that fills the nearest
+// positioned ancestor. A green route is drawn across it with a marker and a mono label:
+//   route="wrong-turn"  wanders right, veers off and stops at the marker (the 404)
+//   route="start"       sets out from the marker and runs off the right edge (home)
+// The pointer raises a hill that follows it. Colours come from the page, so the map follows
+// light and dark. Under reduced motion it is one still map. Several maps on one page each
+// run on their own; each pauses while it is off screen.
+interface Props {
+  route: 'wrong-turn' | 'start';
+  label: string;
+  /** Multiplies the contour lines' opacity: 1 is the 404's full-strength map. */
+  strength?: number;
+  /** Frames per terrain redraw; 2 halves the cost where the map shares the page. */
+  every?: number;
+}
+const { route, label, strength = 1, every = 1 } = Astro.props;
+---
+
+<div class="contour-map" data-route={route} data-strength={strength} data-every={every} aria-hidden="true">
+  <canvas></canvas>
+  <p class="contour-label">{label}</p>
+</div>
+
+<style>
+  .contour-map{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+  .contour-map canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+  /* The marker's label: IBM Plex Mono, set as a tag beside the dot, flipped left near the edge. */
+  .contour-label{position:absolute;left:0;top:0;margin:0;padding:0.3em 0.55em;font-family:var(--font-mono);font-size:0.75rem;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;background:var(--ink);color:var(--sheet);white-space:nowrap;opacity:0;transition:opacity .5s;transform:translate(14px,-50%)}
+  .contour-label.on{opacity:1}
+  .contour-label.flip{transform:translate(calc(-100% - 14px),-50%)}
+</style>
+
+<script>
+  // ── Seeded value noise ────────────────────────────────────────────────────
+  const makeRand = (s: number) => () => {
+    s = (s + 0x6d2b79f5) | 0;
+    let t = Math.imul(s ^ (s >>> 15), 1 | s);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+  const rand = makeRand(404);
+  const perm = new Uint8Array(512);
+  const vals = new Float32Array(256);
+  for (let i = 0; i < 256; i++) { perm[i] = i; vals[i] = rand(); }
+  for (let i = 255; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [perm[i], perm[j]] = [perm[j], perm[i]]; }
+  for (let i = 0; i < 256; i++) perm[i + 256] = perm[i];
+  const h = (x: number, y: number, z: number) => vals[perm[perm[perm[x & 255] + (y & 255)] + (z & 255)]];
+  const f = (t: number) => t * t * (3 - 2 * t);
+  const noise = (x: number, y: number, z: number) => {
+    const xi = Math.floor(x), yi = Math.floor(y), zi = Math.floor(z);
+    const u = f(x - xi), v = f(y - yi), w = f(z - zi);
+    const l = (a: number, b: number, t: number) => a + (b - a) * t;
+    return l(
+      l(l(h(xi, yi, zi), h(xi + 1, yi, zi), u), l(h(xi, yi + 1, zi), h(xi + 1, yi + 1, zi), u), v),
+      l(l(h(xi, yi, zi + 1), h(xi + 1, yi, zi + 1), u), l(h(xi, yi + 1, zi + 1), h(xi + 1, yi + 1, zi + 1), u), v),
+      w,
+    );
+  };
+
+  // ── Routes, in fractions of the map's width and height ─────────────────────
+  // The 404's wander heads right, then takes a wrong turn and stops: the marker is its end.
+  // It draws from the same generator the map's noise was seeded from, so it is unchanged.
+  const wrongTurn: [number, number][] = [];
+  {
+    let x = -0.04, y = 0.34, hd = 0.05;
+    for (let i = 0; i < 110; i++) {
+      wrongTurn.push([x, y]);
+      hd += (rand() - 0.5) * 0.38 - hd * 0.06;
+      if (i > 78) hd -= 0.055; // the wrong turn: it veers up and away
+      x += Math.cos(hd) * 0.0068;
+      y = Math.min(0.5, Math.max(0.1, y + Math.sin(hd) * 0.012));
+    }
+  }
+  // Home's sets out from the marker and wanders off the right edge: the start of the way.
+  const setOut: [number, number][] = [];
+  {
+    const r = makeRand(7);
+    // Low and to the right, clear of text set in the left of the box at any width.
+    let x = 0.74, y = 0.78, hd = -0.35;
+    while (x < 1.05) {
+      setOut.push([x, y]);
+      hd += (r() - 0.5) * 0.5 - hd * 0.08;
+      x += Math.cos(hd) * 0.006;
+      y = Math.min(0.85, Math.max(0.2, y + Math.sin(hd) * 0.02));
+    }
+  }
+
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  for (const root of document.querySelectorAll<HTMLElement>('.contour-map')) {
+    const canvas = root.querySelector('canvas')!;
+    const label = root.querySelector<HTMLElement>('.contour-label')!;
+    const ctx = canvas.getContext('2d')!;
+    const route = root.dataset.route === 'start' ? setOut : wrongTurn;
+    const markerAtStart = root.dataset.route === 'start';
+    const strength = Number(root.dataset.strength) || 1;
+    const every = Math.max(1, Number(root.dataset.every) || 1);
+
+    // Colours come from the page, so the map follows light and dark: ink from the inherited
+    // text colour, the route from the accent token, the dot's ring from the ground.
+    let INK = '', ACCENT = '', SHEET = '';
+    const readColours = () => {
+      INK = getComputedStyle(canvas).color;
+      ACCENT = getComputedStyle(document.documentElement).getPropertyValue('--color-accent').trim();
+      SHEET = getComputedStyle(document.body).backgroundColor;
+    };
+    readColours();
+
+    // Terrain settings run from a phone (360px wide) to a laptop (1024px) and hold beyond:
+    // phones get smaller hills and closer contour levels, so the map reads as dense as on a
+    // wide screen. Blended, not switched, so a resizing window never jumps.
+    let W = 0, H = 0, dpr = 1, step = 12, cols = 0, rows = 0, grid = new Float32Array(0);
+    let scale = 260, gap = 0.06, levels = 11;
+    const layout = () => {
+      const r = root.getBoundingClientRect();
+      W = r.width; H = r.height;
+      dpr = Math.min(2, devicePixelRatio || 1);
+      canvas.width = Math.round(W * dpr);
+      canvas.height = Math.round(H * dpr);
+      const k = Math.min(1, Math.max(0, (W - 360) / (1024 - 360)));
+      scale = 135 + (260 - 135) * k;          // px per noise cell: the hills' size
+      gap = 0.042 + (0.06 - 0.042) * k;       // height between contour levels
+      levels = Math.floor(0.63 / gap) + 1;    // enough levels to reach the peaks
+      step = Math.round(7 + (12 - 7) * k);    // sampling grid, finer for smaller hills
+      cols = Math.ceil(W / step) + 1;
+      rows = Math.ceil(H / step) + 1;
+      grid = new Float32Array(cols * rows);
+    };
+    layout();
+
+    // Pointer hill: eases toward the pointer, fades when it leaves.
+    let tx = 0, ty = 0, hx = 0, hy = 0, amp = 0, want = 0;
+    addEventListener('pointermove', (e) => {
+      const r = root.getBoundingClientRect();
+      tx = e.clientX - r.left; ty = e.clientY - r.top;
+      want = ty > -40 && ty < H + 40 && tx > -40 && tx < W + 40 ? 1 : 0;
+      if (amp === 0) { hx = tx; hy = ty; }
+    }, { passive: true });
+    document.documentElement.addEventListener('pointerleave', () => { want = 0; });
+
+    const contours = (z: number) => {
+      const sc = 1 / scale;
+      const sig2 = 2 * Math.pow(Math.min(W, H) * 0.16, 2);
+      for (let j = 0; j < rows; j++) {
+        for (let i = 0; i < cols; i++) {
+          const x = i * step, y = j * step;
+          let v = noise(x * sc, y * sc, z) * 0.68 + noise(x * sc * 2.3, y * sc * 2.3, z * 1.4 + 9) * 0.32;
+          if (amp > 0.001) v += amp * 0.32 * Math.exp(-((x - hx) ** 2 + (y - hy) ** 2) / sig2);
+          grid[j * cols + i] = v;
+        }
+      }
+      for (let k = 0; k < levels; k++) {
+        const lv = 0.2 + k * gap;
+        const index = k % 4 === 1;
+        ctx.beginPath();
+        for (let j = 0; j < rows - 1; j++) {
+          for (let i = 0; i < cols - 1; i++) {
+            const a = grid[j * cols + i], b = grid[j * cols + i + 1];
+            const c = grid[(j + 1) * cols + i + 1], d = grid[(j + 1) * cols + i];
+            const cs = (a > lv ? 8 : 0) | (b > lv ? 4 : 0) | (c > lv ? 2 : 0) | (d > lv ? 1 : 0);
+            if (cs === 0 || cs === 15) continue;
+            const x = i * step, y = j * step;
+            const top = (): [number, number] => [x + step * (lv - a) / (b - a), y];
+            const right = (): [number, number] => [x + step, y + step * (lv - b) / (c - b)];
+            const bottom = (): [number, number] => [x + step * (lv - d) / (c - d), y + step];
+            const left = (): [number, number] => [x, y + step * (lv - a) / (d - a)];
+            const seg = (p: [number, number], q: [number, number]) => { ctx.moveTo(p[0], p[1]); ctx.lineTo(q[0], q[1]); };
+            switch (cs) {
+              case 1: case 14: seg(left(), bottom()); break;
+              case 2: case 13: seg(bottom(), right()); break;
+              case 3: case 12: seg(left(), right()); break;
+              case 4: case 11: seg(top(), right()); break;
+              case 6: case 9: seg(top(), bottom()); break;
+              case 7: case 8: seg(left(), top()); break;
+              case 5: seg(left(), top()); seg(bottom(), right()); break;
+              case 10: seg(top(), right()); seg(left(), bottom()); break;
+            }
+          }
+        }
+        ctx.strokeStyle = INK;
+        ctx.globalAlpha = (index ? 0.42 : 0.2) * strength;
+        ctx.lineWidth = index ? 1.5 : 1;
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+      }
+    };
+
+    const drawRoute = (progress: number, t: number) => {
+      const n = Math.max(2, Math.floor(route.length * progress));
+      ctx.beginPath();
+      for (let i = 0; i < n; i++) {
+        const [x, y] = route[i];
+        i ? ctx.lineTo(x * W, y * H) : ctx.moveTo(x * W, y * H);
+      }
+      ctx.lineJoin = ctx.lineCap = 'round';
+      ctx.strokeStyle = ACCENT;
+      ctx.lineWidth = 3.5;
+      ctx.stroke();
+      // The marker sits at the route's end on the 404 and at its start on home, where it
+      // shows from the first frame while the route draws out of it.
+      if (!markerAtStart && progress < 1) return;
+      const [ex, ey] = markerAtStart ? route[0] : route[n - 1];
+      if (!reduce) {
+        // A ring pulses out from the marker every two seconds.
+        const p = (t % 2000) / 2000;
+        ctx.beginPath();
+        ctx.arc(ex * W, ey * H, 7 + p * 26, 0, Math.PI * 2);
+        ctx.strokeStyle = ACCENT;
+        ctx.globalAlpha = 0.55 * (1 - p);
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+      }
+      ctx.beginPath();
+      ctx.arc(ex * W, ey * H, 7, 0, Math.PI * 2);
+      ctx.fillStyle = ACCENT;
+      ctx.fill();
+      ctx.lineWidth = 2.5;
+      ctx.strokeStyle = SHEET;
+      ctx.stroke();
+      label.style.left = `${ex * W}px`;
+      label.style.top = `${ey * H}px`;
+      // The label sits on the side away from the route: left of a start marker, whose route
+      // runs off to the right; right of an end marker, unless that runs off the edge.
+      label.classList.toggle('flip', markerAtStart || ex * W + 14 + label.offsetWidth > W - 8);
+      label.classList.add('on');
+    };
+
+    let frames = 0;
+    const frame = (t: number, progress: number) => {
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, W, H);
+      contours(t / 1000 * 0.045);
+      drawRoute(progress, t);
+    };
+    const still = () => frame(0, 1);
+
+    // Watch the map itself, not the window: on a phone its height settles after load (the
+    // browser bars move), and a canvas sized to a stale height gets stretched to fit.
+    new ResizeObserver(() => { layout(); if (reduce) still(); }).observe(root);
+    // Re-read the colours when the mode changes: the device setting, or data-theme on <html>
+    // (set by the local dev panel).
+    const recolour = () => { readColours(); if (reduce) still(); };
+    matchMedia('(prefers-color-scheme: dark)').addEventListener('change', recolour);
+    new MutationObserver(recolour).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+    if (reduce) {
+      still();
+      continue;
+    }
+    let raf = 0, t0 = 0, last = 0;
+    const tick = (t: number) => {
+      if (!t0) t0 = t;
+      const dt = Math.min(0.05, (t - last) / 1000);
+      last = t;
+      amp += (want - amp) * Math.min(1, dt * 2.5);
+      hx += (tx - hx) * Math.min(1, dt * 4);
+      hy += (ty - hy) * Math.min(1, dt * 4);
+      // Where the map shares the page with other motion, it redraws every few frames.
+      if (frames++ % every === 0) {
+        const p = Math.min(1, (t - t0 - 400) / 2600);
+        frame(t, Math.max(0, p) ** 0.8);
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    // Drawn once straight away, so the map is never blank before it scrolls into view, then
+    // animated only while on screen (starting a little early, so it is moving on arrival).
+    frame(0, markerAtStart ? 0 : 1);
+    new IntersectionObserver(([entry]) => {
+      if (entry?.isIntersecting) {
+        if (!raf) { last = performance.now(); raf = requestAnimationFrame(tick); }
+      } else {
+        cancelAnimationFrame(raf);
+        raf = 0;
+      }
+    }, { rootMargin: '200px 0px' }).observe(root);
+  }
+</script>
