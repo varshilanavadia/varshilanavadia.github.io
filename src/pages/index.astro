@@ -291,13 +291,42 @@ const structuredData = {
         tiltX = clamp((e.gamma - tiltFrom[0]) / 22);
         tiltY = clamp((e.beta - tiltFrom[1]) / 22);
       });
+      // iOS taps on a page with nothing clickable often produce no click event at all, so
+      // the request rides on the touch itself as well, and keeps trying until it is granted.
+      let permission = 'not asked';
       const askTilt = () => {
         const api = (DeviceOrientationEvent as any)?.requestPermission;
-        if (asked || typeof api !== 'function') return;
+        if (asked || typeof api !== 'function') {
+          if (!asked) permission = typeof DeviceOrientationEvent === 'undefined' ? 'no motion API' : 'no permission needed';
+          return;
+        }
         asked = true;
-        api.call(DeviceOrientationEvent).catch(() => {});
+        permission = 'asking';
+        api.call(DeviceOrientationEvent).then(
+          (state: string) => { permission = state; if (state !== 'granted') asked = false; },
+          (err: any) => { permission = `refused: ${err?.name || err}`; asked = false; },
+        );
       };
-      addEventListener('click', askTilt, { once: true });
+      for (const type of ['pointerdown', 'touchend', 'click']) addEventListener(type, askTilt);
+
+      // A readout for testing the tilt on a real phone, which needs the live https site:
+      // open the page with ?motion. Nothing renders without it.
+      if (location.search.includes('motion')) {
+        const out = document.createElement('div');
+        out.style.cssText =
+          'position:fixed;left:8px;bottom:8px;z-index:9999;padding:8px 10px;background:var(--ink);color:var(--sheet);' +
+          'font-family:var(--font-mono);font-size:11px;line-height:1.5;white-space:pre;border-radius:2px';
+        addEventListener('DOMContentLoaded', () => document.body.append(out));
+        const show = () => {
+          out.textContent =
+            `secure ${isSecureContext}  api ${typeof (DeviceOrientationEvent as any)?.requestPermission}\n` +
+            `permission ${permission}\n` +
+            `readings ${tiltFrom ? 'yes' : 'none'}  tilt ${tiltX.toFixed(2)}, ${tiltY.toFixed(2)}\n` +
+            `offset ${(dx * 42).toFixed(1)}, ${(dy * 24).toFixed(1)}px  motion ${matchMedia('(prefers-reduced-motion: reduce)').matches ? 'reduced' : 'full'}`;
+          requestAnimationFrame(show);
+        };
+        show();
+      }
 
       const depth = (dt: number) => {
         let tx = 0, ty = 0;
