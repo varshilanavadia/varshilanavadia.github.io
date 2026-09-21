@@ -1,0 +1,41 @@
+name: Check
+
+# Every pull request into main builds the site the way GitHub Pages will, and fails if
+# anything from the local dev panel reached the build. Nothing else runs on a pull request,
+# so this is the only automated gate before a merge publishes.
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      # The dev panel is local-only: it renders only in a build made with PUBLIC_DEV_PANEL=1,
+      # and its script and styles are inline, so a published build must not mention it.
+      - name: No dev panel in the build
+        run: |
+          if grep -rq "dev-panel" dist/; then
+            echo "The dev panel reached the build:"
+            grep -rl "dev-panel" dist/
+            exit 1
+          fi
+      # The site is two routes. A third means a prototype escaped into src/pages, and the
+      # repository is public, so it would publish. Update this list when a real page is added.
+      - name: Only the expected routes
+        run: |
+          found=$(find dist -name '*.html' | sort | tr '\n' ' ')
+          expected="dist/404.html dist/index.html "
+          if [ "$found" != "$expected" ]; then
+            echo "Routes changed."
+            echo "  expected: $expected"
+            echo "  found:    $found"
+            exit 1
+          fi

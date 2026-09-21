@@ -2,6 +2,9 @@
 .env
 .env.*
 
+# throwaway prototypes, per CLAUDE.md
+scratch/
+
 # dependencies and build output
 node_modules/
 dist/

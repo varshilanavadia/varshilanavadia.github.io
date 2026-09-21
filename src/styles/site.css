@@ -18,7 +18,8 @@ html{--scrim:var(--color-text)}
    --on-paper is declared once, for both modes, and takes a ramp step rather than
    --color-accent. The paper is white whichever mode the page is in, so the ink on it is the
    one colour here that must not follow the theme: the semantic accent goes pale in the dark
-   (accent-400), which reads at 1.9:1 on white and would all but vanish. */
+   (accent-400), which reads at 1.9:1 on white and would all but vanish. accent-700 reads at
+   5.2:1 there, and 5.3:1 is what --color-accent gives in the light, so the two modes match. */
 :root{color-scheme:light;--ground-dark:#0E2E1D;--hero-over:#fff;--on-paper:var(--color-accent-700);--lift:color-mix(in srgb, var(--color-text) 30%, transparent)}
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){color-scheme:dark;--color-bg:var(--ground-dark);--color-surface:color-mix(in srgb, var(--ground-dark), #f0f8f2 6%);--color-text:var(--color-neutral-100);--color-accent:var(--color-accent-400);--color-divider:color-mix(in srgb, #f0f8f2 35%, transparent);--ink-2:var(--ink-inv-2);--ink-3:var(--ink-inv-3);--hero-over:var(--ground-dark);--lift:rgba(0,0,0,.55)}
