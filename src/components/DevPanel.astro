@@ -11,9 +11,10 @@
   (() => {
     const CONTROLS = [
       { key: 'theme', label: 'Theme', options: [['device', 'Device'], ['light', 'Light'], ['dark', 'Dark']] },
-      // Placement: a strip along the head of the window, or along its foot. Either way the
-      // page is shortened by the strip's height rather than covered by it.
-      { key: 'panel', label: 'Panel', options: [['top', 'Top'], ['foot', 'Foot']] },
+      // Review toggles for features under consideration; removed once each is decided.
+      { key: 'map', label: 'Map', options: [['off', 'Off'], ['on', 'On']] },
+      { key: 'band', label: 'Band', options: [['off', 'Off'], ['push', 'Push'], ['fixed', 'Fixed']] },
+      { key: 'depth', label: 'Depth', options: [['off', 'Off'], ['pointer', 'Pointer'], ['scroll', 'Scroll'], ['tilt', 'Tilt'], ['drift', 'Drift']] },
     ];
     const root = document.documentElement;
     const STORE = 'devPanel';
@@ -142,7 +143,7 @@
 <style is:inline>
   /* Docked along the head of the window, and shortening the page by its own height so it
      never covers anything; the site's own sticky bar is pushed down by that height so the
-     two cannot overlap. data-panel="foot" moves the strip to the foot instead. */
+     two cannot overlap. */
   .dev-panel{position:fixed;left:0;right:0;top:0;z-index:1000;display:flex;flex-wrap:wrap;align-items:center;gap:6px 16px;padding:8px var(--gutter);background:var(--sheet);color:var(--ink);border:2px solid var(--ink);border-width:0 0 2px;font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;box-shadow:0 4px 14px rgba(0,0,0,.12)}
   body{padding-top:var(--dev-panel-h, 0px)}
   .bar{top:var(--dev-panel-h, 0px)}
@@ -155,7 +156,4 @@
   .dev-panel-row{display:flex;align-items:center;gap:4px}
   .dev-panel-row span{color:var(--ink-3)}
   .dev-panel-date{margin-left:4px;white-space:nowrap}
-  :root[data-panel="foot"] .dev-panel{top:auto;bottom:0;border-width:2px 0 0;box-shadow:0 -4px 14px rgba(0,0,0,.12)}
-  :root[data-panel="foot"] body{padding-top:0;padding-bottom:var(--dev-panel-h, 0px)}
-  :root[data-panel="foot"] .bar{top:0}
 </style>
