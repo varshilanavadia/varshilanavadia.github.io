@@ -2,6 +2,12 @@
 
 Project instructions for Claude Code in this repository.
 
+## Branches
+
+- **Never work on `main`.** Every feature or fix starts on its own branch, cut from the latest `main` (`git fetch` first, so the branch starts from what is published).
+- **Name the branch and its commits for the work**, plainly and in the repository's existing style: what the change does, not how it was made.
+- **Finish through a pull request**, squashed into a single commit on `main`, with a message that describes the whole change. (GitHub calls them pull requests; a merge request is the same thing.)
+
 ## Publishing
 
 - **Never push to `main` without the owner's explicit go-ahead.** Every push publishes to the live site through GitHub Pages. Show changes in the local preview first.
