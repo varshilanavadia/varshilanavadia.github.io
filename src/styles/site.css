@@ -14,12 +14,16 @@ html{--scrim:var(--color-text)}
    deep green the favicon and share card already use in the dark. Everything downstream
    reads the DS base tokens, so swapping those flips the page. data-theme on <html> forces
    a mode (the local dev panel sets it), so the dark set is declared twice: keep the two
-   declarations identical. */
-:root{color-scheme:light;--ground-dark:#0E2E1D;--hero-over:#fff;--on-paper:var(--color-text);--lift:color-mix(in srgb, var(--color-text) 30%, transparent)}
+   declarations identical.
+   --on-paper is declared once, for both modes, and takes a ramp step rather than
+   --color-accent. The paper is white whichever mode the page is in, so the ink on it is the
+   one colour here that must not follow the theme: the semantic accent goes pale in the dark
+   (accent-400), which reads at 1.9:1 on white and would all but vanish. */
+:root{color-scheme:light;--ground-dark:#0E2E1D;--hero-over:#fff;--on-paper:var(--color-accent-700);--lift:color-mix(in srgb, var(--color-text) 30%, transparent)}
 @media (prefers-color-scheme: dark){
-  :root:not([data-theme="light"]){color-scheme:dark;--color-bg:var(--ground-dark);--color-surface:color-mix(in srgb, var(--ground-dark), #f0f8f2 6%);--color-text:var(--color-neutral-100);--color-accent:var(--color-accent-400);--color-divider:color-mix(in srgb, #f0f8f2 35%, transparent);--ink-2:var(--ink-inv-2);--ink-3:var(--ink-inv-3);--hero-over:var(--ground-dark);--on-paper:var(--ground-dark);--lift:rgba(0,0,0,.55)}
+  :root:not([data-theme="light"]){color-scheme:dark;--color-bg:var(--ground-dark);--color-surface:color-mix(in srgb, var(--ground-dark), #f0f8f2 6%);--color-text:var(--color-neutral-100);--color-accent:var(--color-accent-400);--color-divider:color-mix(in srgb, #f0f8f2 35%, transparent);--ink-2:var(--ink-inv-2);--ink-3:var(--ink-inv-3);--hero-over:var(--ground-dark);--lift:rgba(0,0,0,.55)}
 }
-:root[data-theme="dark"]{color-scheme:dark;--color-bg:var(--ground-dark);--color-surface:color-mix(in srgb, var(--ground-dark), #f0f8f2 6%);--color-text:var(--color-neutral-100);--color-accent:var(--color-accent-400);--color-divider:color-mix(in srgb, #f0f8f2 35%, transparent);--ink-2:var(--ink-inv-2);--ink-3:var(--ink-inv-3);--hero-over:var(--ground-dark);--on-paper:var(--ground-dark);--lift:rgba(0,0,0,.55)}
+:root[data-theme="dark"]{color-scheme:dark;--color-bg:var(--ground-dark);--color-surface:color-mix(in srgb, var(--ground-dark), #f0f8f2 6%);--color-text:var(--color-neutral-100);--color-accent:var(--color-accent-400);--color-divider:color-mix(in srgb, #f0f8f2 35%, transparent);--ink-2:var(--ink-inv-2);--ink-3:var(--ink-inv-3);--hero-over:var(--ground-dark);--lift:rgba(0,0,0,.55)}
 /* Page margin: the wireframe's s5 at the 1440 design width, down to 24px at the 320 floor
    (Type System §14). Interpolated, so there is no breakpoint to maintain. */
 html{--gutter:clamp(1.5rem, 4.1667vw, 3.75rem)}
@@ -94,8 +98,11 @@ a:hover{color:var(--ink)}
 /* The paper cutout. The paper is the portrait's outline grown outward, pre-rendered by
    scripts/make-paper.py onto a canvas padded 24px a side (2.8743% of the width, 2.1563% of
    the height, hence the insets). It sits under the band; .paper-ink holds a copy of the band
-   masked to the same outline, so letters crossing the paper are redrawn in ink rather than
-   hidden by it. The frame sets no z-index, so these layers stack with the band in the hero.
+   masked to the same outline, so letters crossing the paper are redrawn in --on-paper rather
+   than hidden by it. That colour is the paper's own, not the band's: the letters change where
+   they meet the paper, so the cutout's edge reads in the name as well as in the shadow. It is
+   the accent in both modes, because the paper is white in both. The frame sets no z-index, so
+   these layers stack with the band in the hero.
    The shadow sits on a wrapper: on the masked element itself the mask would cut it away. */
 .paper,.paper-ink{position:absolute;inset:-2.1563% -2.8743%;pointer-events:none}
 .paper{z-index:0;filter:drop-shadow(0 6px 10px var(--lift))}
