@@ -288,37 +288,56 @@ const structuredData = {
       });
       hero.addEventListener('pointerleave', () => { inside = false; });
 
+      const hint = document.getElementById('tilt-hint');
+      const hideHint = () => {
+        hint?.classList.remove('on');
+        setTimeout(() => { if (hint) hint.hidden = true; }, 600);
+      };
+
       // The first reading is the rest position, so it works in whatever posture the phone
-      // is held.
+      // is held. Once readings flow there is nothing left to ask for, so the hint goes too.
       let tiltX = 0, tiltY = 0, tiltFrom: [number, number] | null = null;
       addEventListener('deviceorientation', (e) => {
         if (e.gamma == null || e.beta == null) return;
-        if (!tiltFrom) tiltFrom = [e.gamma, e.beta];
+        if (!tiltFrom) { tiltFrom = [e.gamma, e.beta]; hideHint(); }
         tiltX = clamp((e.gamma - tiltFrom[0]) / 22);
         tiltY = clamp((e.beta - tiltFrom[1]) / 22);
       });
 
-      const askApi = (DeviceOrientationEvent as any)?.requestPermission;
-      // Waiting means the scroll drives the depth meanwhile: on iOS until the prompt is
-      // answered, elsewhere only until the first reading lands,
-      // since a device can carry the event and never fire it.
+      // Waiting holds the depth still for a moment after the page arrives, in case readings
+      // are about to land, so the layers don't start on the scroll and jump to the tilt.
+      // After that the scroll drives it until tilt does, since a device can carry the event
+      // and never fire it, and iOS fires none until asked.
       let waiting = true;
-      if (typeof askApi === 'function') {
+      setTimeout(() => { waiting = false; }, 1500);
+
+      // Only a phone or tablet is asked. Chrome and its relatives carry the call too since
+      // version 152, but a desktop has nothing to tilt. The call is read off window because
+      // the event exists only on https or localhost, not on a LAN address.
+      const orientation = (window as any).DeviceOrientationEvent;
+      const askApi = orientation?.requestPermission;
+      if (typeof askApi === 'function' && matchMedia('(pointer: coarse)').matches) {
         // The hint invites the gesture the prompt needs, since nothing else on the page
-        // asks to be touched. It arrives a moment after the page and leaves on the first
-        // gesture whatever the answer, rather than nagging.
-        const hint = document.getElementById('tilt-hint');
-        if (hint && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
-          setTimeout(() => { if (waiting) { hint.hidden = false; requestAnimationFrame(() => hint.classList.add('on')); } }, 1500);
+        // asks to be touched. It arrives a moment after the page, only where no reading has
+        // arrived by then (Android's Chrome sends them without asking), and leaves on the
+        // first gesture whatever the answer, rather than nagging.
+        let touched = false;
+        if (hint) {
+          setTimeout(() => {
+            if (touched || tiltFrom || reduce.matches) return;
+            hint.hidden = false;
+            requestAnimationFrame(() => hint.classList.add('on'));
+          }, 1500);
         }
         let asked = false;
         const ask = () => {
-          if (asked) return;
+          if (!touched) { touched = true; hideHint(); }
+          // Nothing to ask for where readings already flow, and nothing to unlock under
+          // reduced motion, where the depth never runs.
+          if (asked || tiltFrom || reduce.matches) return;
           asked = true;
-          hint?.classList.remove('on');
-          setTimeout(() => { if (hint) hint.hidden = true; }, 600);
-          askApi.call(DeviceOrientationEvent).then(
-            (state: string) => { if (state === 'granted') waiting = false; else asked = false; },
+          askApi.call(orientation).then(
+            (state: string) => { if (state !== 'granted') asked = false; },
             () => { asked = false; },
           );
         };
@@ -328,8 +347,6 @@ const structuredData = {
         // the keyboard ones are for an attached keyboard.
         const gestures = ['pointerdown', 'pointerup', 'touchstart', 'touchend', 'mousedown', 'mouseup', 'click', 'keydown', 'keyup'];
         for (const type of gestures) addEventListener(type, ask, { capture: true, passive: true });
-      } else {
-        setTimeout(() => { waiting = false; }, 1500);
       }
 
       const depth = (dt: number) => {

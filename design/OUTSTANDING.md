@@ -18,6 +18,10 @@ yet. Each one leaves this list when Claude Design has it.
   (20 Sep 2026).
 - **Dark mode, the 404 page, the contour map and the paper cutout** as built. The handoff
   prompt covering these is in the session notes; none of it is recorded yet (20 Sep 2026).
+- **The tilt hint.** "Tap to tilt", a micro label role in the hero's top-right corner: mono
+  at 0.75rem in `--ink-3`, shown only on a phone or tablet whose motion sensors wait to be
+  asked (iOS today), fading in 1.5 seconds after the page and out for good on the first
+  gesture (21 Sep 2026).
 
 ## The snapshot owes the site
 
