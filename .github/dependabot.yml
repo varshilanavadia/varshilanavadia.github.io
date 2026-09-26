@@ -1,0 +1,27 @@
+# Weekly pull requests for newer npm packages and newer pinned actions. Each one goes through
+# check.yml like any other change, and merging it publishes, so it needs the same go-ahead.
+# check.yml never runs the two Pages actions, so a bad bump of either fails only when
+# deploying after the merge, and the site already live stays up.
+# The cooldown skips releases younger than a week: a hijacked release is usually caught and
+# pulled within days.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    groups:
+      npm:
+        patterns: ["*"]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    groups:
+      actions:
+        patterns: ["*"]

@@ -5,10 +5,9 @@ on:
     branches: [main]
   workflow_dispatch:
 
+# Read-only by default. Only the deploy job, which runs no code of ours, may publish.
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 # One deploy at a time. A newer push queues behind a running one rather than cancelling it
 # halfway through publishing.
@@ -16,21 +15,39 @@ concurrency:
   group: pages
   cancel-in-progress: false
 
+# Every action is pinned to a commit, not a tag: a tag can be moved to other code, and this
+# workflow publishes the site. Dependabot (.github/dependabot.yml) proposes new pins.
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-      # Installs with npm from package-lock.json, runs `npm run build` on Node 24, and uploads
-      # dist/ as the Pages artifact.
-      - uses: withastro/action@v6
+      # The same install and build as check.yml, so the site publishes by the recipe the pull
+      # request's check passed: npm ci installs exactly what package-lock.json lists. No token
+      # is left behind for npm's install scripts or the build to read.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: dist/
+          # As withastro/action did, so a dot-file such as public/.well-known/… still publishes.
+          include-hidden-files: true
 
   deploy:
     needs: build
     runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - id: deployment
-        uses: actions/deploy-pages@v5
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
