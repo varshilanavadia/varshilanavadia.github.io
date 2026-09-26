@@ -22,7 +22,7 @@ The local dev panel, "Top Secret Tools", is a strip docked along the top of the 
 
 Every push to `main` builds the site and publishes it to GitHub Pages through `.github/workflows/deploy.yml`. Every pull request into `main` is built by `.github/workflows/check.yml`, with the same install and build, and fails if anything from the dev panel reached the build. Both pin their actions to commits rather than tags.
 
-Dependabot (`.github/dependabot.yml`) opens a weekly pull request for newer npm packages and another for newer actions, skipping releases less than a week old. They go through the check like any other change.
+Dependabot (`.github/dependabot.yml`) opens a weekly pull request for newer npm packages and another for newer actions, skipping releases less than a week old. They go through the check like any other change, though the check doesn't run the two Pages actions: a bad bump of either fails only when publishing after the merge, and the site already live stays up.
 
 ## Layout
 
