@@ -20,6 +20,9 @@ const year = new Date().getFullYear();
 // The dev panel is for local work only: `npm run dev`, or a build with PUBLIC_DEV_PANEL=1
 // (`npm run preview:local`). The GitHub Pages build sets neither, so it never ships.
 const devPanel = import.meta.env.DEV || import.meta.env.PUBLIC_DEV_PANEL === '1';
+// Google Analytics 4. The measurement ID is public by design: it names the property and
+// grants nothing.
+const GA_ID = 'G-S8F7J8V6F4';
 ---
 
 <html lang="en">
@@ -39,6 +42,22 @@ const devPanel = import.meta.env.DEV || import.meta.env.PUBLIC_DEV_PANEL === '1'
     <link rel="mask-icon" href="/assets/mask-icon.svg?v=2" color="#134B2E" />
     <link rel="manifest" href="/site.webmanifest?v=2" />
     <meta name="apple-mobile-web-app-title" content="Varshil Anavadia" />
+    <!-- Analytics, on the published address only, so dev, local and LAN previews are never
+         counted. Google's standard tag, with its script added from here rather than in the
+         markup so that nothing is fetched anywhere else. Below the share-preview tags,
+         which must stay near the top. -->
+    <script is:inline define:vars={{ GA_ID }}>
+      if (location.hostname === 'varshilanavadia.github.io') {
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = function () { dataLayer.push(arguments); };
+        gtag('js', new Date());
+        gtag('config', GA_ID);
+        const tag = document.createElement('script');
+        tag.async = true;
+        tag.src = `https://www.googletagmanager.com/gtag/js?id=${GA_ID}`;
+        document.head.append(tag);
+      }
+    </script>
     {devPanel && <DevPanel />}
   </head>
   <body class={bodyClass}>

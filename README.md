@@ -26,7 +26,7 @@ Dependabot (`.github/dependabot.yml`) opens a weekly pull request for newer npm 
 
 ## Layout
 
-- `src/layouts/Base.astro` is the frame every page shares: head basics and icons, the bar of profile links, and the footer's copyright line. The profile links themselves live in `src/site.ts`.
+- `src/layouts/Base.astro` is the frame every page shares: head basics and icons, the Google Analytics tag, the bar of profile links, and the footer's copyright line. The profile links themselves live in `src/site.ts`. The analytics tag runs only on the published address, so `npm run dev` and the local previews are never counted.
 - `src/pages/index.astro` is the home page: the hero name marquee, the portrait's depth effect (the pointer where there is one, the phone's tilt otherwise), and the thought of the day, which is picked in the browser from the visitor's local date out of `src/data/thoughts.json`.
 - `src/components/HeroGradient.astro` is the moving gradient behind the home page's hero and its bar of links: shadergradient.co's Universe preset, ported to plain WebGL rather than loaded as the React package, in the colours set by `--hero-gradient-1` to `3` in `site.css`, and fading out into the page from `--hero-fade` percent of the way down the figure. It also runs the bar on scroll: clear at the top, sliding away as the page scrolls down and back as glass when it scrolls up, a bar on a computer and a floating capsule on a phone or tablet (`--glass-*` in `site.css`), made solid for anyone who has turned on Reduce Transparency or a high-contrast theme.
 - `src/components/ContourMap.astro` is the drifting contour map, used full strength behind the 404's band and fainter behind the home page's statement.
