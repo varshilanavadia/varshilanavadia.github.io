@@ -101,7 +101,7 @@ a:hover{color:var(--ink)}
 .hero-name--over{left:calc((100% - 100cqw) / 2);right:auto;width:100cqw;z-index:3;color:var(--hero-over)}
 
 /* The paper cutout. The paper is the portrait's outline grown outward, pre-rendered by
-   scripts/make-paper.py onto a canvas padded 24px a side (2.8743% of the width, 2.1563% of
+   scripts/make-paper.py onto a canvas padded 39px a side (4.6707% of the width, 3.5040% of
    the height, hence the insets). It sits under the band; .paper-ink holds a copy of the band
    masked to the same outline, so letters crossing the paper are redrawn in --on-paper rather
    than hidden by it. That colour is the paper's own, not the band's: the letters change where
@@ -109,13 +109,13 @@ a:hover{color:var(--ink)}
    the accent in both modes, because the paper is white in both. The frame sets no z-index, so
    these layers stack with the band in the hero.
    The shadow sits on a wrapper: on the masked element itself the mask would cut it away. */
-.paper,.paper-ink{position:absolute;inset:-2.1563% -2.8743%;pointer-events:none}
+.paper,.paper-ink{position:absolute;inset:-3.5040% -4.6707%;pointer-events:none}
 .paper{z-index:0;filter:drop-shadow(0 6px 10px var(--lift))}
 .paper-shape{position:absolute;inset:0;background:#fff}
 .paper-shape,.paper-ink{-webkit-mask-image:url('/hero-paper.png');mask-image:url('/hero-paper.png');-webkit-mask-size:100% 100%;mask-size:100% 100%;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat}
 .paper-ink{z-index:1}
-/* The band's foot sits on the hero's foot; this box reaches 24/1161 of its height lower. */
-.hero-name--paper{bottom:calc(var(--band-bottom) + 2.0672%);color:var(--on-paper)}
+/* The band's foot sits on the hero's foot; this box reaches 39/1191 of its height lower. */
+.hero-name--paper{bottom:calc(var(--band-bottom) + 3.2746%);color:var(--on-paper)}
 
 /* ── Sections ─────────────────────────────────────────────────────────────── */
 .block-label{margin:0;font-size:var(--t-1);font-weight:600;line-height:var(--lh-normal);color:var(--ink-3);text-transform:uppercase;letter-spacing:1px}

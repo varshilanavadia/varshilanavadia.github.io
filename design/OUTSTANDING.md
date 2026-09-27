@@ -16,6 +16,9 @@ yet. Each one leaves this list when Claude Design has it.
 - **A token for the paper cutout.** The paper behind the portrait is `#fff` in both modes, a
   surface the system has no name for, and nothing there says which inks are legible on it
   (20 Sep 2026).
+- **The paper cutout's width.** The paper grows the figure's outline by 30px of the source
+  image, doubled from 15: about 22px at the portrait's full 605px width and 10px at its 280px
+  floor on a phone (27 Sep 2026).
 - **Dark mode, the 404 page, the contour map and the paper cutout** as built. The handoff
   prompt covering these is in the session notes; none of it is recorded yet (20 Sep 2026).
 - **The tilt hint.** "Tap to tilt", a micro label role in the hero's top-right corner: mono

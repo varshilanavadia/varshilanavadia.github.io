@@ -11,8 +11,10 @@ import numpy as np
 from PIL import Image, ImageFilter
 
 SRC = "public/hero-portrait.webp"
-PAD = 24  # source px added on every side; the CSS insets are derived from this
-R = 15  # grow radius in source px: about 11px of paper at the portrait's full 605px width
+PAD = 39  # source px added on every side; the CSS insets are derived from this
+R = 30  # grow radius in source px: about 22px of paper at the portrait's full 605px width
+# and 10px at its 280px floor on a phone. The figure runs off the sides and the foot, so PAD
+# must be at least R plus the blur, or the grown edge is cut off and np.roll wraps it round.
 
 alpha = np.asarray(Image.open(SRC).convert("RGBA"))[:, :, 3].astype(np.float32)
 h, w = alpha.shape
@@ -29,4 +31,4 @@ a = Image.fromarray(grown.clip(0, 255).astype(np.uint8)).filter(ImageFilter.Gaus
 out = Image.new("RGBA", a.size, (255, 255, 255, 0))
 out.putalpha(a)
 out.save("public/hero-paper.png", optimize=True)
-print(out.size, f"inset x {-PAD / w * 100:.4f}%  y {-PAD / h * 100:.4f}%")
+print(out.size, f"inset x {-PAD / w * 100:.4f}%  y {-PAD / h * 100:.4f}%  band +{PAD / (h + 2 * PAD) * 100:.4f}%")
