@@ -1,0 +1,407 @@
+---
+// The hero's background: a moving gradient, shadergradient.co's Universe preset in the
+// site's colours, carried up behind the bar of links and fading out into the page below.
+//
+// Drawn with plain WebGL: a port of the shadergradient package's shaders rather than the
+// package itself, which would bring React and three.js (about 350 KB compressed) for this one
+// canvas. The port keeps the package's plane, noise, camera, colour mix and light. The preset
+// lights the plane with the package's "3d" lighting, a lone ambient light, which on its
+// physical material comes to the mixed colour times 0.8 × brightness, less the few percent
+// three.js hands to the material's specular layer; no tone mapping or colour conversion
+// follows. Side by side with the package, the two matched to within 2 levels in 255.
+//
+// It pauses while off screen or hidden. It runs under reduced motion too, by the owner's
+// decision (27 Sep 2026): an exception to CLAUDE.md's rule of a still version for every
+// animation.
+//
+// Shader code after shadergradient (MIT, ruucm) and glsl-noise (MIT, Stefan Gustavson and
+// Ashima Arts, by way of hughsk/glsl-noise).
+---
+
+<div class="hero-gradient" aria-hidden="true">
+  <canvas></canvas>
+</div>
+
+<style>
+  /* First in the hero, so everything after it paints above it: paper, band and figure. It
+     fades out towards the hero's foot (the mask is worked out on the hero, below). */
+  .hero-gradient{position:absolute;inset:0;z-index:0;overflow:hidden;pointer-events:none;-webkit-mask-image:var(--fade-mask);mask-image:var(--fade-mask)}
+  .hero-gradient canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+</style>
+
+<style is:global>
+  /* The fade: the gradient runs full strength down to --fade-at, then fades to nothing at the
+     hero's foot, so the colour dissolves into the page rather than stopping at a line.
+     --fade-at is --hero-fade percent of the way down the figure (site.css: 55 in the light;
+     75 in the dark, where the gradient sits close to the ground and has less to hide). The
+     figure starts the bar's height below the top of the hero, so the fade starts at the same
+     place on the body at every width. It fades along a smoothstep, 3t² − 2t³, in eight steps,
+     easing in and out rather than starting and stopping on a line. */
+  .hero{
+    --fade-at:calc(var(--bar-h, 0px) + var(--hero-fade) / 100 * (100% - var(--bar-h, 0px)));
+    --fade-mask:linear-gradient(to bottom,#000 var(--fade-at),
+      rgb(0 0 0 / .957) calc(var(--fade-at) + .125 * (100% - var(--fade-at))),
+      rgb(0 0 0 / .844) calc(var(--fade-at) + .25 * (100% - var(--fade-at))),
+      rgb(0 0 0 / .684) calc(var(--fade-at) + .375 * (100% - var(--fade-at))),
+      rgb(0 0 0 / .5) calc(var(--fade-at) + .5 * (100% - var(--fade-at))),
+      rgb(0 0 0 / .316) calc(var(--fade-at) + .625 * (100% - var(--fade-at))),
+      rgb(0 0 0 / .156) calc(var(--fade-at) + .75 * (100% - var(--fade-at))),
+      rgb(0 0 0 / .043) calc(var(--fade-at) + .875 * (100% - var(--fade-at))),
+      transparent)}
+  /* With the gradient fading into the page, the rule between the hero and the statement goes:
+     made transparent rather than removed, so nothing below moves. */
+  .hero + .intro{border-top-color:transparent}
+  /* The gradient carries on up behind the bar of links. The hero reaches up under the bar by
+     the bar's height (--bar-h, set by the script below) and pads its content back down by as
+     much, so nothing in it moves. The bar drops its ground while the hero is behind it and
+     takes it back once the page has scrolled on past, where it would otherwise lie over text.
+     Its rule goes the same way, so bar and hero read as one field: made transparent rather
+     than removed, so the bar keeps its height, and back only with the ground. */
+  .bar{background:transparent;border-bottom-color:transparent;transition:background-color .3s,border-color .3s}
+  .bar.bar--over-page{background:var(--sheet);border-bottom-color:var(--rule)}
+  /* On the gradient the links, large text (site.css), take --on-gradient, and darken or
+     brighten on hover to --on-gradient-hover as they do everywhere else: in the light, the
+     darkest green to a near-black green, since the resting grey fell to 2–4:1 there; in the
+     dark, a lighter grey than usual to ink. Measured around the letters, at rest that holds
+     3.1:1 at worst on a phone and 4.3:1 on a laptop in the light, against the 3:1 large text
+     needs. */
+  .bar:not(.bar--over-page) .bar-links a{color:var(--on-gradient)}
+  .bar:not(.bar--over-page) .bar-links a:hover{color:var(--on-gradient-hover)}
+  /* The focus ring there takes the links' hover colour, on a band of the page's ground
+     (--sheet, pale in the light, dark in the dark) that it sits in the middle of: the design
+     system's accent green all but vanished into the gradient (1.3:1 at worst in the light),
+     and no one colour could hold the 3:1 a focus ring needs against all of the gradient,
+     where the ground always does. */
+  .bar:not(.bar--over-page) .bar-links a:focus-visible{outline-color:var(--on-gradient-hover);box-shadow:0 0 0 6px var(--sheet)}
+  .hero{margin-top:calc(-1 * var(--bar-h, 0px));padding-top:var(--bar-h, 0px)}
+  .tilt-hint{top:calc(var(--bar-h, 0px) + var(--s3))}
+</style>
+
+<script>
+  type Vec3 = [number, number, number];
+
+  // shadergradient's Universe preset (its presets.ts), less its colours, which are the page's.
+  const UNIVERSE = {
+    brightness: 1.1,
+    azimuth: 180, polar: 115, distance: 3.9, zoom: 1,
+    position: [-0.5, 0.1, 0] as Vec3, rotation: [0, 0, 235] as Vec3,
+    speed: 0.1, density: 1.1, strength: 2.4,
+  };
+
+  // The specular layer's share of the ambient light, from three.js's DFG table
+  // (src/renderers/shaders/DFGLUTData.js, 16 × 16, roughness across, facing angle down): the
+  // column at the preset's roughness, 0.9 (1 − its reflection), filtered as the GPU filters
+  // it, as sixteen (scale, bias) pairs from grazing (0) to facing the camera (1).
+  const DFG = [0.8644, 0.0463, 0.7733, 0.0331, 0.7118, 0.0244, 0.6642, 0.0182, 0.6257, 0.0135, 0.5935, 0.01, 0.5657, 0.0074, 0.5417, 0.0054, 0.5206, 0.0038, 0.5022, 0.0027, 0.4855, 0.0018, 0.4707, 0.0012, 0.4574, 0.0007, 0.4455, 0.0004, 0.4347, 0.0002, 0.425, 0.0001];
+
+  // ── Shaders ───────────────────────────────────────────────────────────────
+  // A flat sheet, raised and lowered by classic Perlin noise. vNormal and vViewPosition feed
+  // only the light's specular share, and follow the package: both come from the sheet before
+  // the noise moves it.
+  const VERTEX = /* glsl */ `
+    precision highp float;
+    attribute vec3 position;
+    uniform mat4 uMVP, uMV;
+    uniform mat3 uNormalMatrix;
+    uniform float uTime, uSpeed, uNoiseDensity, uNoiseStrength;
+    varying vec3 vPos, vNormal, vViewPosition;
+    vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+    vec4 mod289(vec4 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+    vec4 permute(vec4 x) { return mod289(((x * 34.0) + 1.0) * x); }
+    vec4 taylorInvSqrt(vec4 r) { return 1.79284291400159 - 0.85373472095314 * r; }
+    vec3 fade(vec3 t) { return t * t * t * (t * (t * 6.0 - 15.0) + 10.0); }
+    float cnoise(vec3 P) {
+      vec3 Pi0 = mod289(floor(P));
+      vec3 Pi1 = mod289(floor(P) + vec3(1.0));
+      vec3 Pf0 = fract(P);
+      vec3 Pf1 = Pf0 - vec3(1.0);
+      vec4 ix = vec4(Pi0.x, Pi1.x, Pi0.x, Pi1.x);
+      vec4 iy = vec4(Pi0.yy, Pi1.yy);
+      vec4 iz0 = Pi0.zzzz;
+      vec4 iz1 = Pi1.zzzz;
+      vec4 ixy = permute(permute(ix) + iy);
+      vec4 ixy0 = permute(ixy + iz0);
+      vec4 ixy1 = permute(ixy + iz1);
+      vec4 gx0 = ixy0 * (1.0 / 7.0);
+      vec4 gy0 = fract(floor(gx0) * (1.0 / 7.0)) - 0.5;
+      gx0 = fract(gx0);
+      vec4 gz0 = vec4(0.5) - abs(gx0) - abs(gy0);
+      vec4 sz0 = step(gz0, vec4(0.0));
+      gx0 -= sz0 * (step(0.0, gx0) - 0.5);
+      gy0 -= sz0 * (step(0.0, gy0) - 0.5);
+      vec4 gx1 = ixy1 * (1.0 / 7.0);
+      vec4 gy1 = fract(floor(gx1) * (1.0 / 7.0)) - 0.5;
+      gx1 = fract(gx1);
+      vec4 gz1 = vec4(0.5) - abs(gx1) - abs(gy1);
+      vec4 sz1 = step(gz1, vec4(0.0));
+      gx1 -= sz1 * (step(0.0, gx1) - 0.5);
+      gy1 -= sz1 * (step(0.0, gy1) - 0.5);
+      vec3 g000 = vec3(gx0.x, gy0.x, gz0.x);
+      vec3 g100 = vec3(gx0.y, gy0.y, gz0.y);
+      vec3 g010 = vec3(gx0.z, gy0.z, gz0.z);
+      vec3 g110 = vec3(gx0.w, gy0.w, gz0.w);
+      vec3 g001 = vec3(gx1.x, gy1.x, gz1.x);
+      vec3 g101 = vec3(gx1.y, gy1.y, gz1.y);
+      vec3 g011 = vec3(gx1.z, gy1.z, gz1.z);
+      vec3 g111 = vec3(gx1.w, gy1.w, gz1.w);
+      vec4 norm0 = taylorInvSqrt(vec4(dot(g000, g000), dot(g010, g010), dot(g100, g100), dot(g110, g110)));
+      g000 *= norm0.x;
+      g010 *= norm0.y;
+      g100 *= norm0.z;
+      g110 *= norm0.w;
+      vec4 norm1 = taylorInvSqrt(vec4(dot(g001, g001), dot(g011, g011), dot(g101, g101), dot(g111, g111)));
+      g001 *= norm1.x;
+      g011 *= norm1.y;
+      g101 *= norm1.z;
+      g111 *= norm1.w;
+      float n000 = dot(g000, Pf0);
+      float n100 = dot(g100, vec3(Pf1.x, Pf0.yz));
+      float n010 = dot(g010, vec3(Pf0.x, Pf1.y, Pf0.z));
+      float n110 = dot(g110, vec3(Pf1.xy, Pf0.z));
+      float n001 = dot(g001, vec3(Pf0.xy, Pf1.z));
+      float n101 = dot(g101, vec3(Pf1.x, Pf0.y, Pf1.z));
+      float n011 = dot(g011, vec3(Pf0.x, Pf1.yz));
+      float n111 = dot(g111, Pf1);
+      vec3 fade_xyz = fade(Pf0);
+      vec4 n_z = mix(vec4(n000, n100, n010, n110), vec4(n001, n101, n011, n111), fade_xyz.z);
+      vec2 n_yz = mix(n_z.xy, n_z.zw, fade_xyz.y);
+      float n_xyz = mix(n_yz.x, n_yz.y, fade_xyz.x);
+      return 2.2 * n_xyz;
+    }
+    void main() {
+      float t = uTime * uSpeed;
+      float distortion = 0.75 * cnoise(0.43 * position * uNoiseDensity + t);
+      vec3 pos = position + vec3(0.0, 0.0, 1.0) * distortion * uNoiseStrength;
+      vPos = pos;
+      vNormal = uNormalMatrix * vec3(0.0, 0.0, 1.0);
+      vViewPosition = -(uMV * vec4(position, 1.0)).xyz;
+      gl_Position = uMVP * vec4(pos, 1.0);
+    }
+  `;
+
+  // The colour mix is the package's own, unclamped: the mix factors run past 0 and 1, pushing
+  // the colour beyond its ends, and that is part of the look. The light is uGain
+  // (0.8 × brightness) less the specular layer's share, which three.js works out from the DFG
+  // table at how squarely the surface faces the camera, for a dielectric (reflectance 0.04)
+  // with multiple scattering (its RE_IndirectDiffuse_Physical).
+  const FRAGMENT = /* glsl */ `
+    precision highp float;
+    uniform vec3 uC1, uC2, uC3;
+    uniform float uGain;
+    uniform vec2 uDFG[16];
+    varying vec3 vPos, vNormal, vViewPosition;
+    float light() {
+      vec3 n = normalize(vNormal) * (gl_FrontFacing ? 1.0 : -1.0);
+      float facing = clamp(dot(n, normalize(vViewPosition)), 0.0, 1.0);
+      float x = clamp(facing * 16.0 - 0.5, 0.0, 15.0);
+      vec2 fab = vec2(0.0);
+      for (int i = 0; i < 16; i++) fab += max(0.0, 1.0 - abs(x - float(i))) * uDFG[i];
+      float single = 0.04 * fab.x + fab.y;
+      float missed = 1.0 - (fab.x + fab.y);
+      float average = 0.04 + 0.96 / 21.0;
+      float multiple = single * average / (1.0 - missed * average) * missed;
+      return uGain * (1.0 - single - multiple);
+    }
+    void main() {
+      vec3 colour = mix(mix(uC1, uC2, smoothstep(-3.0, 3.0, vPos.x)), uC3, vPos.z);
+      gl_FragColor = vec4(colour * light(), 1.0);
+    }
+  `;
+
+  // ── The sheet, as three.js builds it ──────────────────────────────────────
+  // The package's water plane: 10 units square, 192 segments a side (PlaneGeometry), lying
+  // in x and y and facing +z.
+  const plane = (size: number, segments: number) => {
+    const n = segments + 1;
+    const positions = new Float32Array(n * n * 3);
+    for (let iy = 0; iy < n; iy++) {
+      for (let ix = 0; ix < n; ix++) {
+        const i = (iy * n + ix) * 3;
+        positions[i] = (ix / segments) * size - size / 2;
+        positions[i + 1] = size / 2 - (iy / segments) * size;
+      }
+    }
+    const indices = new Uint16Array(segments * segments * 6);
+    let o = 0;
+    for (let iy = 0; iy < segments; iy++) {
+      for (let ix = 0; ix < segments; ix++) {
+        const a = ix + n * iy, b = ix + n * (iy + 1), c = ix + 1 + n * (iy + 1), d = ix + 1 + n * iy;
+        indices.set([a, b, d, b, c, d], o);
+        o += 6;
+      }
+    }
+    return { positions, indices };
+  };
+
+  // ── Camera, as the package's camera controls place it ─────────────────────
+  // Column-major 4×4 matrices, as WebGL takes them.
+  const RAD = Math.PI / 180;
+  const multiply = (a: number[], b: number[]) => {
+    const o = new Array(16).fill(0);
+    for (let c = 0; c < 4; c++) for (let r = 0; r < 4; r++) for (let k = 0; k < 4; k++) o[c * 4 + r] += a[k * 4 + r] * b[c * 4 + k];
+    return o;
+  };
+  // three.js's PerspectiveCamera: 45° vertical field, narrowed by zoom; near 0.1, far 1000.
+  const perspective = (aspect: number, zoom: number) => {
+    const f = zoom / Math.tan((45 * RAD) / 2), near = 0.1, far = 1000;
+    return [f / aspect, 0, 0, 0, 0, f, 0, 0, 0, 0, (far + near) / (near - far), -1, 0, 0, (2 * far * near) / (near - far), 0];
+  };
+  // Orbiting the origin: polar angle down from straight above, azimuth round from +z, then
+  // looking back at the origin with y up.
+  const view = (azimuth: number, polar: number, distance: number) => {
+    const eye: Vec3 = [
+      distance * Math.sin(polar * RAD) * Math.sin(azimuth * RAD),
+      distance * Math.cos(polar * RAD),
+      distance * Math.sin(polar * RAD) * Math.cos(azimuth * RAD),
+    ];
+    const norm = (v: Vec3): Vec3 => { const l = Math.hypot(...v); return [v[0] / l, v[1] / l, v[2] / l]; };
+    const cross = (p: Vec3, q: Vec3): Vec3 => [p[1] * q[2] - p[2] * q[1], p[2] * q[0] - p[0] * q[2], p[0] * q[1] - p[1] * q[0]];
+    const dot = (p: Vec3, q: Vec3) => p[0] * q[0] + p[1] * q[1] + p[2] * q[2];
+    const z = norm(eye), x = norm(cross([0, 1, 0], z)), y = cross(z, x);
+    return [x[0], y[0], z[0], 0, x[1], y[1], z[1], 0, x[2], y[2], z[2], 0, -dot(x, eye), -dot(y, eye), -dot(z, eye), 1];
+  };
+  // The sheet's placement: moved, then turned in degrees about x, y and z (three.js's XYZ order).
+  const model = ([px, py, pz]: Vec3, [rx, ry, rz]: Vec3) => {
+    const a = Math.cos(rx * RAD), b = Math.sin(rx * RAD), c = Math.cos(ry * RAD);
+    const d = Math.sin(ry * RAD), e = Math.cos(rz * RAD), f = Math.sin(rz * RAD);
+    const ae = a * e, af = a * f, be = b * e, bf = b * f;
+    return [c * e, af + be * d, bf - ae * d, 0, -c * f, ae - bf * d, be + af * d, 0, d, -b * c, a * c, 0, px, py, pz, 1];
+  };
+
+  // ── Page ──────────────────────────────────────────────────────────────────
+  const root = document.querySelector<HTMLElement>('.hero-gradient');
+  if (root) {
+    const canvas = root.querySelector('canvas')!;
+    const html = document.documentElement;
+
+    // The bar (see the global styles above): the hero reaches up under it by its measured
+    // height, and it takes its ground back once the hero has scrolled out from under it. Set
+    // up whatever becomes of the gradient, since the page's layout depends on it.
+    const bar = document.querySelector<HTMLElement>('.bar');
+    if (bar) {
+      const hero = root.parentElement!;
+      const overPage = () => bar.classList.toggle('bar--over-page', hero.getBoundingClientRect().bottom <= bar.getBoundingClientRect().bottom + 1);
+      // Unrounded, so no sliver of the page shows between the top of the bar and the hero.
+      new ResizeObserver(() => { html.style.setProperty('--bar-h', `${bar.getBoundingClientRect().height}px`); overPage(); }).observe(bar);
+      addEventListener('scroll', overPage, { passive: true });
+      addEventListener('resize', overPage);
+    }
+
+    // Drawn at one pixel per CSS pixel, as the package draws by default. Without WebGL the
+    // hero keeps the page's own ground.
+    const gl = canvas.getContext('webgl', { antialias: true, alpha: true });
+    if (gl) {
+      const fx = UNIVERSE;
+      const mv = multiply(view(fx.azimuth, fx.polar, fx.distance), model(fx.position, fx.rotation));
+      const { positions, indices } = plane(10, 192);
+
+      // Everything the GPU holds: built once, and again whenever the browser hands back a
+      // context it took away. Phones drop WebGL under memory pressure (after a switch of app,
+      // say), and a context lost and never rebuilt would leave the hero plain for good.
+      let u: (name: string) => WebGLUniformLocation | null = () => null;
+      let uMVP: WebGLUniformLocation | null = null, uTime: WebGLUniformLocation | null = null;
+      const setup = () => {
+        const program = gl.createProgram()!;
+        for (const [type, source] of [[gl.VERTEX_SHADER, VERTEX], [gl.FRAGMENT_SHADER, FRAGMENT]] as const) {
+          const shader = gl.createShader(type)!;
+          gl.shaderSource(shader, source);
+          gl.compileShader(shader);
+          if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) console.error(gl.getShaderInfoLog(shader));
+          gl.attachShader(program, shader);
+        }
+        gl.bindAttribLocation(program, 0, 'position');
+        gl.linkProgram(program);
+        if (!gl.getProgramParameter(program, gl.LINK_STATUS)) console.error(gl.getProgramInfoLog(program));
+        u = (name) => gl.getUniformLocation(program, name);
+        uMVP = u('uMVP');
+        uTime = u('uTime');
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+        gl.bufferData(gl.ARRAY_BUFFER, positions, gl.STATIC_DRAW);
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, gl.createBuffer());
+        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW);
+        gl.enableVertexAttribArray(0);
+        gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
+        gl.useProgram(program);
+        // Both sides drawn, nearest in front, as the package's double-sided material does.
+        gl.disable(gl.CULL_FACE);
+        gl.enable(gl.DEPTH_TEST);
+        gl.depthFunc(gl.LEQUAL);
+
+        // What doesn't change from frame to frame.
+        gl.uniformMatrix4fv(u('uMV'), false, mv);
+        // Turns only, no scaling, so the normals turn with the same 3 × 3.
+        gl.uniformMatrix3fv(u('uNormalMatrix'), false, [mv[0], mv[1], mv[2], mv[4], mv[5], mv[6], mv[8], mv[9], mv[10]]);
+        gl.uniform2fv(u('uDFG'), DFG);
+        gl.uniform1f(u('uSpeed'), fx.speed);
+        gl.uniform1f(u('uNoiseDensity'), fx.density);
+        gl.uniform1f(u('uNoiseStrength'), fx.strength);
+        // The ambient light on a 20% metallic surface, before the specular share: 0.8 × brightness.
+        gl.uniform1f(u('uGain'), 0.8 * fx.brightness);
+      };
+
+      // The colours are the page's, so they follow light and dark.
+      const recolour = () => {
+        const s = getComputedStyle(root);
+        for (const i of [1, 2, 3]) {
+          const n = parseInt(s.getPropertyValue(`--hero-gradient-${i}`).trim().replace('#', ''), 16) || 0;
+          gl.uniform3f(u(`uC${i}`), ((n >> 16) & 255) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255);
+        }
+      };
+      // Sized to the hero, which the camera's aspect follows. Only when the size has changed,
+      // since resizing a canvas clears it; says whether it did.
+      const layout = (force = false) => {
+        const w = Math.max(1, Math.round(root.clientWidth)), h = Math.max(1, Math.round(root.clientHeight));
+        if (!force && w === canvas.width && h === canvas.height) return false;
+        canvas.width = w;
+        canvas.height = h;
+        gl.viewport(0, 0, w, h);
+        gl.uniformMatrix4fv(uMVP, false, multiply(perspective(w / h, fx.zoom), mv));
+        return true;
+      };
+
+      let time = 0;
+      const draw = () => {
+        gl.uniform1f(uTime, time);
+        gl.clearColor(0, 0, 0, 0);
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+        gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0);
+      };
+
+      // Runs only while the hero is on screen and the context is held; the browser holds it
+      // while the page is hidden. Paused, it keeps its place: time counts only frames drawn.
+      let raf = 0, last = 0, onScreen = false, lost = false;
+      const tick = (t: number) => {
+        time += Math.min(0.1, (t - last) / 1000);
+        last = t;
+        draw();
+        raf = requestAnimationFrame(tick);
+      };
+      const run = () => {
+        const want = onScreen && !lost;
+        if (want && !raf) { last = performance.now(); raf = requestAnimationFrame(tick); }
+        else if (!want && raf) { cancelAnimationFrame(raf); raf = 0; }
+      };
+      const start = () => {
+        setup();
+        recolour();
+        layout(true);
+        draw();
+        run();
+      };
+
+      start();
+      // Holding on to a lost context (preventDefault) is what lets the browser offer it back.
+      canvas.addEventListener('webglcontextlost', (e) => { e.preventDefault(); lost = true; run(); });
+      canvas.addEventListener('webglcontextrestored', () => { lost = false; start(); });
+      // This runs after the frame's own drawing, so a resize is drawn at once rather than left
+      // blank until the next frame.
+      new ResizeObserver(() => { if (!lost && layout()) draw(); }).observe(root);
+      new IntersectionObserver(([entry]) => { onScreen = !!entry?.isIntersecting; run(); }).observe(root);
+      // The theme: the device setting, or data-theme on <html> (set by the local dev panel).
+      const retheme = () => { if (lost) return; recolour(); if (!raf) draw(); };
+      new MutationObserver(retheme).observe(html, { attributes: true, attributeFilter: ['data-theme'] });
+      matchMedia('(prefers-color-scheme: dark)').addEventListener('change', retheme);
+    }
+  }
+</script>

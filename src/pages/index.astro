@@ -1,6 +1,7 @@
 ---
 import Base from '../layouts/Base.astro';
 import ContourMap from '../components/ContourMap.astro';
+import HeroGradient from '../components/HeroGradient.astro';
 import { links } from '../site';
 import quotes from '../data/quotes.json';
 
@@ -74,6 +75,9 @@ const structuredData = {
 
   <main>
     <section class="hero">
+      <!-- The moving gradient behind everything in the hero. First, so all that follows
+           paints above it. -->
+      <HeroGradient />
       <h1 class="sr-only">Varshil Anavadia</h1>
       <div class="hero-name" aria-hidden="true">
         <div class="hero-name-track">
