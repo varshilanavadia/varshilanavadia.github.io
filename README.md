@@ -28,6 +28,7 @@ Dependabot (`.github/dependabot.yml`) opens a weekly pull request for newer npm 
 
 - `src/layouts/Base.astro` is the frame every page shares: head basics and icons, the bar of profile links, and the footer's copyright line. The profile links themselves live in `src/site.ts`.
 - `src/pages/index.astro` is the home page: the hero name marquee, the portrait's depth effect (the pointer where there is one, the phone's tilt otherwise), and the quote of the day, which is picked in the browser from the visitor's local date out of `src/data/quotes.json`.
+- `src/components/HeroGradient.astro` is the moving gradient behind the home page's hero and its bar of links: shadergradient.co's Universe preset, ported to plain WebGL rather than loaded as the React package, in the colours set by `--hero-gradient-1` to `3` in `site.css`, and fading out into the page from `--hero-fade` percent of the way down the figure.
 - `src/components/ContourMap.astro` is the drifting contour map, used full strength behind the 404's band and fainter behind the home page's statement.
 - `src/pages/404.astro` is the not-found page. GitHub Pages serves it, with a 404 status, for any address that has no file. It is kept out of search results and the sitemap.
 - `src/styles/design-system.css` is the stylesheet of the Personal Portfolio Design System, the owner's design system in Claude Design (a copy of Modernist), with its Google Fonts import removed, since fonts are self-hosted through Fontsource.

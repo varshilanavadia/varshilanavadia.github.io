@@ -19,12 +19,22 @@ html{--scrim:var(--color-text)}
    --color-accent. The paper is white whichever mode the page is in, so the ink on it is the
    one colour here that must not follow the theme: the semantic accent goes pale in the dark
    (accent-400), which reads at 1.9:1 on white and would all but vanish. accent-700 reads at
-   5.2:1 there, and 5.3:1 is what --color-accent gives in the light, so the two modes match. */
-:root{color-scheme:light;--ground-dark:#0E2E1D;--hero-over:#fff;--on-paper:var(--color-accent-700);--lift:color-mix(in srgb, var(--color-text) 30%, transparent)}
+   5.2:1 there, and 5.3:1 is what --color-accent gives in the light, so the two modes match.
+   --hero-gradient-1 to 3 are the hero background's colours (HeroGradient.astro): mid green,
+   sea glass and the portrait's yellow in the light; the ground, deep teal and olive gold in
+   the dark. --hero-fade is where that background starts to fade out, as a percentage of the
+   way down the figure: later in the dark, where the gradient sits close to the ground and the
+   fade has less to hide. --on-gradient is the ink of the bar's links while that background
+   runs behind them, and --on-gradient-hover theirs when pointed at: in the light the darkest
+   green, the dark ground, since the gradient's deepest greens take ordinary ink below 3:1,
+   darkening on hover to a near-black green, as far again as the resting grey steps to ink
+   everywhere else; in the dark the lighter grey (--ink-2) brightening to ink, the same step,
+   since the usual grey falls to 2.6:1 on the gradient's olive. */
+:root{color-scheme:light;--ground-dark:#0E2E1D;--hero-over:#fff;--on-paper:var(--color-accent-700);--lift:color-mix(in srgb, var(--color-text) 30%, transparent);--hero-gradient-1:#60B37D;--hero-gradient-2:#A8D8D0;--hero-gradient-3:#F2D16B;--hero-fade:55;--on-gradient:var(--ground-dark);--on-gradient-hover:color-mix(in srgb, var(--ground-dark), #000 60%)}
 @media (prefers-color-scheme: dark){
-  :root:not([data-theme="light"]){color-scheme:dark;--color-bg:var(--ground-dark);--color-surface:color-mix(in srgb, var(--ground-dark), #f0f8f2 6%);--color-text:var(--color-neutral-100);--color-accent:var(--color-accent-400);--color-divider:color-mix(in srgb, #f0f8f2 35%, transparent);--ink-2:var(--ink-inv-2);--ink-3:var(--ink-inv-3);--hero-over:var(--ground-dark);--lift:rgba(0,0,0,.55)}
+  :root:not([data-theme="light"]){color-scheme:dark;--color-bg:var(--ground-dark);--color-surface:color-mix(in srgb, var(--ground-dark), #f0f8f2 6%);--color-text:var(--color-neutral-100);--color-accent:var(--color-accent-400);--color-divider:color-mix(in srgb, #f0f8f2 35%, transparent);--ink-2:var(--ink-inv-2);--ink-3:var(--ink-inv-3);--hero-over:var(--ground-dark);--lift:rgba(0,0,0,.55);--hero-gradient-1:#0E2E1D;--hero-gradient-2:#1E5A4E;--hero-gradient-3:#6B5E10;--hero-fade:75;--on-gradient:var(--ink-2);--on-gradient-hover:var(--ink)}
 }
-:root[data-theme="dark"]{color-scheme:dark;--color-bg:var(--ground-dark);--color-surface:color-mix(in srgb, var(--ground-dark), #f0f8f2 6%);--color-text:var(--color-neutral-100);--color-accent:var(--color-accent-400);--color-divider:color-mix(in srgb, #f0f8f2 35%, transparent);--ink-2:var(--ink-inv-2);--ink-3:var(--ink-inv-3);--hero-over:var(--ground-dark);--lift:rgba(0,0,0,.55)}
+:root[data-theme="dark"]{color-scheme:dark;--color-bg:var(--ground-dark);--color-surface:color-mix(in srgb, var(--ground-dark), #f0f8f2 6%);--color-text:var(--color-neutral-100);--color-accent:var(--color-accent-400);--color-divider:color-mix(in srgb, #f0f8f2 35%, transparent);--ink-2:var(--ink-inv-2);--ink-3:var(--ink-inv-3);--hero-over:var(--ground-dark);--lift:rgba(0,0,0,.55);--hero-gradient-1:#0E2E1D;--hero-gradient-2:#1E5A4E;--hero-gradient-3:#6B5E10;--hero-fade:75;--on-gradient:var(--ink-2);--on-gradient-hover:var(--ink)}
 /* Page margin: the wireframe's s5 at the 1440 design width, down to 24px at the 320 floor
    (Type System §14). Interpolated, so there is no breakpoint to maintain. */
 html{--gutter:clamp(1.5rem, 4.1667vw, 3.75rem)}
@@ -46,9 +56,12 @@ a:hover{color:var(--ink)}
    wordmark gave way to the profile links, since the hero already carries the name. */
 .bar{position:sticky;top:0;z-index:10;display:flex;align-items:center;justify-content:flex-end;padding:9px var(--gutter);border-bottom:2px solid var(--rule);background:var(--sheet)}
 .bar-links{display:flex;flex-wrap:wrap;justify-content:flex-end;column-gap:clamp(1rem, 2.7778vw, 2.5rem);list-style:none;margin:0;padding:0}
-/* Sized as the C3 nav labels are (t-1, 600, --ink-3 at rest) but in normal case, so without
-   their caps tracking. 12px above and 13px below the 19.2px line box make the 44px target. */
-.bar-links a{display:inline-block;padding:12px 0 13px;font-size:var(--t-1);font-weight:600;line-height:1.2;color:var(--ink-3)}
+/* Styled as the C3 nav labels are (--ink-3 at rest) but in normal case, so without their caps
+   tracking, and a size up from theirs: t0 in bold, which WCAG counts as large text, where 3:1
+   is enough. The home page runs its gradient behind them (HeroGradient.astro), where 4.5:1
+   could not be held; the bar keeps one size on every page. 10.1px above and below the 24px
+   line box make the 44px target, so the bar's height is unchanged. */
+.bar-links a{display:inline-block;padding:10.1px 0;font-size:var(--t0);font-weight:700;line-height:1.2;color:var(--ink-3)}
 .bar-links a:hover{color:var(--ink)}
 /* On narrow screens the row spans the bar and the gaps take what is left, so the three
    labels hold one line down to the 320 floor. */
