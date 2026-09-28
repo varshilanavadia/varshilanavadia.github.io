@@ -27,9 +27,9 @@
     // Applied before first paint, so a forced theme never flashes the other one.
     for (const c of CONTROLS) if (state[c.key]) apply(c, state[c.key]);
 
-    // The quote of the day is picked from the visitor's local date. This shifts that date by
-    // a number of days so any day's quote, and how it wraps, can be read on a phone without
-    // touching the clock. Set here, at head time, so the quote script down in the footer
+    // The thought of the day is picked from the visitor's local date. This shifts that date by
+    // a number of days so any day's thought, and how it wraps, can be read on a phone without
+    // touching the clock. Set here, at head time, so the thought script down in the footer
     // picks the previewed day on first paint too, rather than correcting itself afterwards.
     window.__dayOffset = state.dayOffset || 0;
 
@@ -66,20 +66,20 @@
         panel.append(row);
       }
 
-      // Day stepper, only on pages that carry a quote. Not a CONTROLS row: it steps a
+      // Day stepper, only on pages that carry a thought. Not a CONTROLS row: it steps a
       // number rather than choosing one of a set of values.
-      const quote = window.__quoteOfTheDay;
-      if (quote) {
+      const thought = window.__thoughtOfTheDay;
+      if (thought) {
         const row = document.createElement('div');
         row.className = 'dev-panel-row';
         row.innerHTML = '<span>Day</span>';
         const shown = document.createElement('span');
         shown.className = 'dev-panel-date';
-        // Quotes differ in length, so swapping one changes the page's height and the view
+        // Thoughts differ in length, so swapping one changes the page's height and the view
         // drifts under you. Two things keep it still: a spacer that stops the page ever
         // getting shorter during a session (at the foot of the page the browser would
         // otherwise pull the view up, and no amount of scrolling could correct it), and a
-        // scroll nudge by however far the quote itself moved. Both are local only.
+        // scroll nudge by however far the thought itself moved. Both are local only.
         const el = document.querySelector('.foot blockquote');
         const spacer = document.createElement('div');
         spacer.setAttribute('aria-hidden', 'true');
@@ -97,13 +97,13 @@
           window.__dayOffset = state.dayOffset;
           save();
           const before = el ? el.getBoundingClientRect().top : 0;
-          quote.render();
+          thought.render();
           hold();
           if (el) {
             const moved = el.getBoundingClientRect().top - before;
             if (moved) scrollBy({ top: moved, behavior: 'instant' });
           }
-          shown.textContent = quote.label();
+          shown.textContent = thought.label();
         };
         for (const [text, by] of [['\u2039', -1], ['Today', 0], ['\u203a', 1]]) {
           const b = document.createElement('button');
@@ -113,9 +113,9 @@
         }
         row.append(shown);
         panel.append(row);
-        // The offset was applied at head time, so the quote on screen is already right for
+        // The offset was applied at head time, so the thought on screen is already right for
         // the previewed day; only the date beside the buttons needs filling in.
-        shown.textContent = quote.label();
+        shown.textContent = thought.label();
       }
 
       document.body.append(panel);

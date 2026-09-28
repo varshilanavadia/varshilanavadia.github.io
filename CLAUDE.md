@@ -45,8 +45,8 @@ Rules only: the reasoning lives in commit messages and code comments. Delete a r
 
 ## Data and privacy
 
-- The repository is public. Never commit private data. Quote authors stay out of `src/data/quotes.json`.
-- Quotes come from the owner's private Google Sheet (`1jZk5j9XmP78ocRAIVSQ_E-NNuaLacfFJR3vmlcK8BO4`). Append new ones to `src/data/quotes.json` with the date they are added. Never change a date already in the file, and never reorder or delete entries. The first import's shared `2026-09-01` stays as it is.
+- The repository is public. Never commit private data. Who said each thought stays out of `src/data/thoughts.json`.
+- Thoughts come from the owner's private Google Sheet (`1jZk5j9XmP78ocRAIVSQ_E-NNuaLacfFJR3vmlcK8BO4`). Append new ones to `src/data/thoughts.json` with the date they are added. Never change a date already in the file, and never reorder or delete entries. The first import's shared `2026-09-01` stays as it is.
 
 ## Assets and tools
 

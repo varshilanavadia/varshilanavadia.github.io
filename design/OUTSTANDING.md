@@ -37,20 +37,22 @@ yet. Each one leaves this list when Claude Design has it.
   lifted), on a spring settling in about half a second. On a computer the glass is the bar's
   full width, fading out over 48px at its foot along the hero fade's eased curve; on a phone or
   tablet it is a capsule floating around the links, with 27px corners, a rim of light, a soft
-  shadow and a faint sheen (`--glass-*`). With Reduce Transparency on, the glass turns solid, the page's ground with no
-  blur, ending on its edge rather than fading, and the capsule loses its sheen; in a
-  high-contrast theme it is a solid panel in the theme's colours with a thin line round it.
-  The rule between the hero and the statement is gone (27 Sep 2026).
+  shadow and a faint sheen (`--glass-*`). With Reduce Transparency on, the glass turns solid,
+  the page's ground with no blur, ending on its edge rather than fading, and the capsule loses
+  its sheen; in a high-contrast theme it is a solid panel in the theme's colours with a thin
+  line round it. The rule between the hero and the statement is gone (27 Sep 2026).
 - **The bar's links a size up.** t0 in bold on every page, up from the C3 nav label's t-1 at
   600, so they count as large text on the gradient. There they rest in `--on-gradient` (the
   dark ground in the light, `--ink-2` in the dark), hover to `--on-gradient-hover` (a
   near-black green, and `--ink`), and take a two-tone focus ring: that hover colour on a band
   of the page's ground (27 Sep 2026).
+- **Thought of the day.** The footer's block label reads "Thought of the day", where the
+  landing wireframe still says "Quote of the day" (27 Sep 2026).
 
 ## The snapshot owes the site
 
 - **`design/` needs re-taking.** The Type System, the landing wireframe and the `_ds`
   stylesheet are all from 12 September; the Favicon Spec is from the 17th. They predate the
-  system's rename, dark mode, the quote of the day, the docked dev panel, the contour map, the
-  portrait depth, the paper accent and the hero gradient. Re-take after the rename lands, so
-  it is one pass.
+  system's rename, dark mode, the thought of the day, the docked dev panel, the contour map,
+  the portrait depth, the paper accent and the hero gradient. Re-take after the rename lands,
+  so it is one pass.
