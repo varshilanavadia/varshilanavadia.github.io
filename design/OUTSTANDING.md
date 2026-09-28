@@ -32,8 +32,15 @@ yet. Each one leaves this list when Claude Design has it.
   way down the figure in the light and 75% in the dark (`--hero-fade`). The system has no
   role for a moving background (27 Sep 2026).
 - **The bar over the gradient.** On the home page the bar runs on transparent over the hero,
-  with no rule, and turns solid with its rule once the page scrolls past the hero. The rule
-  between the hero and the statement is gone (27 Sep 2026).
+  with no rule. As the page scrolls down it slides away, and as it scrolls up it slides back
+  as glass (the page's ground at 45% in the light and 70% in the dark, blurred and its colour
+  lifted), on a spring settling in about half a second. On a computer the glass is the bar's
+  full width, fading out over 48px at its foot along the hero fade's eased curve; on a phone or
+  tablet it is a capsule floating around the links, with 27px corners, a rim of light, a soft
+  shadow and a faint sheen (`--glass-*`). With Reduce Transparency on, the glass turns solid, the page's ground with no
+  blur, ending on its edge rather than fading, and the capsule loses its sheen; in a
+  high-contrast theme it is a solid panel in the theme's colours with a thin line round it.
+  The rule between the hero and the statement is gone (27 Sep 2026).
 - **The bar's links a size up.** t0 in bold on every page, up from the C3 nav label's t-1 at
   600, so they count as large text on the gradient. There they rest in `--on-gradient` (the
   dark ground in the light, `--ink-2` in the dark), hover to `--on-gradient-hover` (a
