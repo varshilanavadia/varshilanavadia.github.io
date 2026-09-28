@@ -52,27 +52,104 @@
      made transparent rather than removed, so nothing below moves. */
   .hero + .intro{border-top-color:transparent}
   /* The gradient carries on up behind the bar of links. The hero reaches up under the bar by
-     the bar's height (--bar-h, set by the script below) and pads its content back down by as
-     much, so nothing in it moves. The bar drops its ground while the hero is behind it and
-     takes it back once the page has scrolled on past, where it would otherwise lie over text.
-     Its rule goes the same way, so bar and hero read as one field: made transparent rather
-     than removed, so the bar keeps its height, and back only with the ground. */
-  .bar{background:transparent;border-bottom-color:transparent;transition:background-color .3s,border-color .3s}
-  .bar.bar--over-page{background:var(--sheet);border-bottom-color:var(--rule)}
-  /* On the gradient the links, large text (site.css), take --on-gradient, and darken or
-     brighten on hover to --on-gradient-hover as they do everywhere else: in the light, the
-     darkest green to a near-black green, since the resting grey fell to 2–4:1 there; in the
-     dark, a lighter grey than usual to ink. Measured around the letters, at rest that holds
-     3.1:1 at worst on a phone and 4.3:1 on a laptop in the light, against the 3:1 large text
-     needs. */
-  .bar:not(.bar--over-page) .bar-links a{color:var(--on-gradient)}
-  .bar:not(.bar--over-page) .bar-links a:hover{color:var(--on-gradient-hover)}
+     the bar's height (--bar-h, worked out at the foot of this style and measured by the script
+     below) and pads its content back down by as much, so nothing in it moves; the bar drops
+     its ground and its rule (made transparent rather than removed, so the bar keeps its
+     height), so bar and hero read as one field.
+     Once the page scrolls it gets out of the way, as Safari's toolbar does, since pinned and
+     see-through it left its links over the portrait, where they all but vanished: clear at
+     the top; sliding away as the page scrolls down, into the reading; sliding back as glass
+     when it scrolls up, when a link is more likely wanted (bar--hidden, bar--glass, set by
+     the script). The glass is the page's ground as a light veil over what is behind, blurred
+     and its colour lifted, after Apple's bar materials (--glass-* in site.css). It slides and
+     turns to glass on a spring (--spring, --spring-time, which the script works out), and
+     under reduced motion does neither: it stays, as glass once the page has scrolled.
+     Its shape follows the device, after Apple's Liquid Glass:
+       mouse or trackpad  a bar the width of the page, fading out over 48px at its foot
+                          rather than ending on a line (a progressive blur, as in iOS 26)
+       touch (a phone or tablet, as the tilt decides too)  a capsule floating around the
+                          links, set in from the edges, with a rim of light (bright above, a
+                          shade darker below), a soft shadow lifting it off what is beneath,
+                          and a faint diagonal sheen; it fades and settles in on the spring */
+  .bar{background:transparent;border-bottom-color:transparent;transition:translate var(--spring-time, .4s) var(--spring, ease)}
+  /* Up by its height and the glass's 36px below it, so none of the glass is left showing. */
+  .bar.bar--hidden{translate:0 calc(-100% - 36px)}
+  /* The glass is its own layer behind the links, reaching 36px below the bar, so it can fade
+     out there without fading the links. It fades from just below them along the hero fade's
+     eased curve, over 48px: a straight ramp over 28px drew a line where it began, which cut
+     the white paper's top off flat under the dark glass as the bar slid over it. */
+  .bar::before{
+    content:'';position:absolute;inset:0 0 -36px;z-index:-1;pointer-events:none;opacity:0;
+    background:var(--glass-tint);
+    -webkit-backdrop-filter:blur(24px) saturate(200%);backdrop-filter:blur(24px) saturate(200%);
+    --glass-fade:linear-gradient(to bottom,#000 calc(100% - 48px),
+      rgb(0 0 0 / .957) calc(100% - 42px),rgb(0 0 0 / .844) calc(100% - 36px),
+      rgb(0 0 0 / .684) calc(100% - 30px),rgb(0 0 0 / .5) calc(100% - 24px),
+      rgb(0 0 0 / .316) calc(100% - 18px),rgb(0 0 0 / .156) calc(100% - 12px),
+      rgb(0 0 0 / .043) calc(100% - 6px),transparent);
+    -webkit-mask-image:var(--glass-fade);mask-image:var(--glass-fade);
+    transition:opacity var(--spring-time, .4s) var(--spring, ease)}
+  .bar.bar--glass::before{opacity:1}
+  /* The capsule's corners are 27px, half its height on one row, so it is a pill at any normal
+     size; with larger text, the links wrapped to two rows, it becomes a rounded rectangle
+     that still holds them all, rather than a lozenge with their corners outside it. */
+  @media (pointer: coarse){
+    .bar::before{display:none}
+    .bar nav{position:relative}
+    .bar nav::before{
+      content:'';position:absolute;inset:-4px calc(-1 * min(18px, var(--gutter) - 10px));z-index:-1;pointer-events:none;border-radius:27px;
+      background:var(--glass-sheen),var(--glass-tint);
+      -webkit-backdrop-filter:blur(24px) saturate(200%);backdrop-filter:blur(24px) saturate(200%);
+      box-shadow:var(--glass-rim),var(--glass-lift);
+      opacity:0;scale:.94;transition:opacity var(--spring-time, .4s) var(--spring, ease),scale var(--spring-time, .4s) var(--spring, ease)}
+    .bar.bar--glass nav::before{opacity:1;scale:1}
+  }
+  @media (prefers-reduced-motion: reduce){
+    .bar,.bar::before,.bar nav::before{transition:none}
+  }
+  /* Reduce Transparency (a system setting on Apple's devices and on Windows; Chrome and Edge
+     pass it on, Safari does not yet): the glass turns solid, the page's own ground with no
+     blur, as the system's own bars do. It ends on its edge rather than fading out, and the
+     capsule drops its sheen; the slide, the capsule's shape, its rim and its shadow stay. */
+  @media (prefers-reduced-transparency: reduce){
+    .bar::before{inset:0;-webkit-mask-image:none;mask-image:none}
+    .bar::before,.bar nav::before{background:var(--sheet);-webkit-backdrop-filter:none;backdrop-filter:none}
+  }
+  /* High contrast (forced colours, as Windows' contrast themes set): the browser paints every
+     border in the theme's text colour, transparent or not, so the rules made transparent here
+     would cross the hero as lines. They give way to padding of the same 2px, so nothing moves.
+     The glass, which the theme would leave a see-through blur with no edge, becomes a solid
+     panel in the theme's own colours with a thin line round it: along its foot on a computer,
+     ending there rather than fading; all round the capsule on a phone or tablet. The browser
+     drops the shadows itself. */
+  @media (forced-colors: active){
+    .bar{border-bottom:0;padding-bottom:calc(9px + 2px)}
+    .hero + .intro{border-top:0;padding-top:calc(var(--s5) + 2px)}
+    .bar::before{inset:0;background:Canvas;-webkit-backdrop-filter:none;backdrop-filter:none;-webkit-mask-image:none;mask-image:none;border-bottom:1px solid CanvasText}
+    .bar nav::before{background:Canvas;-webkit-backdrop-filter:none;backdrop-filter:none;border:1px solid CanvasText}
+  }
+  /* The links, large text (site.css), take --on-gradient, and darken or brighten on hover to
+     --on-gradient-hover as they do everywhere else: in the light, the darkest green to a
+     near-black green, since the resting grey fell to 2–4:1 on the gradient; in the dark, a
+     lighter grey than usual to ink. Measured around the letters against the 3:1 large text
+     needs (27 Sep 2026, sampled across the animation): on the gradient at the top, 3.5:1 at
+     worst, on a phone in the light; on the glass, 4.0:1 in the light and, with the dark
+     glass's 70% tint, 3.2:1 in the dark, at the worst place, a phone with Safari's toolbars
+     showing, scrolled back up over the paper and the name. */
+  .bar .bar-links a{color:var(--on-gradient)}
+  .bar .bar-links a:hover{color:var(--on-gradient-hover)}
   /* The focus ring there takes the links' hover colour, on a band of the page's ground
      (--sheet, pale in the light, dark in the dark) that it sits in the middle of: the design
      system's accent green all but vanished into the gradient (1.3:1 at worst in the light),
      and no one colour could hold the 3:1 a focus ring needs against all of the gradient,
      where the ground always does. */
-  .bar:not(.bar--over-page) .bar-links a:focus-visible{outline-color:var(--on-gradient-hover);box-shadow:0 0 0 6px var(--sheet)}
+  .bar .bar-links a:focus-visible{outline-color:var(--on-gradient-hover);box-shadow:0 0 0 6px var(--sheet)}
+  /* The bar's height before the script has measured it, from what makes it in site.css: its
+     padding, a link's padding and line, and its rule. So the page is laid out right from its
+     first frame, where the hero used to start below the bar and jump up under it once the
+     script ran, a layout shift on every load. The script's measurement still overrides it,
+     for a bar of another height, as when larger text wraps the links. */
+  :root{--bar-h:calc(2 * 9px + 2 * 10.1px + 1.2 * var(--t0) + 2px)}
   .hero{margin-top:calc(-1 * var(--bar-h, 0px));padding-top:var(--bar-h, 0px)}
   .tilt-hint{top:calc(var(--bar-h, 0px) + var(--s3))}
 </style>
@@ -275,16 +352,85 @@
     const html = document.documentElement;
 
     // The bar (see the global styles above): the hero reaches up under it by its measured
-    // height, and it takes its ground back once the hero has scrolled out from under it. Set
-    // up whatever becomes of the gradient, since the page's layout depends on it.
+    // height. Set up whatever becomes of the gradient, since the page's layout depends on it.
     const bar = document.querySelector<HTMLElement>('.bar');
     if (bar) {
-      const hero = root.parentElement!;
-      const overPage = () => bar.classList.toggle('bar--over-page', hero.getBoundingClientRect().bottom <= bar.getBoundingClientRect().bottom + 1);
       // Unrounded, so no sliver of the page shows between the top of the bar and the hero.
-      new ResizeObserver(() => { html.style.setProperty('--bar-h', `${bar.getBoundingClientRect().height}px`); overPage(); }).observe(bar);
-      addEventListener('scroll', overPage, { passive: true });
-      addEventListener('resize', overPage);
+      new ResizeObserver(() => html.style.setProperty('--bar-h', `${bar.getBoundingClientRect().height}px`)).observe(bar);
+      // The bar's spring, after Motion's: a damped spring from 0 to 1, given
+      // as how long it should look to take and how much it may bounce, sampled every 10ms into
+      // CSS's linear() easing so the browser plays it with no script running. Apple-like:
+      // settled in about half a second, with a bounce too small to see as one.
+      const spring = (visual = 0.35, bounce = 0.1) => {
+        const w = (2 * Math.PI) / (visual * 1.2); // natural frequency
+        const z = 1 - bounce; // damping ratio
+        const at = (t: number) => {
+          if (z >= 1) return 1 - Math.exp(-w * t) * (1 + w * t);
+          const wd = w * Math.sqrt(1 - z * z);
+          return 1 - Math.exp(-z * w * t) * (Math.cos(wd * t) + ((z * w) / wd) * Math.sin(wd * t));
+        };
+        // Long enough to settle within a thousandth of the way.
+        let end = 0;
+        for (let t = 0; t < 3; t += 0.01) if (Math.abs(1 - at(t)) > 0.001) end = t;
+        const time = end + 0.01;
+        const points: number[] = [];
+        for (let i = 0; i * 0.01 <= time + 1e-9; i++) points.push(Math.round(at(i * 0.01) * 10000) / 10000);
+        points[points.length - 1] = 1;
+        return { easing: `linear(${points.join(', ')})`, time };
+      };
+      const { easing, time: springTime } = spring();
+      bar.style.setProperty('--spring', easing);
+      bar.style.setProperty('--spring-time', `${springTime.toFixed(2)}s`);
+
+      // The bar's state: glass once the page has left the top; hidden once it has
+      // travelled 8px down beyond the bar's own height, and back once it has travelled 8px up,
+      // so small wobbles change nothing. Only positions within the page's real range count,
+      // so a phone's bounce past either end moves nothing, and a resize or rotation is not a
+      // scroll. It never hides while one of its links has keyboard focus (WCAG 2.4.11), and
+      // Tab brings a hidden bar back at once, before focus moves, or the browser would scroll
+      // the page to show the link where it sits off screen. Under reduced motion it never
+      // hides, including when that is switched on while it is hidden.
+      const still = matchMedia('(prefers-reduced-motion: reduce)');
+      const scrolled = () => Math.min(Math.max(scrollY, 0), Math.max(0, document.documentElement.scrollHeight - innerHeight));
+      // Keyboard focus only: a link clicked with a mouse opens a new tab and keeps focus, and
+      // must not hold the bar up. Older browsers without :focus-visible fall back to focus.
+      const keyboardFocus = () => {
+        try { return !!bar.querySelector(':focus-visible'); } catch { return bar.contains(document.activeElement); }
+      };
+      let lastY = scrolled(), travel = 0;
+      const glass = () => {
+        const y = scrolled(), h = bar.offsetHeight;
+        // Only movement beyond the bar's height counts towards hiding it.
+        const d = Math.max(y, h) - Math.max(lastY, h);
+        lastY = y;
+        bar.classList.toggle('bar--glass', y > 1);
+        if (y <= h || still.matches) {
+          travel = 0;
+          bar.classList.remove('bar--hidden');
+          return;
+        }
+        // Travel so far in one direction; turning round starts it again.
+        travel = Math.sign(d) === Math.sign(travel) ? travel + d : d;
+        if (travel > 8 && !keyboardFocus()) bar.classList.add('bar--hidden');
+        else if (travel < -8) bar.classList.remove('bar--hidden');
+      };
+      bar.addEventListener('focusin', () => bar.classList.remove('bar--hidden'));
+      addEventListener('keydown', (e) => {
+        if (e.key !== 'Tab' || !bar.classList.contains('bar--hidden')) return;
+        bar.style.transition = 'none';
+        bar.classList.remove('bar--hidden');
+        requestAnimationFrame(() => requestAnimationFrame(() => { bar.style.transition = ''; }));
+      }, { capture: true });
+      // A resize fires before the scroll it causes, so starting the count again here keeps a
+      // rotation from reading as a scroll.
+      addEventListener('resize', () => {
+        lastY = scrolled();
+        travel = 0;
+      });
+      still.addEventListener('change', glass);
+
+      addEventListener('scroll', glass, { passive: true });
+      glass();
     }
 
     // Drawn at one pixel per CSS pixel, as the package draws by default. Without WebGL the
