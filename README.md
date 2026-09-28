@@ -1,6 +1,6 @@
 # varshil-anavadia
 
-Personal website. Currently a Coming Soon page: the hero, a statement, and a footer carrying the quote of the day.
+Personal website. Currently a Coming Soon page: the hero, a statement, and a footer carrying the thought of the day.
 
 `CLAUDE.md` holds the rules for working in this repository.
 
@@ -16,7 +16,7 @@ npm run preview  # serve the build locally
 npm run preview:local  # build with the local dev panel and serve it on your network
 ```
 
-The local dev panel, "Top Secret Tools", is a strip docked along the top of the window, closed by default (tap its label, or press the backtick key). It shortens the page rather than covering it, and holds controls for checking the site: a Light / Dark / Device theme switch, and a day stepper that previews any day's quote of the day. It appears in `npm run dev` and `npm run preview:local` only; the GitHub Pages build never includes it. Add controls in `src/components/DevPanel.astro`.
+The local dev panel, "Top Secret Tools", is a strip docked along the top of the window, closed by default (tap its label, or press the backtick key). It shortens the page rather than covering it, and holds controls for checking the site: a Light / Dark / Device theme switch, and a day stepper that previews any day's thought of the day. It appears in `npm run dev` and `npm run preview:local` only; the GitHub Pages build never includes it. Add controls in `src/components/DevPanel.astro`.
 
 ## Deploy
 
@@ -27,7 +27,7 @@ Dependabot (`.github/dependabot.yml`) opens a weekly pull request for newer npm 
 ## Layout
 
 - `src/layouts/Base.astro` is the frame every page shares: head basics and icons, the bar of profile links, and the footer's copyright line. The profile links themselves live in `src/site.ts`.
-- `src/pages/index.astro` is the home page: the hero name marquee, the portrait's depth effect (the pointer where there is one, the phone's tilt otherwise), and the quote of the day, which is picked in the browser from the visitor's local date out of `src/data/quotes.json`.
+- `src/pages/index.astro` is the home page: the hero name marquee, the portrait's depth effect (the pointer where there is one, the phone's tilt otherwise), and the thought of the day, which is picked in the browser from the visitor's local date out of `src/data/thoughts.json`.
 - `src/components/HeroGradient.astro` is the moving gradient behind the home page's hero and its bar of links: shadergradient.co's Universe preset, ported to plain WebGL rather than loaded as the React package, in the colours set by `--hero-gradient-1` to `3` in `site.css`, and fading out into the page from `--hero-fade` percent of the way down the figure. It also runs the bar on scroll: clear at the top, sliding away as the page scrolls down and back as glass when it scrolls up, a bar on a computer and a floating capsule on a phone or tablet (`--glass-*` in `site.css`), made solid for anyone who has turned on Reduce Transparency or a high-contrast theme.
 - `src/components/ContourMap.astro` is the drifting contour map, used full strength behind the 404's band and fainter behind the home page's statement.
 - `src/pages/404.astro` is the not-found page. GitHub Pages serves it, with a 404 status, for any address that has no file. It is kept out of search results and the sitemap.

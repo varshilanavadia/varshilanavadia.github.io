@@ -3,20 +3,20 @@ import Base from '../layouts/Base.astro';
 import ContourMap from '../components/ContourMap.astro';
 import HeroGradient from '../components/HeroGradient.astro';
 import { links } from '../site';
-import quotes from '../data/quotes.json';
+import thoughts from '../data/thoughts.json';
 
 const canonical = new URL('/', Astro.site).href;
 
 
-// Quote of the day. A day number is whole days since 1 Jan 2026, which is the arithmetic
+// Thought of the day. A day number is whole days since 1 Jan 2026, which is the arithmetic
 // the picker below runs on the visitor's local date. Working the dates out here keeps them
-// out of the page: the browser is handed a text and a number per quote and nothing else.
+// out of the page: the browser is handed a text and a number per thought and nothing else.
 const EPOCH = Date.UTC(2026, 0, 1);
 const dayNumber = (iso: string) => {
   const [y, m, d] = iso.split('-').map(Number);
   return Math.floor((Date.UTC(y, m - 1, d) - EPOCH) / 86400000);
 };
-const quoteData = quotes.map((q) => [q.text, dayNumber(q.added)]);
+const thoughtData = thoughts.map((t) => [t.text, dayNumber(t.added)]);
 
 // Share preview strings and image, from Share Preview.dc.html (17 Sep 2026), minus its
 // description: the page carries no description line while it is a Coming Soon page.
@@ -140,17 +140,17 @@ const structuredData = {
   </main>
 
   <Fragment slot="foot">
-    <p class="block-label">Quote of the day</p>
-    {/* The first quote in the file is what ships in the HTML: what a visitor without
+    <p class="block-label">Thought of the day</p>
+    {/* The first thought in the file is what ships in the HTML: what a visitor without
         JavaScript reads, and what a crawler indexes. The script below replaces it. */}
-    <blockquote id="quote-of-the-day">{quotes[0].text}</blockquote>
-    <script is:inline define:vars={{ QUOTES: quoteData }}>
-      // The day is the visitor's own: the quote is picked here from their local date, so it
+    <blockquote id="thought-of-the-day">{thoughts[0].text}</blockquote>
+    <script is:inline define:vars={{ THOUGHTS: thoughtData }}>
+      // The day is the visitor's own: the thought is picked here from their local date, so it
       // turns over at their midnight and publishing needs no daily rebuild. Everyone whose
-      // local date is the same reads the same quote, and it cannot change during their day.
+      // local date is the same reads the same thought, and it cannot change during their day.
       //
       // Inline and in the parser's path, immediately after the <blockquote>, so the text is
-      // replaced before the page is painted and no other quote is ever visible.
+      // replaced before the page is painted and no other thought is ever visible.
       (() => {
         const DAY = 86400000;
         const EPOCH = Date.UTC(2026, 0, 1);
@@ -172,18 +172,18 @@ const structuredData = {
           return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
         };
 
-        // Rounds. The rotation runs in rounds from the first day any quote is eligible: a
-        // round takes the pool as it stands on its first day and shows each of those quotes
-        // once, in an order shuffled from the round's number. A quote added mid-round waits
-        // for the next round, so adding quotes never reshuffles the round in progress and
-        // "every quote once before any repeat" holds while the list grows.
+        // Rounds. The rotation runs in rounds from the first day any thought is eligible: a
+        // round takes the pool as it stands on its first day and shows each of those thoughts
+        // once, in an order shuffled from the round's number. A thought added mid-round waits
+        // for the next round, so adding thoughts never reshuffles the round in progress and
+        // "every thought once before any repeat" holds while the list grows.
         //
         // Walking the rounds from the start keeps this a pure function of the date: the same
         // day always lands in the same round with the same order. That holds only if the past
-        // never changes, so quotes are appended to quotes.json with the date they are added,
-        // never backdated, reordered or deleted. (A round is about as many days as there are
-        // quotes, so even decades out this is a few hundred short shuffles.)
-        const FIRST = Math.min(...QUOTES.map(([, added]) => added)) + 1;
+        // never changes, so thoughts are appended to thoughts.json with the date they are
+        // added, never backdated, reordered or deleted. (A round is about as many days as
+        // there are thoughts, so even decades out this is a few hundred short shuffles.)
+        const FIRST = Math.min(...THOUGHTS.map(([, added]) => added)) + 1;
         const shuffle = (pool, round, prevLast) => {
           const order = pool.slice();
           const rand = rng(round);
@@ -191,18 +191,19 @@ const structuredData = {
             const j = Math.floor(rand() * (i + 1));
             [order[i], order[j]] = [order[j], order[i]];
           }
-          // Backstop: a round never opens on the quote the last one closed on, so no quote
-          // shows two days running. Swapping the first two keeps every quote once per round.
+          // Backstop: a round never opens on the thought the last one closed on, so no
+          // thought shows two days running. Swapping the first two keeps every thought once
+          // per round.
           if (order.length > 1 && order[0] === prevLast) [order[0], order[1]] = [order[1], order[0]];
           return order;
         };
         const pick = (day) => {
-          if (!QUOTES.length || day < FIRST) return null;
+          if (!THOUGHTS.length || day < FIRST) return null;
           let start = FIRST;
           let prevLast = null;
           for (let round = 0; ; round++) {
-            // A quote joins at the midnight after the date it was added.
-            const pool = QUOTES.filter(([, added]) => added < start);
+            // A thought joins at the midnight after the date it was added.
+            const pool = THOUGHTS.filter(([, added]) => added < start);
             const order = shuffle(pool, round, prevLast);
             if (day < start + order.length) return order[day - start];
             prevLast = order[order.length - 1];
@@ -210,18 +211,18 @@ const structuredData = {
           }
         };
 
-        const el = document.getElementById('quote-of-the-day');
+        const el = document.getElementById('thought-of-the-day');
         // What the markup shipped, so a previewed day with nothing eligible yet puts it back
-        // rather than leaving another day's quote on screen.
+        // rather than leaving another day's thought on screen.
         const shipped = el.textContent;
         const render = () => {
-          const q = pick(today());
-          el.textContent = q ? q[0] : shipped;
+          const thought = pick(today());
+          el.textContent = thought ? thought[0] : shipped;
         };
         render();
 
         // Read by the dev panel's day stepper, which is local-only.
-        window.__quoteOfTheDay = {
+        window.__thoughtOfTheDay = {
           render,
           // "20 Sep": month names spelled out here, since locale data differs by browser (a
           // current one gives UK English "Sept").
