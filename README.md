@@ -2,8 +2,6 @@
 
 Personal website. Currently a Coming Soon page: the hero, a statement, and a footer carrying the thought of the day.
 
-`CLAUDE.md` holds the rules for working in this repository.
-
 Built with [Astro](https://astro.build) as a static site, hosted on GitHub Pages at https://varshilanavadia.github.io.
 
 ## Develop
@@ -35,4 +33,3 @@ Dependabot (`.github/dependabot.yml`) opens a weekly pull request for newer npm 
 - `src/styles/site.css` holds the wireframe's tokens (type scale, spacing, leading, ink roles) and the page layout. Dark mode follows the device setting: one block swaps the base colour tokens to the deep green `#0E2E1D` ground and the Type System's inverted inks.
 - `public/hero-paper.png` is the paper behind the portrait: the figure's outline grown outward. It is generated from the portrait, so after replacing `public/hero-portrait.webp` run `python3 scripts/make-paper.py` (needs Pillow and NumPy).
 - `public/assets/`, `public/favicon.ico` and `public/site.webmanifest` are the icon set from Claude Design's Favicon Spec (VA monogram, #134B2E ink on #D3F0DE). Regenerate them from the drawings in Symbol.dc.html rather than editing them by hand.
-- `design/` is a snapshot of the Claude Design project taken on 12 Sep 2026: the landing wireframe, the Type System, and project notes. Claude Design is the source of truth for the design, and `design/OUTSTANDING.md` lists what the site has decided that Claude Design does not record yet.
