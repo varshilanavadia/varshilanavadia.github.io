@@ -93,7 +93,11 @@
      takes the links' place, and their ink, and on a phone or tablet the capsule. Its panel is
      glass whenever it is open, at the top of the page too, since it hangs over the gradient
      and the portrait: a card with the capsule's corners, rim and sheens on a phone or tablet,
-     in line with the capsule's edge; square, with the shadow alone, on a computer. With two
+     in line with the capsule's edge; square, with the shadow alone, on a computer. Measured
+     behind the letters every 24px of scroll across the hero and every 61px down the rest of
+     the page (3 Oct 2026, a production build in Chrome, 390×664 and 500×800): the button and
+     the panel's links hold 4.9:1 at worst in the light and 4.6:1 in the dark, the worst of
+     each being the button's own word, on the gradient and on its capsule. With two
      groups of links on one line, each has its own capsule, as iOS groups its bar's buttons. */
   .bar{background:transparent;border-bottom-color:transparent;transition:translate var(--spring-time, .4s) var(--spring, ease)}
   /* Up by its height and the glass's 36px below it, so none of the glass is left showing. */
@@ -114,8 +118,13 @@
     -webkit-mask-image:var(--glass-fade);mask-image:var(--glass-fade);
     transition:opacity var(--spring-time, .4s) var(--spring, ease)}
   .bar.bar--glass::before{opacity:1}
-  /* The menu's panel: glass in place of site.css's ruled box, hung 4px clear of the bar. */
-  .bar[data-compact] .bar-menu{top:calc(100% + 4px);border:0;background:var(--glass-tint);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);box-shadow:var(--glass-lift)}
+  /* The menu's panel: glass in place of site.css's ruled box, hung 4px clear of the bar. A
+     thicker glass than the bar's, the page's ground at 82% in both modes: a menu is a list to
+     read, it opens over running text as well as over the hero, and where a browser does not
+     draw the blur (headless Firefox and WebKit did not, 3 Oct 2026) the bar's thin veil left
+     the page's words showing through the links. At 82% what is behind is a fifth of its
+     strength, blurred or not. */
+  .bar[data-compact] .bar-menu{--menu-tint:color-mix(in srgb, var(--sheet) 82%, transparent);top:calc(100% + 4px);border:0;background:var(--menu-tint);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);box-shadow:var(--glass-lift)}
   /* The capsule's corners are 27px, half its height on one row, so it is a pill at any normal
      size; with larger text, the links wrapped to two rows, it becomes a rounded rectangle
      that still holds them all, rather than a lozenge with their corners outside it. */
@@ -131,7 +140,7 @@
     .bar.bar--glass nav::before,.bar.bar--glass .bar-toggle::before{opacity:1;scale:1}
     /* In the menu the links are on the panel's glass, not each group on its own. */
     .bar[data-compact] nav::before{display:none}
-    .bar[data-compact] .bar-menu{right:calc(var(--gutter) - min(18px, var(--gutter) - 10px));border-radius:27px;background:var(--glass-sheen),var(--glass-tint);box-shadow:var(--glass-rim),var(--glass-lift)}
+    .bar[data-compact] .bar-menu{right:calc(var(--gutter) - min(18px, var(--gutter) - 10px));border-radius:27px;background:var(--glass-sheen),var(--menu-tint);box-shadow:var(--glass-rim),var(--glass-lift)}
   }
   @media (prefers-reduced-motion: reduce){
     .bar,.bar::before,.bar nav::before,.bar-toggle::before{transition:none}
