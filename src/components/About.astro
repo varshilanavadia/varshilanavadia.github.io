@@ -12,10 +12,11 @@
 // under reduced motion; without script, in print, under Increase Contrast and in a
 // high-contrast theme the sentence is simply in full ink.
 //
-// After the scroll-linked text on motion.dev: the idea, not its code. CSS's own scroll-driven
-// animations (animation-timeline: view()) do the same with no script, and did in Chrome, but
-// Firefox has none, Safari only since 26, and what Safari paints could not be checked from
-// here (3 Oct 2026). The script is the one way that could be checked in all three.
+// After the "Scroll word reveal" example on motion.dev: the idea, not its code. CSS's own
+// scroll-driven animations (animation-timeline: view()) do the same with no script, and did
+// in Chrome, but Firefox has none, Safari only since 26, and what Safari paints could not be
+// checked from here (3 Oct 2026). The script is the one way that could be checked in all
+// three.
 import ContourMap from './ContourMap.astro';
 
 const lead =
@@ -112,12 +113,12 @@ const words = lead.split(' ');
 <style>
   /* One column on a phone, in reading order: the name of the section, the words, then the
      place. From 60rem, two columns, one part to two: the section's name and the place on the
-     left, the words on the right. The place stays in view beside the
-     words as they scroll, clear of the bar when it slides back. */
+     left, the words on the right. The place stays in view beside the words as they scroll,
+     clear of the bar when it slides back. */
   .about{display:grid;grid-template-columns:minmax(0,1fr);row-gap:var(--s4)}
   .about-text{display:grid;grid-template-columns:minmax(0,1fr);row-gap:var(--s3);align-content:start}
   .about-text p{margin:0}
-  /* Body: t0 · 400 · --lh-body · --ink-2, at the reading measure (10.3:1 on the page in the
+  /* Body: t0 · 400 · --lh-body · --ink-2, at the reading measure (10.2:1 on the page in the
      light, 9.9:1 in the dark). */
   .about-text p:not(.about-lead){max-width:var(--measure);color:var(--ink-2);overflow-wrap:break-word}
 
@@ -145,7 +146,7 @@ const words = lead.split(' ');
   /* The map is drawn by its script, so without script the tile would be an empty box: it
      shows only once the script has sized its canvas (which gives the canvas a width
      attribute), and the words below stand alone until then. A browser too old for :has()
-     keeps the words and never shows the tile. */
+     drops this rule, and shows the tile either way. */
   .about-map:not(:has(canvas[width])){display:none}
   .about-based{display:grid;row-gap:var(--s0);margin:0;font-size:var(--t1);font-weight:600;line-height:var(--lh-snug);color:var(--ink)}
 

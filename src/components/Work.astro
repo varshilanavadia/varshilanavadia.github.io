@@ -16,8 +16,8 @@
 // under reduced motion. Nothing here runs while the section is off screen: the only motion
 // is the half second after a row is opened or closed.
 //
-// The opening row is after the accordions on motion.dev and kokonutui.com: the idea of a row
-// that springs open and brings its lines in one after another, not their code or their look.
+// After the "Accordion" and "Stagger" examples on motion.dev: the idea of a row that springs
+// open and brings its lines in one after another, not their code or their look.
 import { roles, education, skills, type Entry } from '../data/work';
 
 // Spelled out here rather than asked of the build machine's locale data, which differs by
@@ -134,7 +134,7 @@ const month = (ym: string) => {
   .work-item[open]:not([data-closing]) .work-mark::before{rotate:180deg}
   .work-item[open]:not([data-closing]) .work-mark::after{rotate:180deg}
   /* Pointed at, the title and the mark take the accent, as the 404's link does: 4.5:1 on the
-     page in the light and 7.7:1 in the dark, on type that is large either way. Only where
+     page in the light and 7.6:1 in the dark, on type that is large either way. Only where
      there is a pointer to hover with, so a tap does not leave a row green. */
   @media (hover:hover){
     summary:hover .work-title,summary:hover .work-mark{color:var(--color-accent)}

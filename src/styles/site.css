@@ -9,7 +9,7 @@ html{--ink:var(--color-text);--ink-2:var(--color-neutral-900);--ink-3:var(--colo
 html{--ink-inv:var(--color-neutral-100);--ink-inv-2:var(--color-neutral-300);--ink-inv-3:var(--color-neutral-500);--rule-inv:var(--color-accent-900)}
 html{--scrim:var(--color-text)}
 /* The ink of words not yet read, in About's opening sentence (About.astro): one step of the
-   neutral ramp for both modes, 3.1:1 on the page in the light and 4.0:1 in the dark, so for
+   neutral ramp for both modes, 3.1:1 on the page in the light and 3.9:1 in the dark, so for
    large text only (3:1), which that sentence is at every width. */
 html{--ink-unread:var(--color-neutral-600)}
 
