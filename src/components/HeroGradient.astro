@@ -61,9 +61,9 @@
       rgb(0 0 0 / .156) calc(var(--fade-at) + .75 * (100% - var(--fade-at))),
       rgb(0 0 0 / .043) calc(var(--fade-at) + .875 * (100% - var(--fade-at))),
       transparent)}
-  /* With the gradient fading into the page, the rule between the hero and the statement goes:
-     made transparent rather than removed, so nothing below moves. */
-  .hero + .intro{border-top-color:transparent}
+  /* With the gradient fading into the page, the rule between the hero and the section after
+     it goes: made transparent rather than removed, so nothing below moves. */
+  .hero + .section{border-top-color:transparent}
   /* The gradient carries on up behind the bar of links. The hero reaches up under the bar by
      the bar's height (--bar-h, worked out at the foot of this style and measured by the script
      below) and pads its content back down by as much, so nothing in it moves; the bar drops
@@ -75,7 +75,7 @@
      when it scrolls up, when a link is more likely wanted (bar--hidden, bar--glass, set by
      the script). The glass is the page's ground as a light veil over what is behind, blurred
      and its colour lifted, after Apple's bar materials (--glass-* in site.css). It slides and
-     turns to glass on a spring (--spring, --spring-time, which the script works out), and
+     turns to glass on the site's spring (--spring, --spring-time, from Base.astro), and
      under reduced motion does neither: it stays, as glass once the page has scrolled.
      Its shape follows the device, after Apple's Liquid Glass:
        mouse or trackpad  a bar the width of the page, fading out over 48px at its foot
@@ -88,7 +88,17 @@
      The look is the "richer" glass (--glass-* in site.css), chosen over the first version and
      over the liquidGL library, side by side in the dev panel (3 Oct 2026): liquidGL refracts
      a snapshot of the page, which drew the cut-out portrait as a rectangle and the moving
-     gradient flat, and set aside the fallbacks below. */
+     gradient flat, and set aside the fallbacks below.
+     Where the links do not fit on one line the bar is compact (site.css): the Menu button
+     takes the links' place, and their ink, and on a phone or tablet the capsule. Its panel is
+     glass whenever it is open, at the top of the page too, since it hangs over the gradient
+     and the portrait: a card with the capsule's corners, rim and sheens on a phone or tablet,
+     in line with the capsule's edge; square, with the shadow alone, on a computer. Measured
+     behind the letters every 24px of scroll across the hero and every 61px down the rest of
+     the page (3 Oct 2026, a production build in Chrome, 390×664 and 500×800): the button and
+     the panel's links hold 4.9:1 at worst in the light and 4.6:1 in the dark, the worst of
+     each being the button's own word, on the gradient and on its capsule. With two
+     groups of links on one line, each has its own capsule, as iOS groups its bar's buttons. */
   .bar{background:transparent;border-bottom-color:transparent;transition:translate var(--spring-time, .4s) var(--spring, ease)}
   /* Up by its height and the glass's 36px below it, so none of the glass is left showing. */
   .bar.bar--hidden{translate:0 calc(-100% - 36px)}
@@ -108,22 +118,32 @@
     -webkit-mask-image:var(--glass-fade);mask-image:var(--glass-fade);
     transition:opacity var(--spring-time, .4s) var(--spring, ease)}
   .bar.bar--glass::before{opacity:1}
+  /* The menu's panel: glass in place of site.css's ruled box, hung 4px clear of the bar. A
+     thicker glass than the bar's, the page's ground at 82% in both modes: a menu is a list to
+     read, it opens over running text as well as over the hero, and where a browser does not
+     draw the blur (headless Firefox and WebKit did not, 3 Oct 2026) the bar's thin veil left
+     the page's words showing through the links. At 82% what is behind is a fifth of its
+     strength, blurred or not. */
+  .bar[data-compact] .bar-menu{--menu-tint:color-mix(in srgb, var(--sheet) 82%, transparent);top:calc(100% + 4px);border:0;background:var(--menu-tint);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);box-shadow:var(--glass-lift)}
   /* The capsule's corners are 27px, half its height on one row, so it is a pill at any normal
      size; with larger text, the links wrapped to two rows, it becomes a rounded rectangle
      that still holds them all, rather than a lozenge with their corners outside it. */
   @media (pointer: coarse){
     .bar::before{display:none}
-    .bar nav{position:relative}
-    .bar nav::before{
+    .bar nav,.bar-toggle{position:relative}
+    .bar nav::before,.bar-toggle::before{
       content:'';position:absolute;inset:-4px calc(-1 * min(18px, var(--gutter) - 10px));z-index:-1;pointer-events:none;border-radius:27px;
       background:var(--glass-sheen),var(--glass-tint);
       -webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);
       box-shadow:var(--glass-rim),var(--glass-lift);
       opacity:0;scale:.94;transition:opacity var(--spring-time, .4s) var(--spring, ease),scale var(--spring-time, .4s) var(--spring, ease)}
-    .bar.bar--glass nav::before{opacity:1;scale:1}
+    .bar.bar--glass nav::before,.bar.bar--glass .bar-toggle::before{opacity:1;scale:1}
+    /* In the menu the links are on the panel's glass, not each group on its own. */
+    .bar[data-compact] nav::before{display:none}
+    .bar[data-compact] .bar-menu{right:calc(var(--gutter) - min(18px, var(--gutter) - 10px));border-radius:27px;background:var(--glass-sheen),var(--menu-tint);box-shadow:var(--glass-rim),var(--glass-lift)}
   }
   @media (prefers-reduced-motion: reduce){
-    .bar,.bar::before,.bar nav::before{transition:none}
+    .bar,.bar::before,.bar nav::before,.bar-toggle::before{transition:none}
   }
   /* Reduce Transparency (a system setting on Apple's devices and on Windows; Chrome and Edge
      pass it on, Safari does not yet), and Increase Contrast (prefers-contrast: more, which
@@ -132,20 +152,20 @@
      its sheen; the slide, the capsule's shape, its rim and its shadow stay. */
   @media (prefers-reduced-transparency: reduce), (prefers-contrast: more){
     .bar::before{inset:0;-webkit-mask-image:none;mask-image:none}
-    .bar::before,.bar nav::before{background:var(--sheet);-webkit-backdrop-filter:none;backdrop-filter:none}
+    .bar::before,.bar nav::before,.bar-toggle::before,.bar[data-compact] .bar-menu{background:var(--sheet);-webkit-backdrop-filter:none;backdrop-filter:none}
   }
   /* High contrast (forced colours, as Windows' contrast themes set): the browser paints every
      border in the theme's text colour, transparent or not, so the rules made transparent here
      would cross the hero as lines. They give way to padding of the same 2px, so nothing moves.
      The glass, which the theme would leave a see-through blur with no edge, becomes a solid
      panel in the theme's own colours with a thin line round it: along its foot on a computer,
-     ending there rather than fading; all round the capsule on a phone or tablet. The browser
-     drops the shadows itself. */
+     ending there rather than fading; all round the capsule, and the menu's panel, on a phone
+     or tablet. The browser drops the shadows itself. */
   @media (forced-colors: active){
     .bar{border-bottom:0;padding-bottom:calc(9px + 2px)}
-    .hero + .intro{border-top:0;padding-top:calc(var(--s5) + 2px)}
+    .hero + .section{border-top:0;padding-top:calc(var(--s5) + 2px)}
     .bar::before{inset:0;background:Canvas;-webkit-backdrop-filter:none;backdrop-filter:none;-webkit-mask-image:none;mask-image:none;border-bottom:1px solid CanvasText}
-    .bar nav::before{background:Canvas;-webkit-backdrop-filter:none;backdrop-filter:none;border:1px solid CanvasText}
+    .bar nav::before,.bar-toggle::before,.bar[data-compact] .bar-menu{background:Canvas;-webkit-backdrop-filter:none;backdrop-filter:none;border:1px solid CanvasText}
   }
   /* The links, large text (site.css), take --on-gradient, and darken or brighten on hover to
      --on-gradient-hover as they do everywhere else: in the light, the darkest green to a
@@ -157,20 +177,22 @@
      build in Chrome): on a phone with Safari's toolbars showing (390×664), 7.1:1 at worst in
      the light and 3.6:1 in the dark, over the paper and the name, against 4.3:1 there on the
      first glass; on a computer, 8.6:1 and 5.9:1. */
-  .bar .bar-links a{color:var(--on-gradient)}
-  .bar .bar-links a:hover{color:var(--on-gradient-hover)}
+  .bar .bar-links a,.bar .bar-toggle{color:var(--on-gradient)}
+  .bar .bar-links a:hover,.bar .bar-toggle:hover{color:var(--on-gradient-hover)}
+  /* The section being read rests in the hover ink, where the other pages' bar gives it --ink. */
+  .bar .bar-sections a[aria-current]{color:var(--on-gradient-hover)}
   /* Increase Contrast: the links rest in their hover ink, so on the gradient at the top they
      hold 4.6:1 at worst in the light and 7.1:1 in the dark (measured 2 Oct 2026), and on the
      solid bar 16.1:1 and 13.6:1. */
   @media (prefers-contrast: more){
-    .bar .bar-links a{color:var(--on-gradient-hover)}
+    .bar .bar-links a,.bar .bar-toggle{color:var(--on-gradient-hover)}
   }
   /* The focus ring there takes the links' hover colour, on a band of the page's ground
      (--sheet, pale in the light, dark in the dark) that it sits in the middle of: the design
      system's accent green all but vanished into the gradient (1.3:1 at worst in the light),
      and no one colour could hold the 3:1 a focus ring needs against all of the gradient,
      where the ground always does. */
-  .bar .bar-links a:focus-visible{outline-color:var(--on-gradient-hover);box-shadow:0 0 0 6px var(--sheet)}
+  .bar .bar-links a:focus-visible,.bar .bar-toggle:focus-visible{outline-color:var(--on-gradient-hover);box-shadow:0 0 0 6px var(--sheet)}
   /* The bar's height before the script has measured it, from what makes it in site.css: its
      padding, a link's padding and line, and its rule. So the page is laid out right from its
      first frame, where the hero used to start below the bar and jump up under it once the
@@ -384,30 +406,8 @@
     if (bar) {
       // Unrounded, so no sliver of the page shows between the top of the bar and the hero.
       new ResizeObserver(() => html.style.setProperty('--bar-h', `${bar.getBoundingClientRect().height}px`)).observe(bar);
-      // The bar's spring, after Motion's: a damped spring from 0 to 1, given
-      // as how long it should look to take and how much it may bounce, sampled every 10ms into
-      // CSS's linear() easing so the browser plays it with no script running. Apple-like:
-      // settled in about half a second, with a bounce too small to see as one.
-      const spring = (visual = 0.35, bounce = 0.1) => {
-        const w = (2 * Math.PI) / (visual * 1.2); // natural frequency
-        const z = 1 - bounce; // damping ratio
-        const at = (t: number) => {
-          if (z >= 1) return 1 - Math.exp(-w * t) * (1 + w * t);
-          const wd = w * Math.sqrt(1 - z * z);
-          return 1 - Math.exp(-z * w * t) * (Math.cos(wd * t) + ((z * w) / wd) * Math.sin(wd * t));
-        };
-        // Long enough to settle within a thousandth of the way.
-        let end = 0;
-        for (let t = 0; t < 3; t += 0.01) if (Math.abs(1 - at(t)) > 0.001) end = t;
-        const time = end + 0.01;
-        const points: number[] = [];
-        for (let i = 0; i * 0.01 <= time + 1e-9; i++) points.push(Math.round(at(i * 0.01) * 10000) / 10000);
-        points[points.length - 1] = 1;
-        return { easing: `linear(${points.join(', ')})`, time };
-      };
-      const { easing, time: springTime } = spring();
-      bar.style.setProperty('--spring', easing);
-      bar.style.setProperty('--spring-time', `${springTime.toFixed(2)}s`);
+      // The bar slides and turns to glass on the site's spring, which Base.astro hands every
+      // page as --spring and --spring-time (src/scripts/spring.ts, where it moved from here).
 
       // The bar's state: glass once the page has left the top; hidden once it has
       // travelled 8px down beyond the bar's own height, and back once it has travelled 8px up,

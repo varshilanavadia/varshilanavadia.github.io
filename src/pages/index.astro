@@ -1,8 +1,9 @@
 ---
 import Base from '../layouts/Base.astro';
-import ContourMap from '../components/ContourMap.astro';
+import About from '../components/About.astro';
 import HeroGradient from '../components/HeroGradient.astro';
-import { links } from '../site';
+import Work from '../components/Work.astro';
+import { links, sections } from '../site';
 import thoughts from '../data/thoughts.json';
 // The thought-of-the-day picker, as source text, to inline as it is: shipped and tested alike.
 import pickThoughtSource from '../scripts/pick-thought.js?raw';
@@ -28,14 +29,17 @@ const dayNumber = (iso: string) => {
 };
 const thoughtData = thoughts.map((t) => [t.text, dayNumber(t.added)]);
 
-// Share preview strings and image, from Share Preview.dc.html (17 Sep 2026), minus its
-// description: the page carries no description line while it is a Coming Soon page.
+// Share preview strings and image, from Share Preview.dc.html (17 Sep 2026). The description
+// is the owner's own words, drawn from the About section (3 Oct 2026): what a search result
+// and a shared link say under the name. Kept to 160 characters, about where both cut it off.
 const title = 'Varshil Anavadia';
+const description =
+  'I’m firstly a human being and then an Engineer. Currently a Software Engineer at Oracle, developing and delivering the #1 cloud ERP system. Based in Austin, TX.';
 const shareImage = new URL('/assets/og-card.png', Astro.site).href;
 const shareImageAlt = 'The VA monogram above the name Varshil Anavadia, pale green on dark green';
 
 // Tells search engines who the page is about and which profiles are the same person, so a
-// search for the name can connect this site with LinkedIn, Strava and Instagram.
+// search for the name can connect this site with LinkedIn, GitHub, Strava and Instagram.
 const structuredData = {
   '@context': 'https://schema.org',
   '@graph': [
@@ -56,13 +60,15 @@ const structuredData = {
 };
 ---
 
-<Base title={title}>
+<Base title={title} sections={sections}>
   <Fragment slot="head">
+    <meta name="description" content={description} />
     <!-- Share preview, high in the head: WhatsApp reads only the start of a document. The
          image URL must stay absolute. Ship a changed card under a new URL, never in place. -->
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content={title} />
     <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
     <meta property="og:locale" content="en_US" />
     <meta property="og:image" content={shareImage} />
@@ -72,6 +78,7 @@ const structuredData = {
     <meta property="og:image:alt" content={shareImageAlt} />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={shareImage} />
     <meta name="twitter:image:alt" content={shareImageAlt} />
     <!-- The page may be indexed; the portrait may not. GitHub Pages cannot send headers, so
@@ -146,12 +153,8 @@ const structuredData = {
       </div>
     </section>
 
-    <section class="intro" aria-label="Coming soon">
-      <!-- The map behind the statement, fainter than the 404's and redrawn half as often,
-           since the hero's marquee is running on the same page. -->
-      <ContourMap route="start" label="Start" strength={0.6} every={2} />
-      <p class="statement">Something's being built here.</p>
-    </section>
+    <About />
+    <Work />
   </main>
 
   <Fragment slot="foot">

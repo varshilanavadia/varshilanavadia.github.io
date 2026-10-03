@@ -1,8 +1,9 @@
 ---
-// The frame every page shares: head basics and icons, the bar of profile links, and the
-// footer's copyright line. Page-specific head tags go in the "head" slot, which sits right
-// after <title> so the share-preview tags stay high in the document (WhatsApp reads only
-// the start). Anything above the copyright line goes in the "foot" slot.
+// The frame every page shares: head basics and icons, the bar (a page's section links, where
+// it has sections, and the profile links), and the footer's copyright line. Page-specific
+// head tags go in the "head" slot, which sits right after <title> so the share-preview tags
+// stay high in the document (WhatsApp reads only the start). Anything above the copyright
+// line goes in the "foot" slot.
 import '@fontsource-variable/figtree';
 import '@fontsource/ibm-plex-mono/700.css';
 import '../styles/design-system.css';
@@ -12,13 +13,19 @@ import { links } from '../site';
 // the same file Fontsource's stylesheet asks for, so it can be preloaded below.
 import figtreeLatin from '@fontsource-variable/figtree/files/figtree-latin-wght-normal.woff2?url';
 import DevPanel from '../components/DevPanel.astro';
+import { spring } from '../scripts/spring';
 
 interface Props {
   title: string;
   bodyClass?: string;
+  /** The page's sections, for the bar: `id` is a <section>'s id on the page (src/site.ts). */
+  sections?: { id: string; label: string }[];
 }
 
-const { title, bodyClass } = Astro.props;
+const { title, bodyClass, sections = [] } = Astro.props;
+// The site's spring (src/scripts/spring.ts), worked out here, while the site builds, and
+// handed to every page on <html>, so it is there before any script and with none.
+const { easing, time } = spring();
 const year = new Date().getFullYear();
 // The dev panel is for local work only: `npm run dev`, or a build with PUBLIC_DEV_PANEL=1
 // (`npm run preview:local`). The GitHub Pages build sets neither, so it never ships.
@@ -30,7 +37,7 @@ const GA_ID = 'G-S8F7J8V6F4';
 const HOST = Astro.site?.hostname;
 ---
 
-<html lang="en">
+<html lang="en" style={`--spring:${easing};--spring-time:${time.toFixed(2)}s`}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -48,7 +55,7 @@ const HOST = Astro.site?.hostname;
     <link rel="manifest" href="/site.webmanifest?v=2" />
     <meta name="apple-mobile-web-app-title" content="Varshil Anavadia" />
     <!-- Figtree, fetched at once rather than once the stylesheet that names it is in: on a
-         slow connection the name and the statement otherwise paint in the fallback face and
+         slow connection the name and the text otherwise paint in the fallback face and
          swap, and the name band jumps as it measures itself again. Fonts are fetched in CORS
          mode, hence crossorigin, or the preload goes unused and the file comes twice. -->
     <link rel="preload" as="font" type="font/woff2" href={figtreeLatin} crossorigin />
@@ -78,21 +85,146 @@ const HOST = Astro.site?.hostname;
   </head>
   <body class={bodyClass}>
     <header class="bar">
-      <nav aria-label="Elsewhere">
-        <ul class="bar-links">
-          {/* Plain https profile URLs on purpose: on a phone with the app installed, iOS
-              Universal Links and Android App Links hand these to the app; without it they
-              open in the browser. Custom app schemes would fail where the app is missing. */}
-          {links.map(({ label, href }) => (
-            <li>
-              <a href={href} target="_blank" rel="me noopener">
-                {label}<span class="sr-only"> (opens in a new tab)</span>
-              </a>
-            </li>
-          ))}
-        </ul>
-      </nav>
+      {/* Shown only when the links do not fit on one line (the script below decides, by
+          measuring): then it opens them as a menu. Without script it never shows, and the
+          links wrap onto more lines instead. */}
+      <button class="bar-toggle" type="button" aria-expanded="false" aria-controls="bar-menu">Menu</button>
+      <div class="bar-menu" id="bar-menu">
+        {sections.length > 0 && (
+          <nav class="bar-sections" aria-label="Sections">
+            <ul class="bar-links">
+              {/* The inner span carries the mark under the section being read (site.css). */}
+              {sections.map(({ id, label }) => (
+                <li><a href={`#${id}`}><span>{label}</span></a></li>
+              ))}
+            </ul>
+          </nav>
+        )}
+        <nav aria-label="Elsewhere">
+          <ul class="bar-links">
+            {/* Plain https profile URLs on purpose: on a phone with the app installed, iOS
+                Universal Links and Android App Links hand these to the app; without it they
+                open in the browser. Custom app schemes would fail where the app is missing. */}
+            {links.map(({ label, href }) => (
+              <li>
+                <a href={href} target="_blank" rel="me noopener">
+                  {label}<span class="sr-only"> (opens in a new tab)</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      </div>
     </header>
+    <script is:inline>
+      // Do the bar's links fit on one line? Asked here, in the parser's path straight after
+      // the bar, so the answer is in place before the page is first painted and the bar never
+      // changes shape in front of the visitor. Measured rather than set at a width, so it
+      // holds for however many links there are, in whatever size of text: the links are laid
+      // out on one line, their widths added up, and if they need more than the bar has, the
+      // bar turns compact (data-compact: the links become a menu behind the Menu button,
+      // site.css). Asked again whenever the bar's width or the text's size changes, and once
+      // the webfont is in, since the fallback face is a little narrower.
+      (() => {
+        const bar = document.querySelector('.bar');
+        const menu = bar.querySelector('.bar-menu');
+        bar.setAttribute('data-measured', '');
+        const fit = () => {
+          bar.removeAttribute('data-compact');
+          const gap = parseFloat(getComputedStyle(menu).columnGap) || 0;
+          let need = -gap;
+          for (const nav of menu.children) need += nav.getBoundingClientRect().width + gap;
+          if (need > menu.getBoundingClientRect().width + 0.5) bar.setAttribute('data-compact', '');
+        };
+        fit();
+        new ResizeObserver(fit).observe(bar);
+        document.fonts.addEventListener('loadingdone', fit);
+      })();
+    </script>
+    <script>
+      // The bar's menu, where it is compact (see the script above, and site.css), and the
+      // marks under its section links.
+      const bar = document.querySelector<HTMLElement>('.bar');
+      const toggle = bar?.querySelector<HTMLButtonElement>('.bar-toggle');
+      const menu = bar?.querySelector<HTMLElement>('.bar-menu');
+      if (bar && toggle && menu) {
+        // The menu opens and shuts on its button. It shuts on Escape (and hands focus back to
+        // the button if focus was inside it), on a press anywhere outside the bar, when focus
+        // leaves the bar, when one of its links is chosen (C3's shut on activation), and once
+        // the page has scrolled 8px from where it was opened, as the system's own menus do:
+        // on the home page the bar slides away on a scroll down, and must not leave its menu
+        // hanging in the window.
+        let openedAt = 0;
+        const isOpen = () => bar.hasAttribute('data-open');
+        // Shut, the panel is inert at once: it takes half a second to fade, and a Tab pressed
+        // in that time must not land on a link that is on its way out. Only while the bar is
+        // compact: on one line the links are simply the bar's.
+        const reach = () => { menu.inert = bar.hasAttribute('data-compact') && !isOpen(); };
+        const set = (open: boolean) => {
+          bar.toggleAttribute('data-open', open);
+          toggle.setAttribute('aria-expanded', String(open));
+          toggle.textContent = open ? 'Close' : 'Menu';
+          openedAt = scrollY;
+          reach();
+        };
+        new MutationObserver(reach).observe(bar, { attributes: true, attributeFilter: ['data-compact'] });
+        reach();
+        toggle.addEventListener('click', () => set(!isOpen()));
+        menu.addEventListener('click', (e) => {
+          if (isOpen() && (e.target as Element).closest('a')) set(false);
+        });
+        addEventListener('keydown', (e) => {
+          if (e.key !== 'Escape' || !isOpen()) return;
+          const inside = menu.contains(document.activeElement);
+          set(false);
+          if (inside) toggle.focus();
+        });
+        addEventListener('pointerdown', (e) => {
+          if (isOpen() && !bar.contains(e.target as Node)) set(false);
+        });
+        bar.addEventListener('focusout', (e) => {
+          if (isOpen() && e.relatedTarget && !bar.contains(e.relatedTarget as Node)) set(false);
+        });
+        addEventListener('scroll', () => {
+          if (isOpen() && Math.abs(scrollY - openedAt) > 8) set(false);
+        }, { passive: true });
+      }
+
+      // Which section is being read: the last one whose top has reached the foot of the bar,
+      // which is where a link to it stops it (scroll-margin-top, site.css), so a click lands
+      // exactly where the mark hands over. None over the hero. At the very foot of the page
+      // it is the last section, however short. Its link is marked aria-current="location":
+      // the mark follows the scroll, and "page" would claim a navigation that never happened
+      // (the mapping's C3). Looked at once a frame at most, and only while the page scrolls.
+      const marks = Array.from(document.querySelectorAll<HTMLAnchorElement>('.bar-sections a'));
+      const targets = marks.map((a) => document.getElementById(a.hash.slice(1)));
+      if (bar && marks.length) {
+        const root = document.documentElement;
+        let current = -1, queued = false;
+        const spy = () => {
+          queued = false;
+          // The bar's foot when it is in place, whether or not it has slid away.
+          const line = (parseFloat(getComputedStyle(bar).top) || 0) + bar.offsetHeight + 1;
+          let now = -1;
+          targets.forEach((el, i) => { if (el && el.getBoundingClientRect().top <= line) now = i; });
+          if (now >= 0 && scrollY > 0 && innerHeight + scrollY >= root.scrollHeight - 4) now = targets.length - 1;
+          if (now === current) return;
+          current = now;
+          marks.forEach((a, i) => {
+            if (i === now) a.setAttribute('aria-current', 'location');
+            else a.removeAttribute('aria-current');
+          });
+        };
+        const ask = () => {
+          if (queued) return;
+          queued = true;
+          requestAnimationFrame(spy);
+        };
+        addEventListener('scroll', ask, { passive: true });
+        addEventListener('resize', ask);
+        spy();
+      }
+    </script>
 
     <slot />
 

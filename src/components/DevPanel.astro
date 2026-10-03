@@ -150,6 +150,8 @@
   /* :root for weight: site.css's own .bar{top:0} comes later in the page and would otherwise
      win, pinning the bar under this strip. */
   :root .bar{top:var(--dev-panel-h, 0px)}
+  /* A link to a section stops it below the bar (site.css), so below this strip too. */
+  :root .section{scroll-margin-top:calc(var(--bar-h, 0px) + var(--dev-panel-h, 0px))}
   .dev-panel button{flex:0 0 auto;font:inherit;letter-spacing:inherit;text-transform:inherit;padding:6px 8px;white-space:nowrap;border:1px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
   .dev-panel button[aria-pressed="true"]{background:var(--ink);color:var(--sheet)}
   .dev-panel-head{border:0 !important;padding:0 !important;text-align:left}
