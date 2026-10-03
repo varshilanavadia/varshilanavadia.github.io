@@ -15,6 +15,11 @@ updates:
     groups:
       npm:
         patterns: ["*"]
+    # TypeScript stays at 6 until Astro's checker (@astrojs/check) runs on 7: on 7 it can't
+    # load, and scripts/typecheck.mjs fails every check. Drop this once it supports 7.
+    ignore:
+      - dependency-name: typescript
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: github-actions
     directory: /

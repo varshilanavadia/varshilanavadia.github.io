@@ -33,6 +33,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm test
+      - run: npm run typecheck
       - run: npm run build
       # The same gate as the pull request's check, so a push straight to main is held to it
       # too; if it fails, nothing is uploaded and the site already live stays up.
