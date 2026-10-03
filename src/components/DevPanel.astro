@@ -6,9 +6,10 @@
 // options as [value, label] pairs, the first being the default (which clears the attribute).
 // The day stepper below is not one of those: it previews another date rather than setting an
 // attribute, so it is built on its own.
-// The class name dev-panel is what the pull request check looks for: .github/workflows/check.yml
-// fails a build that mentions it anywhere, which is how a panel that escaped into production
-// gets caught. Renaming it here without changing that check leaves the gate passing on anything.
+// The class name dev-panel is what scripts/check-build.mjs looks for: both workflows run it, and
+// it fails a build that mentions the name anywhere, which is how a panel that escaped into
+// production gets caught. Renaming it here without changing that script leaves the gate
+// passing on anything.
 ---
 <script is:inline>
   (() => {
