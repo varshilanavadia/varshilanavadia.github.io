@@ -60,22 +60,51 @@ a:hover{color:var(--ink)}
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 
 /* ── Sticky bar ───────────────────────────────────────────────────────────── */
-/* The section labels are not here: the sections they point at do not exist yet. The
-   wordmark gave way to the profile links, since the hero already carries the name. */
-.bar{position:sticky;top:0;z-index:10;display:flex;align-items:center;justify-content:flex-end;padding:9px var(--gutter);border-bottom:2px solid var(--rule);background:var(--sheet)}
-.bar-links{display:flex;flex-wrap:wrap;justify-content:flex-end;column-gap:clamp(1rem, 2.7778vw, 2.5rem);list-style:none;margin:0;padding:0}
+/* The page's sections on the left, where the page has any (Base.astro's `sections`), and the
+   profile links on the right. The wordmark gave way to the profile links, since the hero
+   already carries the name. */
+.bar{position:sticky;top:0;z-index:10;display:flex;align-items:center;justify-content:flex-end;padding:9px var(--gutter);border-bottom:2px solid var(--rule);background:var(--sheet);--bar-gap:clamp(1rem, 2.7778vw, 2.5rem)}
+.bar-menu{flex:1;min-width:0;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;column-gap:var(--bar-gap)}
+/* The profile links keep to the right, with section links beside them or without. */
+.bar-menu nav:last-child{margin-left:auto}
+.bar-links{display:flex;flex-wrap:wrap;column-gap:var(--bar-gap);list-style:none;margin:0;padding:0}
 /* Styled as the C3 nav labels are (--ink-3 at rest) but in normal case, so without their caps
    tracking, and a size up from theirs: t0 in bold, which WCAG counts as large text, where 3:1
    is enough. The home page runs its gradient behind them (HeroGradient.astro), where 4.5:1
    could not be held; the bar keeps one size on every page. 10.1px above and below the 24px
    line box make the 44px target, so the bar's height is unchanged. */
-.bar-links a{display:inline-block;padding:10.1px 0;font-size:var(--t0);font-weight:700;line-height:1.2;color:var(--ink-3)}
-.bar-links a:hover{color:var(--ink)}
-/* On narrow screens the row spans the bar and the gaps take what is left, so the three
-   labels hold one line down to the 320 floor. */
-@media (max-width:30rem){
-  .bar nav{flex:1}
-  .bar-links{justify-content:space-between;column-gap:0}
+.bar-links a,.bar-toggle{display:inline-block;padding:10.1px 0;font-size:var(--t0);font-weight:700;line-height:1.2;color:var(--ink-3);white-space:nowrap}
+.bar-links a:hover,.bar-toggle:hover{color:var(--ink)}
+/* The section being read (Base.astro's script marks its link aria-current="location", C3's
+   mark; none over the hero): the link in full ink, and a 2px rule drawn under the word from
+   its left on the site's spring, drawn back when the reading moves on. The rule sits on an
+   inner span, so it is as wide as the word, in padding that adds nothing to the line. */
+.bar-sections a span{padding-bottom:3px;background:linear-gradient(currentColor,currentColor) 0 100% / 0 2px no-repeat;transition:background-size var(--spring-time, .4s) var(--spring, ease)}
+.bar-sections a[aria-current]{color:var(--ink)}
+.bar-sections a[aria-current] span{background-size:100% 2px}
+
+/* One line or a menu. Base.astro's script lays the links out on one line (data-measured) and
+   measures whether they fit; where they do not, on a phone or with larger text, the bar turns
+   compact (data-compact): the Menu button alone, at the right, and the links as a panel that
+   hangs from the bar when it is pressed (data-open), sections first, then the profiles under
+   a hairline, each a 44px row. Measured, not set at a width, so there is no breakpoint to
+   keep in step with the number of links. The panel eases in on the site's spring and is out
+   of reach of Tab and screen readers while shut (visibility, and inert from the script, so
+   at once). On a short screen it scrolls within itself; with larger text it is never wider
+   than the window less its margins. Without script nothing is measured, the button never
+   shows, and the links wrap onto as many lines as they need. */
+.bar[data-measured] .bar-menu,.bar[data-measured] .bar-links{flex-wrap:nowrap}
+.bar[data-measured] nav{flex:none}
+.bar-toggle{display:none;margin:0;border:0;background:none;font-family:inherit;cursor:pointer}
+.bar[data-compact] .bar-toggle{display:block}
+.bar[data-compact] .bar-menu{position:absolute;top:100%;right:var(--gutter);flex:none;flex-direction:column;align-items:stretch;box-sizing:border-box;min-width:min(11rem, 100% - 2 * var(--gutter));max-width:calc(100% - 2 * var(--gutter));max-height:calc(100dvh - 100% - var(--s3));overflow-y:auto;padding:var(--s1) var(--s3);border:2px solid var(--rule);background:var(--sheet);visibility:hidden;opacity:0;translate:0 calc(-1 * var(--s1));transition:opacity var(--spring-time, .4s) var(--spring, ease),translate var(--spring-time, .4s) var(--spring, ease),visibility 0s var(--spring-time, .4s)}
+.bar[data-compact][data-open] .bar-menu{visibility:visible;opacity:1;translate:0 0;transition-delay:0s}
+.bar[data-compact] .bar-links{flex-direction:column}
+.bar[data-compact] .bar-links a{display:block}
+.bar[data-compact] .bar-menu nav:last-child{margin-left:0}
+.bar[data-compact] nav + nav{margin-top:var(--s1);padding-top:var(--s1);border-top:1px solid var(--rule)}
+@media (prefers-reduced-motion: reduce){
+  .bar-sections a span,.bar[data-compact] .bar-menu{transition:none}
 }
 
 /* ── Hero ─────────────────────────────────────────────────────────────────── */
