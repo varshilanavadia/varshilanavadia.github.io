@@ -8,6 +8,9 @@ import '@fontsource/ibm-plex-mono/700.css';
 import '../styles/design-system.css';
 import '../styles/site.css';
 import { links } from '../site';
+// The Latin file of Figtree, the face of every word on the page: its URL as the build names it,
+// the same file Fontsource's stylesheet asks for, so it can be preloaded below.
+import figtreeLatin from '@fontsource-variable/figtree/files/figtree-latin-wght-normal.woff2?url';
 import DevPanel from '../components/DevPanel.astro';
 
 interface Props {
@@ -42,20 +45,31 @@ const GA_ID = 'G-S8F7J8V6F4';
     <link rel="mask-icon" href="/assets/mask-icon.svg?v=2" color="#134B2E" />
     <link rel="manifest" href="/site.webmanifest?v=2" />
     <meta name="apple-mobile-web-app-title" content="Varshil Anavadia" />
+    <!-- Figtree, fetched at once rather than once the stylesheet that names it is in: on a
+         slow connection the name and the statement otherwise paint in the fallback face and
+         swap, and the name band jumps as it measures itself again. Fonts are fetched in CORS
+         mode, hence crossorigin, or the preload goes unused and the file comes twice. -->
+    <link rel="preload" as="font" type="font/woff2" href={figtreeLatin} crossorigin />
     <!-- Analytics, on the published address only, so dev, local and LAN previews are never
          counted. Google's standard tag, with its script added from here rather than in the
          markup so that nothing is fetched anywhere else. Below the share-preview tags,
-         which must stay near the top. -->
+         which must stay near the top. The queue starts at once, but Google's script, 178 KB
+         compressed, is fetched only once the page has loaded, so it does not compete with the
+         portrait, the paper and the fonts; a visit that leaves before then is not counted. -->
     <script is:inline define:vars={{ GA_ID }}>
       if (location.hostname === 'varshilanavadia.github.io') {
         window.dataLayer = window.dataLayer || [];
         window.gtag = function () { dataLayer.push(arguments); };
         gtag('js', new Date());
         gtag('config', GA_ID);
-        const tag = document.createElement('script');
-        tag.async = true;
-        tag.src = `https://www.googletagmanager.com/gtag/js?id=${GA_ID}`;
-        document.head.append(tag);
+        const load = () => {
+          const tag = document.createElement('script');
+          tag.async = true;
+          tag.src = `https://www.googletagmanager.com/gtag/js?id=${GA_ID}`;
+          document.head.append(tag);
+        };
+        if (document.readyState === 'complete') load();
+        else addEventListener('load', load, { once: true });
       }
     </script>
     {devPanel && <DevPanel />}

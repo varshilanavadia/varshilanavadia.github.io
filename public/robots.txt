@@ -1,6 +1,7 @@
 # GitHub Pages cannot send an X-Robots-Tag header, so the portrait is kept out of image
-# search here instead, alongside the page's noimageindex robots meta.
+# search here instead, alongside the page's noimageindex robots meta. A prefix, so any other
+# file of it, such as a larger version, is covered too.
 User-agent: *
-Disallow: /hero-portrait.webp
+Disallow: /hero-portrait
 
 Sitemap: https://varshilanavadia.github.io/sitemap-index.xml

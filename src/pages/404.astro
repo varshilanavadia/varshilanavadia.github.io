@@ -38,11 +38,12 @@ import ContourMap from '../components/ContourMap.astro';
 
 <script>
   // The name band: a plain drift, the same parts as the home page's marquee. The map behind
-  // it is its own component.
+  // it is its own component. It runs only while on screen and not under reduced motion, and
+  // follows that setting if it changes mid-visit, stopping where it is.
   const track = document.querySelector<HTMLElement>('.stage .hero-name-track');
-  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if (track && !reduce) {
-    let seg = 0, mx = 0, last = performance.now();
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)');
+  if (track) {
+    let seg = 0, mx = 0, last = 0, raf = 0, onScreen = false;
     const measure = () => {
       const first = track.firstElementChild as HTMLElement | null;
       seg = first ? first.offsetWidth + (parseFloat(getComputedStyle(track).columnGap) || 0) : 0;
@@ -57,9 +58,15 @@ import ContourMap from '../components/ContourMap.astro';
         mx = (mx + 70 * dt) % seg;
         track.style.transform = `translate3d(${mx - seg}px,0,0)`;
       }
-      requestAnimationFrame(tick);
+      raf = requestAnimationFrame(tick);
     };
-    requestAnimationFrame(tick);
+    const run = () => {
+      const wanted = onScreen && !reduce.matches;
+      if (wanted && !raf) { last = performance.now(); raf = requestAnimationFrame(tick); }
+      else if (!wanted && raf) { cancelAnimationFrame(raf); raf = 0; }
+    };
+    new IntersectionObserver(([entry]) => { onScreen = !!entry?.isIntersecting; run(); }).observe(track);
+    reduce.addEventListener('change', run);
   }
 </script>
 

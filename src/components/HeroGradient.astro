@@ -473,18 +473,22 @@
       // say), and a context lost and never rebuilt would leave the hero plain for good.
       let u: (name: string) => WebGLUniformLocation | null = () => null;
       let uMVP: WebGLUniformLocation | null = null, uTime: WebGLUniformLocation | null = null;
+      // Says whether it worked: a shader the GPU will not compile or link leaves nothing to
+      // draw, and then the hero keeps the wash rather than running a loop that draws nothing.
       const setup = () => {
-        const program = gl.createProgram()!;
+        const program = gl.createProgram();
+        if (!program) return false;
         for (const [type, source] of [[gl.VERTEX_SHADER, VERTEX], [gl.FRAGMENT_SHADER, FRAGMENT]] as const) {
-          const shader = gl.createShader(type)!;
+          const shader = gl.createShader(type);
+          if (!shader) return false;
           gl.shaderSource(shader, source);
           gl.compileShader(shader);
-          if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) console.error(gl.getShaderInfoLog(shader));
+          if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) { console.error(gl.getShaderInfoLog(shader)); return false; }
           gl.attachShader(program, shader);
         }
         gl.bindAttribLocation(program, 0, 'position');
         gl.linkProgram(program);
-        if (!gl.getProgramParameter(program, gl.LINK_STATUS)) console.error(gl.getProgramInfoLog(program));
+        if (!gl.getProgramParameter(program, gl.LINK_STATUS)) { console.error(gl.getProgramInfoLog(program)); return false; }
         u = (name) => gl.getUniformLocation(program, name);
         uMVP = u('uMVP');
         uTime = u('uTime');
@@ -511,6 +515,7 @@
         gl.uniform1f(u('uNoiseStrength'), fx.strength);
         // The ambient light on a 20% metallic surface, before the specular share: 0.8 × brightness.
         gl.uniform1f(u('uGain'), 0.8 * fx.brightness);
+        return true;
       };
 
       // The colours are the page's, so they follow light and dark.
@@ -543,39 +548,51 @@
 
       // Runs only while the hero is on screen and the context is held; the browser holds it
       // while the page is hidden. Paused, it keeps its place: time counts only frames drawn.
-      let raf = 0, last = 0, onScreen = false, lost = false;
+      // It draws at most about 30 times a second: the sheet moves slowly enough that more
+      // frames add nothing to see, and each one is the whole plane and its lighting again,
+      // twice that on a 60Hz screen and four times on a 120Hz one, blurred again under the
+      // glass. Side by side with full speed in the dev panel, no difference could be seen
+      // (3 Oct 2026). A few ms' grace, so frame timing jitter does not skip a frame.
+      const gapMs = 1000 / 30 - 4;
+      let raf = 0, last = 0, onScreen = false, lost = false, broken = false;
       const tick = (t: number) => {
+        raf = requestAnimationFrame(tick);
+        if (t - last < gapMs) return;
         time += Math.min(0.1, (t - last) / 1000);
         last = t;
         draw();
-        raf = requestAnimationFrame(tick);
       };
       const run = () => {
-        const want = onScreen && !lost;
+        const want = onScreen && !lost && !broken;
         if (want && !raf) { last = performance.now(); raf = requestAnimationFrame(tick); }
         else if (!want && raf) { cancelAnimationFrame(raf); raf = 0; }
       };
+      // A context already lost at the start, or shaders that will not build, leave the wash in
+      // place and nothing running; a context the browser hands back starts it all again.
+      // data-drawn marks the first frame on screen, from which the canvas fades in over the
+      // wash (the styles above).
       const start = () => {
-        setup();
+        if (gl.isContextLost()) { lost = true; return; }
+        broken = !setup();
+        if (broken) { run(); return; }
         recolour();
         layout(true);
         draw();
         run();
+        requestAnimationFrame(() => root.setAttribute('data-drawn', ''));
       };
 
-      // data-drawn marks the first frame on screen, from which the canvas fades in over the
-      // wash (the styles above).
-      start();
-      requestAnimationFrame(() => root.setAttribute('data-drawn', ''));
       // Holding on to a lost context (preventDefault) is what lets the browser offer it back.
+      // Listening before the first start, so a context lost at once is still offered back.
       canvas.addEventListener('webglcontextlost', (e) => { e.preventDefault(); lost = true; run(); });
       canvas.addEventListener('webglcontextrestored', () => { lost = false; start(); });
+      start();
       // This runs after the frame's own drawing, so a resize is drawn at once rather than left
       // blank until the next frame.
-      new ResizeObserver(() => { if (!lost && layout()) draw(); }).observe(root);
+      new ResizeObserver(() => { if (!lost && !broken && layout()) draw(); }).observe(root);
       new IntersectionObserver(([entry]) => { onScreen = !!entry?.isIntersecting; run(); }).observe(root);
       // The theme: the device setting, or data-theme on <html> (set by the local dev panel).
-      const retheme = () => { if (lost) return; recolour(); if (!raf) draw(); };
+      const retheme = () => { if (lost || broken) return; recolour(); if (!raf) draw(); };
       new MutationObserver(retheme).observe(html, { attributes: true, attributeFilter: ['data-theme'] });
       matchMedia('(prefers-color-scheme: dark)').addEventListener('change', retheme);
     }

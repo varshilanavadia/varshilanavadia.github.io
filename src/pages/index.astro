@@ -228,11 +228,27 @@ const structuredData = {
         // What the markup shipped, so a previewed day with nothing eligible yet puts it back
         // rather than leaving another day's thought on screen.
         const shipped = el.textContent;
+        let shownDay = null;
         const render = () => {
-          const thought = pick(today());
+          shownDay = today();
+          const thought = pick(shownDay);
           el.textContent = thought ? thought[0] : shipped;
         };
         render();
+
+        // A tab left open past midnight, or brought back by Back or Forward from the browser's
+        // page cache, would keep yesterday's thought. The date is looked at again whenever the
+        // page is shown, and at the visitor's own midnight while it stays open; the thought
+        // changes only if the day has.
+        const refresh = () => { if (today() !== shownDay) render(); };
+        addEventListener('pageshow', (e) => { if (e.persisted) refresh(); });
+        document.addEventListener('visibilitychange', () => { if (!document.hidden) refresh(); });
+        const atMidnight = () => {
+          const now = new Date();
+          const next = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+          setTimeout(() => { refresh(); atMidnight(); }, next - now + 1000);
+        };
+        atMidnight();
 
         // Read by the dev panel's day stepper, which is local-only.
         window.__thoughtOfTheDay = {

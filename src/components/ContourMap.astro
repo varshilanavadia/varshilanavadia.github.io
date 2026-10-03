@@ -4,8 +4,9 @@
 //   route="wrong-turn"  wanders right, veers off and stops at the marker (the 404)
 //   route="start"       sets out from the marker and runs off the right edge (home)
 // The pointer raises a hill that follows it. Colours come from the page, so the map follows
-// light and dark. Under reduced motion it is one still map. Several maps on one page each
-// run on their own; each pauses while it is off screen.
+// light and dark. Under reduced motion it is one still map, switched to and from at once if
+// the setting changes mid-visit. Several maps on one page each run on their own; each pauses
+// while it is off screen.
 interface Props {
   route: 'wrong-turn' | 'start';
   label: string;
@@ -86,7 +87,7 @@ const { route, label, strength = 1, every = 1 } = Astro.props;
     }
   }
 
-  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)');
 
   for (const root of document.querySelectorAll<HTMLElement>('.contour-map')) {
     const canvas = root.querySelector('canvas')!;
@@ -201,7 +202,7 @@ const { route, label, strength = 1, every = 1 } = Astro.props;
       // shows from the first frame while the route draws out of it.
       if (!markerAtStart && progress < 1) return;
       const [ex, ey] = markerAtStart ? route[0] : route[n - 1];
-      if (!reduce) {
+      if (!reduce.matches) {
         // A ring pulses out from the marker every two seconds.
         const p = (t % 2000) / 2000;
         ctx.beginPath();
@@ -227,8 +228,10 @@ const { route, label, strength = 1, every = 1 } = Astro.props;
       label.classList.add('on');
     };
 
-    let frames = 0;
+    // What is on the canvas, so a resize or a change of colours can draw it again at once.
+    let frames = 0, shownT = 0, shownP = 1;
     const frame = (t: number, progress: number) => {
+      shownT = t; shownP = progress;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, W, H);
       contours(t / 1000 * 0.045);
@@ -237,43 +240,48 @@ const { route, label, strength = 1, every = 1 } = Astro.props;
     const still = () => frame(0, 1);
 
     // Watch the map itself, not the window: on a phone its height settles after load (the
-    // browser bars move), and a canvas sized to a stale height gets stretched to fit.
-    new ResizeObserver(() => { layout(); if (reduce) still(); }).observe(root);
+    // browser bars move), and a canvas sized to a stale height gets stretched to fit. Resizing
+    // a canvas clears it, and this runs after the frame's own drawing, so the map is drawn
+    // again here rather than left blank until the next frame, as it was while a window was
+    // dragged or a phone turned.
+    new ResizeObserver(() => { layout(); frame(shownT, shownP); }).observe(root);
     // Re-read the colours when the mode changes: the device setting, or data-theme on <html>
     // (set by the local dev panel).
-    const recolour = () => { readColours(); if (reduce) still(); };
+    let raf = 0;
+    const recolour = () => { readColours(); if (!raf) frame(shownT, shownP); };
     matchMedia('(prefers-color-scheme: dark)').addEventListener('change', recolour);
     new MutationObserver(recolour).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 
-    if (reduce) {
-      still();
-      continue;
-    }
-    let raf = 0, t0 = 0, last = 0;
+    // The map keeps its own time, which moves only while it animates, a frame at a time and at
+    // most 50ms a frame. Driven by the page's clock instead, it jumped to another shape on a
+    // return to a tab left in the background.
+    let last = 0, clock = 0, onScreen = false;
     const tick = (t: number) => {
-      if (!t0) t0 = t;
       const dt = Math.min(0.05, (t - last) / 1000);
       last = t;
+      clock += dt * 1000;
       amp += (want - amp) * Math.min(1, dt * 2.5);
       hx += (tx - hx) * Math.min(1, dt * 4);
       hy += (ty - hy) * Math.min(1, dt * 4);
       // Where the map shares the page with other motion, it redraws every few frames.
       if (frames++ % every === 0) {
-        const p = Math.min(1, (t - t0 - 400) / 2600);
-        frame(t, Math.max(0, p) ** 0.8);
+        const p = Math.min(1, (clock - 400) / 2600);
+        frame(clock, Math.max(0, p) ** 0.8);
       }
       raf = requestAnimationFrame(tick);
     };
-    // Drawn once straight away, so the map is never blank before it scrolls into view, then
-    // animated only while on screen (starting a little early, so it is moving on arrival).
-    frame(0, markerAtStart ? 0 : 1);
-    new IntersectionObserver(([entry]) => {
-      if (entry?.isIntersecting) {
-        if (!raf) { last = performance.now(); raf = requestAnimationFrame(tick); }
-      } else {
-        cancelAnimationFrame(raf);
-        raf = 0;
-      }
-    }, { rootMargin: '200px 0px' }).observe(root);
+    // Animated only while on screen (starting a little early, so it is moving on arrival) and
+    // not under reduced motion; switching that on mid-visit leaves the still map at once, and
+    // switching it off carries on from where the map was.
+    const run = () => {
+      const wanted = onScreen && !reduce.matches;
+      if (wanted && !raf) { last = performance.now(); raf = requestAnimationFrame(tick); }
+      else if (!wanted && raf) { cancelAnimationFrame(raf); raf = 0; }
+    };
+    // Drawn once straight away, so the map is never blank before it scrolls into view.
+    if (reduce.matches) still();
+    else frame(0, markerAtStart ? 0 : 1);
+    new IntersectionObserver(([entry]) => { onScreen = !!entry?.isIntersecting; run(); }, { rootMargin: '200px 0px' }).observe(root);
+    reduce.addEventListener('change', () => { run(); if (reduce.matches) still(); });
   }
 </script>
