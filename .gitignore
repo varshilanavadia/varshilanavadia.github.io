@@ -2,8 +2,13 @@
 .env
 .env.*
 
-# throwaway prototypes, per CLAUDE.md
+# throwaway prototypes
 scratch/
+
+# kept on the owner's machine, out of the public repository: the instructions for Claude
+# sessions, and the snapshot of the Claude Design project
+CLAUDE.md
+design/
 
 # dependencies and build output
 node_modules/
