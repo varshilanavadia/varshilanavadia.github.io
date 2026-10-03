@@ -24,9 +24,22 @@
 
 <style>
   /* First in the hero, so everything after it paints above it: paper, band and figure. It
-     fades out towards the hero's foot (the mask is worked out on the hero, below). */
-  .hero-gradient{position:absolute;inset:0;z-index:0;overflow:hidden;pointer-events:none;-webkit-mask-image:var(--fade-mask);mask-image:var(--fade-mask)}
-  .hero-gradient canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+     fades out towards the hero's foot (the mask is worked out on the hero, below).
+     It arrives on a wash of its own three colours, laid out as the gradient lies (the third
+     above to the left, the second to the right, the first below; darkened as the gradient's
+     light darkens them), so the hero has its colour from the first paint rather than
+     flashing the plain ground until the script and shaders are in. The canvas fades in over
+     the wash from its first frame (data-drawn, set by the script), at once under reduced
+     motion. Without WebGL the wash is what stays. Chosen over a plain fade and over today's
+     snap, side by side in the dev panel (2 Oct 2026). */
+  .hero-gradient{position:absolute;inset:0;z-index:0;overflow:hidden;pointer-events:none;-webkit-mask-image:var(--fade-mask);mask-image:var(--fade-mask);
+    background:
+      radial-gradient(120% 60% at 15% 0%, color-mix(in srgb, var(--hero-gradient-3), #000 12%), transparent 65%),
+      radial-gradient(90% 70% at 90% 45%, color-mix(in srgb, var(--hero-gradient-2), #000 12%), transparent 70%),
+      color-mix(in srgb, var(--hero-gradient-1), #000 12%)}
+  .hero-gradient canvas{position:absolute;inset:0;width:100%;height:100%;display:block;opacity:0;transition:opacity .8s ease-out}
+  .hero-gradient[data-drawn] canvas{opacity:1}
+  @media (prefers-reduced-motion: reduce){.hero-gradient canvas{transition:none}}
 </style>
 
 <style is:global>
@@ -68,9 +81,14 @@
        mouse or trackpad  a bar the width of the page, fading out over 48px at its foot
                           rather than ending on a line (a progressive blur, as in iOS 26)
        touch (a phone or tablet, as the tilt decides too)  a capsule floating around the
-                          links, set in from the edges, with a rim of light (bright above, a
-                          shade darker below), a soft shadow lifting it off what is beneath,
-                          and a faint diagonal sheen; it fades and settles in on the spring */
+                          links, set in from the edges, with a rim of light all round
+                          (strongest along the top, with a soft glow inside the edges), a
+                          two-part shadow lifting it off what is beneath, and sheens from two
+                          corners; it fades and settles in on the spring
+     The look is the "richer" glass (--glass-* in site.css), chosen over the first version and
+     over the liquidGL library, side by side in the dev panel (3 Oct 2026): liquidGL refracts
+     a snapshot of the page, which drew the cut-out portrait as a rectangle and the moving
+     gradient flat, and set aside the fallbacks below. */
   .bar{background:transparent;border-bottom-color:transparent;transition:translate var(--spring-time, .4s) var(--spring, ease)}
   /* Up by its height and the glass's 36px below it, so none of the glass is left showing. */
   .bar.bar--hidden{translate:0 calc(-100% - 36px)}
@@ -81,7 +99,7 @@
   .bar::before{
     content:'';position:absolute;inset:0 0 -36px;z-index:-1;pointer-events:none;opacity:0;
     background:var(--glass-tint);
-    -webkit-backdrop-filter:blur(24px) saturate(200%);backdrop-filter:blur(24px) saturate(200%);
+    -webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);
     --glass-fade:linear-gradient(to bottom,#000 calc(100% - 48px),
       rgb(0 0 0 / .957) calc(100% - 42px),rgb(0 0 0 / .844) calc(100% - 36px),
       rgb(0 0 0 / .684) calc(100% - 30px),rgb(0 0 0 / .5) calc(100% - 24px),
@@ -99,7 +117,7 @@
     .bar nav::before{
       content:'';position:absolute;inset:-4px calc(-1 * min(18px, var(--gutter) - 10px));z-index:-1;pointer-events:none;border-radius:27px;
       background:var(--glass-sheen),var(--glass-tint);
-      -webkit-backdrop-filter:blur(24px) saturate(200%);backdrop-filter:blur(24px) saturate(200%);
+      -webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);
       box-shadow:var(--glass-rim),var(--glass-lift);
       opacity:0;scale:.94;transition:opacity var(--spring-time, .4s) var(--spring, ease),scale var(--spring-time, .4s) var(--spring, ease)}
     .bar.bar--glass nav::before{opacity:1;scale:1}
@@ -108,10 +126,11 @@
     .bar,.bar::before,.bar nav::before{transition:none}
   }
   /* Reduce Transparency (a system setting on Apple's devices and on Windows; Chrome and Edge
-     pass it on, Safari does not yet): the glass turns solid, the page's own ground with no
-     blur, as the system's own bars do. It ends on its edge rather than fading out, and the
-     capsule drops its sheen; the slide, the capsule's shape, its rim and its shadow stay. */
-  @media (prefers-reduced-transparency: reduce){
+     pass it on, Safari does not yet), and Increase Contrast (prefers-contrast: more, which
+     Safari does pass on): the glass turns solid, the page's own ground with no blur, as the
+     system's own bars do. It ends on its edge rather than fading out, and the capsule drops
+     its sheen; the slide, the capsule's shape, its rim and its shadow stay. */
+  @media (prefers-reduced-transparency: reduce), (prefers-contrast: more){
     .bar::before{inset:0;-webkit-mask-image:none;mask-image:none}
     .bar::before,.bar nav::before{background:var(--sheet);-webkit-backdrop-filter:none;backdrop-filter:none}
   }
@@ -133,11 +152,19 @@
      near-black green, since the resting grey fell to 2–4:1 on the gradient; in the dark, a
      lighter grey than usual to ink. Measured around the letters against the 3:1 large text
      needs (27 Sep 2026, sampled across the animation): on the gradient at the top, 3.5:1 at
-     worst, on a phone in the light; on the glass, 4.0:1 in the light and, with the dark
-     glass's 70% tint, 3.2:1 in the dark, at the worst place, a phone with Safari's toolbars
-     showing, scrolled back up over the paper and the name. */
+     worst, on a phone in the light. On the richer glass, remeasured behind the letters at
+     every 5px of scroll across the hero as the name ran beneath (3 Oct 2026, a production
+     build in Chrome): on a phone with Safari's toolbars showing (390×664), 7.1:1 at worst in
+     the light and 3.6:1 in the dark, over the paper and the name, against 4.3:1 there on the
+     first glass; on a computer, 8.6:1 and 5.9:1. */
   .bar .bar-links a{color:var(--on-gradient)}
   .bar .bar-links a:hover{color:var(--on-gradient-hover)}
+  /* Increase Contrast: the links rest in their hover ink, so on the gradient at the top they
+     hold 4.6:1 at worst in the light and 7.1:1 in the dark (measured 2 Oct 2026), and on the
+     solid bar 16.1:1 and 13.6:1. */
+  @media (prefers-contrast: more){
+    .bar .bar-links a{color:var(--on-gradient-hover)}
+  }
   /* The focus ring there takes the links' hover colour, on a band of the page's ground
      (--sheet, pale in the light, dark in the dark) that it sits in the middle of: the design
      system's accent green all but vanished into the gradient (1.3:1 at worst in the light),
@@ -446,18 +473,22 @@
       // say), and a context lost and never rebuilt would leave the hero plain for good.
       let u: (name: string) => WebGLUniformLocation | null = () => null;
       let uMVP: WebGLUniformLocation | null = null, uTime: WebGLUniformLocation | null = null;
+      // Says whether it worked: a shader the GPU will not compile or link leaves nothing to
+      // draw, and then the hero keeps the wash rather than running a loop that draws nothing.
       const setup = () => {
-        const program = gl.createProgram()!;
+        const program = gl.createProgram();
+        if (!program) return false;
         for (const [type, source] of [[gl.VERTEX_SHADER, VERTEX], [gl.FRAGMENT_SHADER, FRAGMENT]] as const) {
-          const shader = gl.createShader(type)!;
+          const shader = gl.createShader(type);
+          if (!shader) return false;
           gl.shaderSource(shader, source);
           gl.compileShader(shader);
-          if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) console.error(gl.getShaderInfoLog(shader));
+          if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) { console.error(gl.getShaderInfoLog(shader)); return false; }
           gl.attachShader(program, shader);
         }
         gl.bindAttribLocation(program, 0, 'position');
         gl.linkProgram(program);
-        if (!gl.getProgramParameter(program, gl.LINK_STATUS)) console.error(gl.getProgramInfoLog(program));
+        if (!gl.getProgramParameter(program, gl.LINK_STATUS)) { console.error(gl.getProgramInfoLog(program)); return false; }
         u = (name) => gl.getUniformLocation(program, name);
         uMVP = u('uMVP');
         uTime = u('uTime');
@@ -484,6 +515,7 @@
         gl.uniform1f(u('uNoiseStrength'), fx.strength);
         // The ambient light on a 20% metallic surface, before the specular share: 0.8 × brightness.
         gl.uniform1f(u('uGain'), 0.8 * fx.brightness);
+        return true;
       };
 
       // The colours are the page's, so they follow light and dark.
@@ -516,36 +548,51 @@
 
       // Runs only while the hero is on screen and the context is held; the browser holds it
       // while the page is hidden. Paused, it keeps its place: time counts only frames drawn.
-      let raf = 0, last = 0, onScreen = false, lost = false;
+      // It draws at most about 30 times a second: the sheet moves slowly enough that more
+      // frames add nothing to see, and each one is the whole plane and its lighting again,
+      // twice that on a 60Hz screen and four times on a 120Hz one, blurred again under the
+      // glass. Side by side with full speed in the dev panel, no difference could be seen
+      // (3 Oct 2026). A few ms' grace, so frame timing jitter does not skip a frame.
+      const gapMs = 1000 / 30 - 4;
+      let raf = 0, last = 0, onScreen = false, lost = false, broken = false;
       const tick = (t: number) => {
+        raf = requestAnimationFrame(tick);
+        if (t - last < gapMs) return;
         time += Math.min(0.1, (t - last) / 1000);
         last = t;
         draw();
-        raf = requestAnimationFrame(tick);
       };
       const run = () => {
-        const want = onScreen && !lost;
+        const want = onScreen && !lost && !broken;
         if (want && !raf) { last = performance.now(); raf = requestAnimationFrame(tick); }
         else if (!want && raf) { cancelAnimationFrame(raf); raf = 0; }
       };
+      // A context already lost at the start, or shaders that will not build, leave the wash in
+      // place and nothing running; a context the browser hands back starts it all again.
+      // data-drawn marks the first frame on screen, from which the canvas fades in over the
+      // wash (the styles above).
       const start = () => {
-        setup();
+        if (gl.isContextLost()) { lost = true; return; }
+        broken = !setup();
+        if (broken) { run(); return; }
         recolour();
         layout(true);
         draw();
         run();
+        requestAnimationFrame(() => root.setAttribute('data-drawn', ''));
       };
 
-      start();
       // Holding on to a lost context (preventDefault) is what lets the browser offer it back.
+      // Listening before the first start, so a context lost at once is still offered back.
       canvas.addEventListener('webglcontextlost', (e) => { e.preventDefault(); lost = true; run(); });
       canvas.addEventListener('webglcontextrestored', () => { lost = false; start(); });
+      start();
       // This runs after the frame's own drawing, so a resize is drawn at once rather than left
       // blank until the next frame.
-      new ResizeObserver(() => { if (!lost && layout()) draw(); }).observe(root);
+      new ResizeObserver(() => { if (!lost && !broken && layout()) draw(); }).observe(root);
       new IntersectionObserver(([entry]) => { onScreen = !!entry?.isIntersecting; run(); }).observe(root);
       // The theme: the device setting, or data-theme on <html> (set by the local dev panel).
-      const retheme = () => { if (lost) return; recolour(); if (!raf) draw(); };
+      const retheme = () => { if (lost || broken) return; recolour(); if (!raf) draw(); };
       new MutationObserver(retheme).observe(html, { attributes: true, attributeFilter: ['data-theme'] });
       matchMedia('(prefers-color-scheme: dark)').addEventListener('change', retheme);
     }
