@@ -9,10 +9,12 @@
 // the browser's own find-in-page can open a closed row. They open and close on the site's
 // spring (--spring, from Base.astro) by animating the browser's own ::details-content box
 // between no height and its full height, as a grid row from 0fr to 1fr, which is the one way
-// CSS can animate to a height it does not know. Where a browser has no ::details-content
-// (before Chrome 131, Safari 18.4, Firefox 143) a row simply opens, as it does under reduced
-// motion. Nothing here runs while the section is off screen: the only motion is the half
-// second after a row is opened or closed.
+// CSS can animate to a height it does not know. Opening is CSS alone. Closing is CSS alone
+// in Chrome; Safari hides a closing row's contents at once, so the short script at the foot
+// of this file holds a row open while it shrinks. Where a browser has no ::details-content
+// (before Chrome 131, Safari 18.4, Firefox 143) a row simply opens and closes, as it does
+// under reduced motion. Nothing here runs while the section is off screen: the only motion
+// is the half second after a row is opened or closed.
 //
 // The opening row is after the accordions on motion.dev and kokonutui.com: the idea of a row
 // that springs open and brings its lines in one after another, not their code or their look.
@@ -129,8 +131,8 @@ const month = (ym: string) => {
   .work-mark{position:relative;flex:none;width:1rem;height:1rem;margin-top:calc((var(--t1) * var(--lh-snug) - 1rem) / 2);color:var(--ink)}
   .work-mark::before,.work-mark::after{content:'';position:absolute;left:0;right:0;top:calc(50% - 1px);height:2px;background:currentColor;transition:rotate var(--spring-time, .4s) var(--spring, ease)}
   .work-mark::after{rotate:90deg}
-  .work-item[open] .work-mark::before{rotate:180deg}
-  .work-item[open] .work-mark::after{rotate:180deg}
+  .work-item[open]:not([data-closing]) .work-mark::before{rotate:180deg}
+  .work-item[open]:not([data-closing]) .work-mark::after{rotate:180deg}
   /* Pointed at, the title and the mark take the accent, as the 404's link does: 4.5:1 on the
      page in the light and 7.7:1 in the dark, on type that is large either way. Only where
      there is a pointer to hover with, so a tap does not leave a row green. */
@@ -143,7 +145,7 @@ const month = (ym: string) => {
      shrunk (content-visibility, allowed to wait). The panel is that grid's one item, clipped
      to the row while it moves. */
   .work-item::details-content{display:grid;grid-template-rows:0fr;transition:grid-template-rows var(--spring-time, .4s) var(--spring, ease),content-visibility var(--spring-time, .4s) allow-discrete}
-  .work-item[open]::details-content{grid-template-rows:1fr}
+  .work-item[open]:not([data-closing])::details-content{grid-template-rows:1fr}
   .work-panel{min-height:0;overflow:hidden}
   .work-body{row-gap:var(--s3);padding-bottom:var(--s4)}
   /* As the row opens its lines arrive one after another, 50ms apart, each rising half a rem
@@ -181,3 +183,36 @@ const month = (ym: string) => {
     .work-skills{grid-template-columns:minmax(0,1fr) minmax(0,2fr);column-gap:var(--s5);align-items:first baseline}
   }
 </style>
+
+<script>
+  // Closing a row. CSS can keep a closing row's contents drawn while they shrink
+  // (content-visibility, allowed to wait: the styles above), and Chrome does; Safari (26.0)
+  // hides them the moment the row loses `open`, so there a row would spring open and snap
+  // shut. So a click on an open row does not close it at once: the row is marked data-closing,
+  // which shrinks it and turns its mark back while it is still open, and `open` comes off
+  // once it has shrunk. A second click while it is shrinking opens it again. Left to the
+  // browser where there is nothing to animate: under reduced motion, and where there is no
+  // ::details-content. Enter and Space on a row arrive as clicks too.
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)');
+  if (CSS.supports('selector(::details-content)')) {
+    for (const item of document.querySelectorAll<HTMLDetailsElement>('.work-item')) {
+      const close = () => {
+        if (!item.hasAttribute('data-closing')) return;
+        item.removeAttribute('data-closing');
+        item.open = false;
+      };
+      item.querySelector('summary')?.addEventListener('click', (e) => {
+        if (reduce.matches) return;
+        if (item.hasAttribute('data-closing')) {
+          e.preventDefault();
+          item.removeAttribute('data-closing');
+        } else if (item.open) {
+          e.preventDefault();
+          item.setAttribute('data-closing', '');
+          // As long as the spring takes (--spring-time, in seconds).
+          setTimeout(close, (parseFloat(getComputedStyle(item).getPropertyValue('--spring-time')) || 0.4) * 1000);
+        }
+      });
+    }
+  }
+</script>
