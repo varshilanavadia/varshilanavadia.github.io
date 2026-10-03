@@ -4,15 +4,18 @@
 // reading measure. Beside it, where he is based: the contour map that was behind the
 // statement, now a map in its own right with its marker on Austin.
 //
-// The opening sentence inks in as it is read. Every word is in the page in full; where the
-// browser can tie an animation to the scroll position, the words ahead of a reading line
-// (65% of the way down the window) rest in a lighter ink and darken as they cross it. That
-// is CSS alone, a scroll-driven animation of one number (--read) that each word measures
-// itself against: no script, nothing running unless the page is being scrolled with the
-// sentence on screen, and nothing at all under reduced motion, in print, or in a browser
-// without scroll-driven animations (Firefox today), where the sentence is simply in full ink.
+// The opening sentence inks in as it is read. Every word is in the page in full; the words
+// ahead of a reading line (65% of the way down the window) rest in a lighter ink and darken
+// as they cross it. A short script after the sentence keeps one number on it, --read, how far
+// the sentence has crossed the line, and each word measures itself against that number in
+// CSS. It runs only while the sentence is on screen and the page is scrolling, and not at all
+// under reduced motion; without script, in print, under Increase Contrast and in a
+// high-contrast theme the sentence is simply in full ink.
 //
-// After the scroll-linked text on motion.dev: the idea, written here as CSS.
+// After the scroll-linked text on motion.dev: the idea, not its code. CSS's own scroll-driven
+// animations (animation-timeline: view()) do the same with no script, and did in Chrome, but
+// Firefox has none, Safari only since 26, and what Safari paints could not be checked from
+// here (3 Oct 2026). The script is the one way that could be checked in all three.
 import ContourMap from './ContourMap.astro';
 
 const lead =
@@ -29,6 +32,45 @@ const words = lead.split(' ');
         <Fragment><span class="w" style={`--i:${i}`}>{word}</span>{i < words.length - 1 ? ' ' : ''}</Fragment>
       ))}
     </p>
+    <script is:inline>
+      // Inline and in the parser's path, straight after the sentence, so its words are in
+      // their starting ink before the page is first painted: on a phone its first lines are
+      // on screen as the page arrives, and they must not arrive dark and then fade.
+      (() => {
+        const lead = document.currentScript.previousElementSibling;
+        const still = matchMedia('(prefers-reduced-motion: reduce)');
+        // How far the sentence has crossed the reading line, 65% of the way down the window:
+        // 0 with its first line on the line, 1 with its last. Above the window it is read,
+        // below it unread, so the number is right wherever the page is opened or left.
+        let queued = false;
+        const read = () => {
+          queued = false;
+          const box = lead.getBoundingClientRect();
+          lead.style.setProperty('--read', Math.max(0, Math.min(1, (innerHeight * 0.65 - box.top) / box.height)).toFixed(4));
+        };
+        const ask = () => {
+          if (queued) return;
+          queued = true;
+          requestAnimationFrame(read);
+        };
+        // Listening only while the sentence is on screen, and from a little before it
+        // arrives, so its ink is right as it comes into view; data-reading is what turns the
+        // lighter ink on (the styles below), so it is off under reduced motion, and comes
+        // and goes with that setting.
+        let onScreen = false, listening = false;
+        const run = () => {
+          lead.toggleAttribute('data-reading', !still.matches);
+          read();
+          const want = onScreen && !still.matches;
+          if (want === listening) return;
+          listening = want;
+          for (const type of ['scroll', 'resize']) window[want ? 'addEventListener' : 'removeEventListener'](type, ask, { passive: true });
+        };
+        run();
+        new IntersectionObserver(([entry]) => { onScreen = entry.isIntersecting; run(); }, { rootMargin: '200px 0px' }).observe(lead);
+        still.addEventListener('change', run);
+      })();
+    </script>
     <p>
       I’m currently a Software Engineer at Oracle where I am developing and delivering the #1
       cloud ERP system that allows businesses to grow reliably. As a curious learner, I love to
@@ -85,24 +127,16 @@ const words = lead.split(' ');
      keeps it large text at every width: the lighter ink below is measured against 3:1. */
   .about-lead{max-width:56.25rem;margin-bottom:var(--s2);font-size:clamp(1.56rem, calc(1.3086rem + 1.2571vw), 2.44rem);font-weight:600;line-height:var(--lh-snug);color:var(--ink);text-wrap:pretty;overflow-wrap:break-word}
 
-  /* Inking in. --read runs from 0 to 1 as the sentence crosses the reading line, 35% up from
-     the foot of the window (the timeline's second inset, the one at the window's end): from
-     its first line reaching the line to its last line reaching it. A word is in full ink once --read × the number of words has passed its place in the
-     sentence, and part-way while it is passing, so the ink moves through the sentence as
+  /* Inking in. The script above keeps --read on the sentence: 0 to 1 as it crosses the reading
+     line. A word is in full ink once --read × the number of words has passed its place in
+     the sentence, and part-way while it is passing, so the ink moves through the sentence as
      smoothly as the page scrolls. Words not yet reached rest in --ink-unread (site.css).
-     --read is registered as a number so the browser can animate it; at rest, and wherever
-     the animation does not apply, it is 1: read. */
-  @property --read{syntax:'<number>';inherits:true;initial-value:1}
-  @keyframes read{from{--read:0}to{--read:1}}
-  @media (prefers-reduced-motion: no-preference){
-    @supports (animation-timeline: view()){
-      .about-lead{animation:read linear both;animation-timeline:view(block 0% 35%);animation-range:entry 0% entry 100%}
-      .about-lead .w{color:color-mix(in srgb, var(--ink) calc(clamp(0, var(--read) * var(--n) - var(--i), 1) * 100%), var(--ink-unread))}
-    }
-  }
-  /* Increase Contrast asks for more than the lighter ink's 3:1, and a high-contrast theme
-     paints all text in its own colour: in both the sentence is in full ink throughout. */
-  @media (prefers-contrast: more), (forced-colors: active){.about-lead .w{color:inherit}}
+     Only while the script says so (data-reading). */
+  .about-lead[data-reading] .w{color:color-mix(in srgb, var(--ink) calc(clamp(0, var(--read, 1) * var(--n) - var(--i), 1) * 100%), var(--ink-unread))}
+  /* Increase Contrast asks for more than the lighter ink's 3:1, a high-contrast theme paints
+     all text in its own colour, and paper does not scroll: in all three the sentence is in
+     full ink throughout. */
+  @media (prefers-contrast: more), (forced-colors: active), print{.about-lead[data-reading] .w{color:inherit}}
 
   /* The place: a map tile, then the words. The tile is the contour map at full strength, as
      on the 404, on the page's second ground with square corners. */
