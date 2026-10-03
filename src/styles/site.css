@@ -8,6 +8,10 @@ html{--ink:var(--color-text);--ink-2:var(--color-neutral-900);--ink-3:var(--colo
 /* Inverted set, §08: the dark ground is --ink itself. */
 html{--ink-inv:var(--color-neutral-100);--ink-inv-2:var(--color-neutral-300);--ink-inv-3:var(--color-neutral-500);--rule-inv:var(--color-accent-900)}
 html{--scrim:var(--color-text)}
+/* The ink of words not yet read, in About's opening sentence (About.astro): one step of the
+   neutral ramp for both modes, 3.1:1 on the page in the light and 4.0:1 in the dark, so for
+   large text only (3:1), which that sentence is at every width. */
+html{--ink-unread:var(--color-neutral-600)}
 
 /* ── Dark ─────────────────────────────────────────────────────────────────── */
 /* Follows the device setting. The inverted set (§08) supplies the inks; the ground is the
@@ -176,15 +180,24 @@ a:hover{color:var(--ink)}
 /* ── Sections ─────────────────────────────────────────────────────────────── */
 .block-label{margin:0;font-size:var(--t-1);font-weight:600;line-height:var(--lh-normal);color:var(--ink-3);text-transform:uppercase;letter-spacing:1px}
 
+/* A section of the home page: the wireframe's uniform s5 frame under a 2px rule. A link to it
+   stops it just below the bar (--bar-h, HeroGradient.astro), and under no-preference the page
+   glides there rather than jumping.
+   The leading set is declared here, on the section, for what is inside it: the Type System's
+   five values, which the rest of this file names (var(--lh-…)) but which were never declared
+   for the site, so outside a section those declarations fall back to the browser's normal
+   leading. Declaring them for the whole page would move the hero's name band, the footer
+   and the 404, which were all tuned by eye as they are; that is the owner's to decide. */
+.section{position:relative;padding:var(--s5) var(--gutter);border-top:2px solid var(--rule);scroll-margin-top:var(--bar-h, 0px);--lh-tight:1.05;--lh-snug:1.15;--lh-normal:1.3;--lh-body:1.5;line-height:var(--lh-body)}
+@media (prefers-reduced-motion: no-preference){html{scroll-behavior:smooth}}
+/* Eyebrow: inherited size · 700 · --lh-normal · 1px · uppercase · --ink. The section's name,
+   an h2, so the design system's heading styles are set aside in full. Shown, where the
+   mapping's B2 hid the section names: the bar that named the section in the wireframe slides
+   away here as the page is read. */
+.eyebrow{margin:0;font-family:var(--font-body);font-size:var(--t-1);font-weight:700;line-height:var(--lh-normal);letter-spacing:1px;text-transform:uppercase;color:var(--ink)}
+
+/* The 404's one line takes this frame (below). */
 .intro{position:relative;padding:var(--s5) var(--gutter);border-top:2px solid var(--rule)}
-/* Everything in the section sits above the map behind it. */
-.intro > :not(.contour-map){position:relative}
-/* Page title: t4 · 700 · --lh-tight · --ink · balance · 56.25rem. Per §14 a display role
-   interpolates with the viewport, two steps down to t2 at the 320 floor. */
-/* A word too long for the line breaks rather than running off the page: only ever with
-   larger text on a narrow screen ("Something's" at 200% text on a 320px phone), never at
-   normal sizes, where every word fits. The thought below does the same. */
-.statement{margin:0;font-size:clamp(1.95rem, calc(1.636rem + 1.5714vw), 3.05rem);font-weight:700;line-height:var(--lh-tight);color:var(--ink);max-width:56.25rem;text-wrap:balance;overflow-wrap:break-word}
 
 /* ── 404 ──────────────────────────────────────────────────────────────────── */
 /* A short page: the main column takes the spare height so the footer sits at the foot of
@@ -203,8 +216,9 @@ a:hover{color:var(--ink)}
 
 /* ── Footer ───────────────────────────────────────────────────────────────── */
 .foot{padding:var(--s4) var(--gutter);border-top:2px solid var(--rule)}
-/* No --measure while this is a landing-only page: the one thought runs the full column. */
-.foot blockquote{margin:var(--s2) 0 0;font-size:var(--t1);font-weight:400;line-height:var(--lh-snug);color:var(--ink);text-wrap:pretty;overflow-wrap:break-word}
+/* The thought takes the reading measure, as the prose above it does, now that the page is
+   more than a landing: while it was the page's only text, it ran the full column. */
+.foot blockquote{margin:var(--s2) 0 0;max-width:var(--measure);font-size:var(--t1);font-weight:400;line-height:var(--lh-snug);color:var(--ink);text-wrap:pretty;overflow-wrap:break-word}
 .copyright{margin:var(--s4) 0 0;padding-top:var(--s2);border-top:1px solid var(--rule);font-size:var(--t-1);font-weight:400;line-height:var(--lh-normal);color:var(--ink-3)}
 /* Alone in the footer (the 404), the footer's own rule is enough. */
 .copyright:first-child{margin-top:0;padding-top:0;border-top:0}

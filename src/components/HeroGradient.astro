@@ -61,9 +61,9 @@
       rgb(0 0 0 / .156) calc(var(--fade-at) + .75 * (100% - var(--fade-at))),
       rgb(0 0 0 / .043) calc(var(--fade-at) + .875 * (100% - var(--fade-at))),
       transparent)}
-  /* With the gradient fading into the page, the rule between the hero and the statement goes:
-     made transparent rather than removed, so nothing below moves. */
-  .hero + .intro{border-top-color:transparent}
+  /* With the gradient fading into the page, the rule between the hero and the section after
+     it goes: made transparent rather than removed, so nothing below moves. */
+  .hero + .section{border-top-color:transparent}
   /* The gradient carries on up behind the bar of links. The hero reaches up under the bar by
      the bar's height (--bar-h, worked out at the foot of this style and measured by the script
      below) and pads its content back down by as much, so nothing in it moves; the bar drops
@@ -154,7 +154,7 @@
      or tablet. The browser drops the shadows itself. */
   @media (forced-colors: active){
     .bar{border-bottom:0;padding-bottom:calc(9px + 2px)}
-    .hero + .intro{border-top:0;padding-top:calc(var(--s5) + 2px)}
+    .hero + .section{border-top:0;padding-top:calc(var(--s5) + 2px)}
     .bar::before{inset:0;background:Canvas;-webkit-backdrop-filter:none;backdrop-filter:none;-webkit-mask-image:none;mask-image:none;border-bottom:1px solid CanvasText}
     .bar nav::before,.bar-toggle::before,.bar[data-compact] .bar-menu{background:Canvas;-webkit-backdrop-filter:none;backdrop-filter:none;border:1px solid CanvasText}
   }

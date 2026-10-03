@@ -55,7 +55,7 @@ const HOST = Astro.site?.hostname;
     <link rel="manifest" href="/site.webmanifest?v=2" />
     <meta name="apple-mobile-web-app-title" content="Varshil Anavadia" />
     <!-- Figtree, fetched at once rather than once the stylesheet that names it is in: on a
-         slow connection the name and the statement otherwise paint in the fallback face and
+         slow connection the name and the text otherwise paint in the fallback face and
          swap, and the name band jumps as it measures itself again. Fonts are fetched in CORS
          mode, hence crossorigin, or the preload goes unused and the file comes twice. -->
     <link rel="preload" as="font" type="font/woff2" href={figtreeLatin} crossorigin />

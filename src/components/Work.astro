@@ -1,0 +1,183 @@
+---
+// Work: the roles, newest first, then education and skills (src/data/work.ts). Each role is a
+// row that opens: the date, the title and the organisation are always on show, and a tap, a
+// click or Enter opens what was done there and the tools used. A CV is scanned before it is
+// read, so the page stays a list of roles until one is asked about. The present role starts
+// open, which also shows that the rows open.
+//
+// The rows are <details>, so they open with no script at all, a crawler reads every word, and
+// the browser's own find-in-page can open a closed row. They open and close on the site's
+// spring (--spring, from Base.astro) by animating the browser's own ::details-content box
+// between no height and its full height, as a grid row from 0fr to 1fr, which is the one way
+// CSS can animate to a height it does not know. Where a browser has no ::details-content
+// (before Chrome 131, Safari 18.4, Firefox 143) a row simply opens, as it does under reduced
+// motion. Nothing here runs while the section is off screen: the only motion is the half
+// second after a row is opened or closed.
+//
+// The opening row is after the accordions on motion.dev and kokonutui.com: the idea of a row
+// that springs open and brings its lines in one after another, not their code or their look.
+import { roles, education, skills, type Entry } from '../data/work';
+
+// Spelled out here rather than asked of the build machine's locale data, which differs by
+// version ("Sep" or "Sept").
+const MONTHS = 'Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec'.split(' ');
+const month = (ym: string) => {
+  const [y, m] = ym.split('-').map(Number);
+  return `${MONTHS[m - 1]} ${y}`;
+};
+---
+
+<section class="section work" id="work" aria-labelledby="work-title">
+  <h2 class="eyebrow" id="work-title">Work</h2>
+
+  {[{ label: null, entries: roles }, { label: 'Education', entries: education }].map(({ label, entries }, group) => (
+    <div class="work-group">
+      {label && <p class="block-label">{label}</p>}
+      {entries.map((entry: Entry, i) => (
+        <details class="work-item" open={group === 0 && i === 0}>
+          {/* The title first, for anyone hearing the row read out; the date sits before it on
+              screen (order, below). */}
+          <summary>
+            <span class="work-head">
+              <span class="work-names">
+                <h3 class="work-title">{entry.title}</h3>
+                <span class="work-org">{entry.org}</span>
+              </span>
+              <span class="work-mark" aria-hidden="true"></span>
+            </span>
+            <span class="work-dates">
+              {entry.when ? (
+                <time datetime={entry.when.datetime}>{entry.when.label}</time>
+              ) : (
+                <>
+                  <time datetime={entry.from}>{month(entry.from!)}</time>
+                  <span aria-hidden="true"> – </span><span class="sr-only"> to </span>
+                  {entry.to ? <time datetime={entry.to}>{month(entry.to)}</time> : 'Present'}
+                </>
+              )}
+            </span>
+          </summary>
+          <div class="work-panel">
+            <div class="work-body">
+              <ul class="work-points">
+                {entry.points.map(({ lead, text }, n) => (
+                  <li style={`--i:${n}`}>
+                    {lead && <strong class="work-lead">{lead}</strong>}
+                    {text}
+                  </li>
+                ))}
+              </ul>
+              {entry.tools && (
+                <div class="work-tools" style={`--i:${entry.points.length}`}>
+                  <p class="block-label" id={`tools-${group}-${i}`}>Tools</p>
+                  <ul class="tags" aria-labelledby={`tools-${group}-${i}`}>
+                    {entry.tools.map((tool) => <li>{tool}</li>)}
+                  </ul>
+                </div>
+              )}
+            </div>
+          </div>
+        </details>
+      ))}
+    </div>
+  ))}
+
+  <div class="work-skills">
+    <p class="block-label" id="skills-title">Skills</p>
+    <ul class="tags" aria-labelledby="skills-title">
+      {skills.map((skill) => <li>{skill}</li>)}
+    </ul>
+  </div>
+</section>
+
+<style>
+  /* One column on a phone; from 60rem the two columns About uses (one part to two, with an s5
+     gap), so the dates run down the column About's map sits in and the titles line up with
+     its text. */
+  /* Every stack here is a one-column grid whose column may be narrower than its longest word
+     (minmax(0, 1fr)), so with larger text on a narrow screen a long word breaks rather than
+     widening the column past the window, where the opening row would clip it. */
+  .work,.work-group,.work-body,.work-points,.work-tools,.work-skills{display:grid;grid-template-columns:minmax(0,1fr)}
+  .work{row-gap:var(--s4)}
+  .work-group{row-gap:var(--s2)}
+
+  /* A row: hairlines between rows and one to close the list, the wireframe's row separators. */
+  .work-item{border-top:1px solid var(--rule)}
+  .work-item:last-child{border-bottom:1px solid var(--rule)}
+  /* The whole head of the row is the control, 44px and more at every width. No marker of the
+     browser's: the mark at the right is the row's own. */
+  summary{display:grid;grid-template-columns:minmax(0,1fr);row-gap:var(--s1);padding:var(--s3) 0;cursor:pointer;list-style:none}
+  summary::-webkit-details-marker{display:none}
+  /* The design system's focus ring sits outside the box, where the hairlines are; inside,
+     it has the row's own padding to sit in. */
+  summary:focus-visible{outline-offset:-2px}
+  .work-head{display:flex;align-items:flex-start;column-gap:var(--s2)}
+  .work-names{flex:1;min-width:0}
+  /* Row title: t1 · 600 · --lh-snug · --ink · balance. An h3 inside the summary, so the
+     design system's heading styles are set aside in full. */
+  .work-title{margin:0;font-family:var(--font-body);font-size:var(--t1);font-weight:600;line-height:var(--lh-snug);letter-spacing:0;color:var(--ink);text-wrap:balance;overflow-wrap:break-word}
+  /* Row subtitle: t0 · 400 · --lh-normal · --ink-2. */
+  .work-org{display:block;margin-top:var(--s0);font-size:var(--t0);line-height:var(--lh-normal);color:var(--ink-2);text-wrap:balance}
+  /* Date rail: the map label's mono, a step below the title it sits beside, in the
+     annotation ink (7.1:1 on the page in the light, 5.5:1 in the dark). Bold, where the Type
+     System's rail is 400: 700 is the one weight of Plex Mono the site loads, and a second
+     file for four dates was not worth its 15 KB. */
+  .work-dates{order:-1;font-family:var(--font-mono);font-size:var(--t-1);font-weight:700;line-height:var(--lh-normal);letter-spacing:0.04em;text-transform:uppercase;font-variant-numeric:tabular-nums;color:var(--ink-3)}
+  .work-dates time{white-space:nowrap}
+  /* The mark: a plus drawn from two 2px rules, level with the title's first line. Opening
+     lays the upright one down, so it reads minus. */
+  .work-mark{position:relative;flex:none;width:1rem;height:1rem;margin-top:calc((var(--t1) * var(--lh-snug) - 1rem) / 2);color:var(--ink)}
+  .work-mark::before,.work-mark::after{content:'';position:absolute;left:0;right:0;top:calc(50% - 1px);height:2px;background:currentColor;transition:rotate var(--spring-time, .4s) var(--spring, ease)}
+  .work-mark::after{rotate:90deg}
+  .work-item[open] .work-mark::before{rotate:180deg}
+  .work-item[open] .work-mark::after{rotate:180deg}
+  /* Pointed at, the title and the mark take the accent, as the 404's link does: 4.5:1 on the
+     page in the light and 7.7:1 in the dark, on type that is large either way. Only where
+     there is a pointer to hover with, so a tap does not leave a row green. */
+  @media (hover:hover){
+    summary:hover .work-title,summary:hover .work-mark{color:var(--color-accent)}
+  }
+
+  /* Opening and closing. The browser's box for a row's contents becomes a one-row grid whose
+     row grows from nothing to the contents' height; closing, it stays drawn until it has
+     shrunk (content-visibility, allowed to wait). The panel is that grid's one item, clipped
+     to the row while it moves. */
+  .work-item::details-content{display:grid;grid-template-rows:0fr;transition:grid-template-rows var(--spring-time, .4s) var(--spring, ease),content-visibility var(--spring-time, .4s) allow-discrete}
+  .work-item[open]::details-content{grid-template-rows:1fr}
+  .work-panel{min-height:0;overflow:hidden}
+  .work-body{row-gap:var(--s3);padding-bottom:var(--s4)}
+  /* As the row opens its lines arrive one after another, 50ms apart, each rising half a rem
+     as it fades in. */
+  .work-item[open] .work-points li,.work-item[open] .work-tools{animation:work-in var(--spring-time, .4s) var(--spring, ease) both;animation-delay:calc(var(--i, 0) * 50ms)}
+  @keyframes work-in{from{opacity:0;translate:0 .5rem}}
+  /* Under reduced motion a row opens at once, mark and all. */
+  @media (prefers-reduced-motion: reduce){
+    .work-item::details-content,.work-mark::before,.work-mark::after{transition:none}
+    .work-item[open] .work-points li,.work-item[open] .work-tools{animation:none}
+  }
+
+  /* What was done there: body text at the reading measure, each point led by a short 2px
+     rule, the hero name's dash at text size. */
+  .work-points{row-gap:var(--s2);margin:0;padding:0;list-style:none;max-width:var(--measure)}
+  .work-points li{position:relative;padding-left:var(--s3);color:var(--ink-2);overflow-wrap:break-word}
+  .work-points li::before{content:'';position:absolute;left:0;top:calc(var(--lh-body) * .5em - 1px);width:var(--s1);height:2px;background:var(--ink-3)}
+  /* Level with the team's name where a point opens with one, which is set tighter. */
+  .work-points li:has(> .work-lead)::before{top:calc(var(--lh-snug) * .5em - 1px)}
+  /* Term label: t0 · 600 · --lh-snug · --ink. The team a point belongs to, on its own line. */
+  .work-lead{display:block;margin-bottom:var(--s0);font-weight:600;line-height:var(--lh-snug);color:var(--ink)}
+  .work-tools{row-gap:var(--s1)}
+
+  /* Tags: the Label role in the case they were typed in (t-1 · 600 · 0.5px), in a hairline
+     box with square corners. Not the design system's .tag, which is 11px, under the site's
+     16px floor. */
+  .tags{display:flex;flex-wrap:wrap;gap:var(--s1);margin:0;padding:0;list-style:none}
+  .tags li{padding:var(--s0) var(--s1);border:1px solid var(--rule);font-size:var(--t-1);font-weight:600;line-height:var(--lh-normal);letter-spacing:0.5px;color:var(--ink-2)}
+  .work-skills{row-gap:var(--s2)}
+
+  @media (min-width:60rem){
+    summary{grid-template-columns:minmax(0,1fr) minmax(0,2fr);column-gap:var(--s5);align-items:first baseline}
+    /* In from the left by the dates' column and its gap, so the points sit under the title. */
+    .work-body{margin-left:calc((100% - var(--s5)) / 3 + var(--s5))}
+    .work-skills{grid-template-columns:minmax(0,1fr) minmax(0,2fr);column-gap:var(--s5);align-items:first baseline}
+  }
+</style>

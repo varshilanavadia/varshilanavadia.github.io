@@ -1,0 +1,125 @@
+---
+// About: the owner's own words, in his voice, with only typos fixed. The opening sentence is
+// set large, as the statement that used to stand here was; the rest is body text at the
+// reading measure. Beside it, where he is based: the contour map that was behind the
+// statement, now a map in its own right with its marker on Austin.
+//
+// The opening sentence inks in as it is read. Every word is in the page in full; where the
+// browser can tie an animation to the scroll position, the words ahead of a reading line
+// (65% of the way down the window) rest in a lighter ink and darken as they cross it. That
+// is CSS alone, a scroll-driven animation of one number (--read) that each word measures
+// itself against: no script, nothing running unless the page is being scrolled with the
+// sentence on screen, and nothing at all under reduced motion, in print, or in a browser
+// without scroll-driven animations (Firefox today), where the sentence is simply in full ink.
+//
+// After the scroll-linked text on motion.dev: the idea, written here as CSS.
+import ContourMap from './ContourMap.astro';
+
+const lead =
+  'I’m firstly a human being and then an Engineer, and I believe that we are able to become better versions of ourselves and achieve better outcomes by leading with grit, abundance and a progress over perfection mindset.';
+const words = lead.split(' ');
+---
+
+<section class="section about" id="about" aria-labelledby="about-title">
+  <h2 class="eyebrow" id="about-title">About</h2>
+
+  <div class="about-text">
+    <p class="about-lead" style={`--n:${words.length}`}>
+      {words.map((word, i) => (
+        <Fragment><span class="w" style={`--i:${i}`}>{word}</span>{i < words.length - 1 ? ' ' : ''}</Fragment>
+      ))}
+    </p>
+    <p>
+      I’m currently a Software Engineer at Oracle where I am developing and delivering the #1
+      cloud ERP system that allows businesses to grow reliably. As a curious learner, I love to
+      solve complex problems by leveraging both parts of my brain equally (Systems 1 and 2). I
+      have a passion for learning about the intersection of core software engineering and
+      distributed systems, and expanding my knowledge of what it takes to solve various problems
+      and create impactful applications for the future.
+    </p>
+    <p>
+      Previously, I developed self-service data and analytics products at Nike (through EY) to
+      fulfill athletic needs of consumers globally. I also graduated from The Pennsylvania State
+      University with a Master’s in Computer Science where, in addition to coursework (data
+      structures, algorithms, distributed systems, databases, machine learning), I led
+      campus-wide efforts as a Global Ambassador to organize cultural events and provide a rich
+      college experience for a diverse group of international students with our motto “Learn
+      more, Think globally, Expand Horizons.” Prior to graduate school, I held a fixed-term
+      Software Engineering position in research at the Hong Kong University of Science and
+      Technology where I developed a forecasting system for ubiquitous people sensing in a Smart
+      City.
+    </p>
+    <p>
+      Outside of work, I love hiking and learning random facts about the universe, its
+      functioning and outer space. Did you know that in five billion years, the Sun will expand
+      and engulf the entire orbits of Mercury, Venus, and Earth?
+    </p>
+  </div>
+
+  <!-- Where he is based. The words are the content; the map is a picture of them, hidden from
+       screen readers, its marker labelled by the script once it has drawn. Redrawn every
+       other frame, as it was behind the statement, since the hero may be running above it. -->
+  <aside class="about-place" aria-label="Location">
+    <div class="about-map">
+      <ContourMap route="start" label="Austin, TX" every={2} />
+    </div>
+    <p class="about-based"><span class="block-label">Based in</span> Austin, TX</p>
+  </aside>
+</section>
+
+<style>
+  /* One column on a phone, in reading order: the name of the section, the words, then the
+     place. From 60rem, two columns, one part to two: the section's name and the place on the
+     left, the words on the right. The place stays in view beside the
+     words as they scroll, clear of the bar when it slides back. */
+  .about{display:grid;grid-template-columns:minmax(0,1fr);row-gap:var(--s4)}
+  .about-text{display:grid;grid-template-columns:minmax(0,1fr);row-gap:var(--s3);align-content:start}
+  .about-text p{margin:0}
+  /* Body: t0 · 400 · --lh-body · --ink-2, at the reading measure (10.3:1 on the page in the
+     light, 9.9:1 in the dark). */
+  .about-text p:not(.about-lead){max-width:var(--measure);color:var(--ink-2);overflow-wrap:break-word}
+
+  /* The opening sentence. A display role, so per the Type System's §14 it interpolates with
+     the window: t1 at the 320 floor to t3 at 1440. 600, since 700 across five lines and more
+     is a wall; the heading cap of 56.25rem the statement had. Never smaller than t1, which
+     keeps it large text at every width: the lighter ink below is measured against 3:1. */
+  .about-lead{max-width:56.25rem;margin-bottom:var(--s2);font-size:clamp(1.56rem, calc(1.3086rem + 1.2571vw), 2.44rem);font-weight:600;line-height:var(--lh-snug);color:var(--ink);text-wrap:pretty;overflow-wrap:break-word}
+
+  /* Inking in. --read runs from 0 to 1 as the sentence crosses the reading line, 35% up from
+     the foot of the window (the timeline's second inset, the one at the window's end): from
+     its first line reaching the line to its last line reaching it. A word is in full ink once --read × the number of words has passed its place in the
+     sentence, and part-way while it is passing, so the ink moves through the sentence as
+     smoothly as the page scrolls. Words not yet reached rest in --ink-unread (site.css).
+     --read is registered as a number so the browser can animate it; at rest, and wherever
+     the animation does not apply, it is 1: read. */
+  @property --read{syntax:'<number>';inherits:true;initial-value:1}
+  @keyframes read{from{--read:0}to{--read:1}}
+  @media (prefers-reduced-motion: no-preference){
+    @supports (animation-timeline: view()){
+      .about-lead{animation:read linear both;animation-timeline:view(block 0% 35%);animation-range:entry 0% entry 100%}
+      .about-lead .w{color:color-mix(in srgb, var(--ink) calc(clamp(0, var(--read) * var(--n) - var(--i), 1) * 100%), var(--ink-unread))}
+    }
+  }
+  /* Increase Contrast asks for more than the lighter ink's 3:1, and a high-contrast theme
+     paints all text in its own colour: in both the sentence is in full ink throughout. */
+  @media (prefers-contrast: more), (forced-colors: active){.about-lead .w{color:inherit}}
+
+  /* The place: a map tile, then the words. The tile is the contour map at full strength, as
+     on the 404, on the page's second ground with square corners. */
+  .about-place{display:grid;grid-template-columns:minmax(0,1fr);row-gap:var(--s2);align-content:start}
+  .about-map{position:relative;height:clamp(11rem, 46vw, 16rem);background:var(--sheet-alt);overflow:hidden}
+  /* The map is drawn by its script, so without script the tile would be an empty box: it
+     shows only once the script has sized its canvas (which gives the canvas a width
+     attribute), and the words below stand alone until then. A browser too old for :has()
+     keeps the words and never shows the tile. */
+  .about-map:not(:has(canvas[width])){display:none}
+  .about-based{display:grid;row-gap:var(--s0);margin:0;font-size:var(--t1);font-weight:600;line-height:var(--lh-snug);color:var(--ink)}
+
+  @media (min-width:60rem){
+    .about{grid-template-columns:minmax(0,1fr) minmax(0,2fr);grid-template-rows:auto 1fr;column-gap:var(--s5)}
+    .about h2{grid-column:1;grid-row:1}
+    .about-text{grid-column:2;grid-row:1 / span 2}
+    .about-place{grid-column:1;grid-row:2;align-self:start;position:sticky;top:calc(var(--bar-h, 0px) + var(--s3))}
+    .about-map{height:auto;aspect-ratio:4 / 3;max-width:26rem}
+  }
+</style>
