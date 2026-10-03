@@ -13,12 +13,18 @@ import { links } from '../site';
 import figtreeLatin from '@fontsource-variable/figtree/files/figtree-latin-wght-normal.woff2?url';
 import DevPanel from '../components/DevPanel.astro';
 
+import { spring } from '../scripts/spring';
 interface Props {
   title: string;
   bodyClass?: string;
 }
+  /** The page's sections, for the bar: `id` is a <section>'s id on the page (src/site.ts). */
+  sections?: { id: string; label: string }[];
 
-const { title, bodyClass } = Astro.props;
+const { title, bodyClass, sections = [] } = Astro.props;
+// The site's spring (src/scripts/spring.ts), worked out here, while the site builds, and
+// handed to every page on <html>, so it is there before any script and with none.
+const { easing, time } = spring();
 const year = new Date().getFullYear();
 // The dev panel is for local work only: `npm run dev`, or a build with PUBLIC_DEV_PANEL=1
 // (`npm run preview:local`). The GitHub Pages build sets neither, so it never ships.
@@ -30,7 +36,7 @@ const GA_ID = 'G-S8F7J8V6F4';
 const HOST = Astro.site?.hostname;
 ---
 
-<html lang="en">
+<html lang="en" style={`--spring:${easing};--spring-time:${time.toFixed(2)}s`}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />

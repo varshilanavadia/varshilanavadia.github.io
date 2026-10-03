@@ -75,7 +75,7 @@
      when it scrolls up, when a link is more likely wanted (bar--hidden, bar--glass, set by
      the script). The glass is the page's ground as a light veil over what is behind, blurred
      and its colour lifted, after Apple's bar materials (--glass-* in site.css). It slides and
-     turns to glass on a spring (--spring, --spring-time, which the script works out), and
+     turns to glass on the site's spring (--spring, --spring-time, from Base.astro), and
      under reduced motion does neither: it stays, as glass once the page has scrolled.
      Its shape follows the device, after Apple's Liquid Glass:
        mouse or trackpad  a bar the width of the page, fading out over 48px at its foot
@@ -384,30 +384,8 @@
     if (bar) {
       // Unrounded, so no sliver of the page shows between the top of the bar and the hero.
       new ResizeObserver(() => html.style.setProperty('--bar-h', `${bar.getBoundingClientRect().height}px`)).observe(bar);
-      // The bar's spring, after Motion's: a damped spring from 0 to 1, given
-      // as how long it should look to take and how much it may bounce, sampled every 10ms into
-      // CSS's linear() easing so the browser plays it with no script running. Apple-like:
-      // settled in about half a second, with a bounce too small to see as one.
-      const spring = (visual = 0.35, bounce = 0.1) => {
-        const w = (2 * Math.PI) / (visual * 1.2); // natural frequency
-        const z = 1 - bounce; // damping ratio
-        const at = (t: number) => {
-          if (z >= 1) return 1 - Math.exp(-w * t) * (1 + w * t);
-          const wd = w * Math.sqrt(1 - z * z);
-          return 1 - Math.exp(-z * w * t) * (Math.cos(wd * t) + ((z * w) / wd) * Math.sin(wd * t));
-        };
-        // Long enough to settle within a thousandth of the way.
-        let end = 0;
-        for (let t = 0; t < 3; t += 0.01) if (Math.abs(1 - at(t)) > 0.001) end = t;
-        const time = end + 0.01;
-        const points: number[] = [];
-        for (let i = 0; i * 0.01 <= time + 1e-9; i++) points.push(Math.round(at(i * 0.01) * 10000) / 10000);
-        points[points.length - 1] = 1;
-        return { easing: `linear(${points.join(', ')})`, time };
-      };
-      const { easing, time: springTime } = spring();
-      bar.style.setProperty('--spring', easing);
-      bar.style.setProperty('--spring-time', `${springTime.toFixed(2)}s`);
+      // The bar slides and turns to glass on the site's spring, which Base.astro hands every
+      // page as --spring and --spring-time (src/scripts/spring.ts, where it moved from here).
 
       // The bar's state: glass once the page has left the top; hidden once it has
       // travelled 8px down beyond the bar's own height, and back once it has travelled 8px up,
