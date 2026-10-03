@@ -32,13 +32,17 @@ html{--scrim:var(--color-text)}
    since the usual grey falls to 2.6:1 on the gradient's olive. --glass-* are the bar's glass
    once the page scrolls (HeroGradient.astro): its tint, the page's ground at 45% in the light
    and 70% in the dark, where the pale links over the white paper and the pale name under a
-   thinner veil fell to 2.3:1; and, on the capsule a phone or tablet shows, its rim of light,
-   the shadow lifting it, and its sheen, each lighter-handed in the dark. */
-:root{color-scheme:light;--ground-dark:#0E2E1D;--hero-over:#fff;--on-paper:var(--color-accent-700);--lift:color-mix(in srgb, var(--color-text) 30%, transparent);--hero-gradient-1:#60B37D;--hero-gradient-2:#A8D8D0;--hero-gradient-3:#F2D16B;--hero-fade:55;--on-gradient:var(--ground-dark);--on-gradient-hover:color-mix(in srgb, var(--ground-dark), #000 60%);--glass-tint:color-mix(in srgb, var(--sheet) 45%, transparent);--glass-rim:inset 0 1px 0 rgb(255 255 255 / .55),inset 0 -1px 0 rgb(0 0 0 / .06);--glass-lift:0 10px 28px -8px rgb(14 46 29 / .28);--glass-sheen:linear-gradient(115deg,rgb(255 255 255 / .28),rgb(255 255 255 / 0) 42%)}
+   thinner veil fell to 2.3:1; its blur, tighter than a plain frost, its colour lifted and a
+   touch brighter; and, on the capsule a phone or tablet shows and the tilt hint's pill, its
+   rim of light all round (strongest along the top, as lit from above, with a soft glow inside
+   the edges where light gathers in thick glass), the two-part shadow lifting it, and its
+   sheens from two corners, each lighter-handed in the dark. The "richer" glass, chosen over
+   the first version and over the liquidGL library side by side in the dev panel (3 Oct 2026). */
+:root{color-scheme:light;--ground-dark:#0E2E1D;--hero-over:#fff;--on-paper:var(--color-accent-700);--lift:color-mix(in srgb, var(--color-text) 30%, transparent);--hero-gradient-1:#60B37D;--hero-gradient-2:#A8D8D0;--hero-gradient-3:#F2D16B;--hero-fade:55;--on-gradient:var(--ground-dark);--on-gradient-hover:color-mix(in srgb, var(--ground-dark), #000 60%);--glass-tint:color-mix(in srgb, var(--sheet) 45%, transparent);--glass-rim:inset 0 1px 0 rgb(255 255 255 / .85),inset 0 -1px 0 rgb(255 255 255 / .25),inset 0 0 0 .5px rgb(255 255 255 / .35),inset 0 0 14px rgb(255 255 255 / .22);--glass-lift:0 12px 32px -8px rgb(14 46 29 / .32),0 2px 6px -2px rgb(14 46 29 / .18);--glass-sheen:linear-gradient(115deg,rgb(255 255 255 / .38),rgb(255 255 255 / 0) 38%),linear-gradient(295deg,rgb(255 255 255 / .16),rgb(255 255 255 / 0) 30%);--glass-blur:blur(20px) saturate(240%) brightness(1.06)}
 @media (prefers-color-scheme: dark){
-  :root:not([data-theme="light"]){color-scheme:dark;--color-bg:var(--ground-dark);--color-surface:color-mix(in srgb, var(--ground-dark), #f0f8f2 6%);--color-text:var(--color-neutral-100);--color-accent:var(--color-accent-400);--color-divider:color-mix(in srgb, #f0f8f2 35%, transparent);--ink-2:var(--ink-inv-2);--ink-3:var(--ink-inv-3);--hero-over:var(--ground-dark);--lift:rgba(0,0,0,.55);--hero-gradient-1:#0E2E1D;--hero-gradient-2:#1E5A4E;--hero-gradient-3:#6B5E10;--hero-fade:75;--on-gradient:var(--ink-2);--on-gradient-hover:var(--ink);--glass-tint:color-mix(in srgb, var(--sheet) 70%, transparent);--glass-rim:inset 0 1px 0 rgb(255 255 255 / .14),inset 0 -1px 0 rgb(0 0 0 / .3);--glass-lift:0 10px 28px -8px rgb(0 0 0 / .55);--glass-sheen:linear-gradient(115deg,rgb(255 255 255 / .09),rgb(255 255 255 / 0) 42%)}
+  :root:not([data-theme="light"]){color-scheme:dark;--color-bg:var(--ground-dark);--color-surface:color-mix(in srgb, var(--ground-dark), #f0f8f2 6%);--color-text:var(--color-neutral-100);--color-accent:var(--color-accent-400);--color-divider:color-mix(in srgb, #f0f8f2 35%, transparent);--ink-2:var(--ink-inv-2);--ink-3:var(--ink-inv-3);--hero-over:var(--ground-dark);--lift:rgba(0,0,0,.55);--hero-gradient-1:#0E2E1D;--hero-gradient-2:#1E5A4E;--hero-gradient-3:#6B5E10;--hero-fade:75;--on-gradient:var(--ink-2);--on-gradient-hover:var(--ink);--glass-tint:color-mix(in srgb, var(--sheet) 70%, transparent);--glass-rim:inset 0 1px 0 rgb(255 255 255 / .28),inset 0 -1px 0 rgb(255 255 255 / .08),inset 0 0 0 .5px rgb(255 255 255 / .14),inset 0 0 14px rgb(255 255 255 / .07);--glass-lift:0 12px 32px -8px rgb(0 0 0 / .6),0 2px 6px -2px rgb(0 0 0 / .4);--glass-sheen:linear-gradient(115deg,rgb(255 255 255 / .14),rgb(255 255 255 / 0) 38%),linear-gradient(295deg,rgb(255 255 255 / .06),rgb(255 255 255 / 0) 30%);--glass-blur:blur(20px) saturate(220%) brightness(1.12)}
 }
-:root[data-theme="dark"]{color-scheme:dark;--color-bg:var(--ground-dark);--color-surface:color-mix(in srgb, var(--ground-dark), #f0f8f2 6%);--color-text:var(--color-neutral-100);--color-accent:var(--color-accent-400);--color-divider:color-mix(in srgb, #f0f8f2 35%, transparent);--ink-2:var(--ink-inv-2);--ink-3:var(--ink-inv-3);--hero-over:var(--ground-dark);--lift:rgba(0,0,0,.55);--hero-gradient-1:#0E2E1D;--hero-gradient-2:#1E5A4E;--hero-gradient-3:#6B5E10;--hero-fade:75;--on-gradient:var(--ink-2);--on-gradient-hover:var(--ink);--glass-tint:color-mix(in srgb, var(--sheet) 70%, transparent);--glass-rim:inset 0 1px 0 rgb(255 255 255 / .14),inset 0 -1px 0 rgb(0 0 0 / .3);--glass-lift:0 10px 28px -8px rgb(0 0 0 / .55);--glass-sheen:linear-gradient(115deg,rgb(255 255 255 / .09),rgb(255 255 255 / 0) 42%)}
+:root[data-theme="dark"]{color-scheme:dark;--color-bg:var(--ground-dark);--color-surface:color-mix(in srgb, var(--ground-dark), #f0f8f2 6%);--color-text:var(--color-neutral-100);--color-accent:var(--color-accent-400);--color-divider:color-mix(in srgb, #f0f8f2 35%, transparent);--ink-2:var(--ink-inv-2);--ink-3:var(--ink-inv-3);--hero-over:var(--ground-dark);--lift:rgba(0,0,0,.55);--hero-gradient-1:#0E2E1D;--hero-gradient-2:#1E5A4E;--hero-gradient-3:#6B5E10;--hero-fade:75;--on-gradient:var(--ink-2);--on-gradient-hover:var(--ink);--glass-tint:color-mix(in srgb, var(--sheet) 70%, transparent);--glass-rim:inset 0 1px 0 rgb(255 255 255 / .28),inset 0 -1px 0 rgb(255 255 255 / .08),inset 0 0 0 .5px rgb(255 255 255 / .14),inset 0 0 14px rgb(255 255 255 / .07);--glass-lift:0 12px 32px -8px rgb(0 0 0 / .6),0 2px 6px -2px rgb(0 0 0 / .4);--glass-sheen:linear-gradient(115deg,rgb(255 255 255 / .14),rgb(255 255 255 / 0) 38%),linear-gradient(295deg,rgb(255 255 255 / .06),rgb(255 255 255 / 0) 30%);--glass-blur:blur(20px) saturate(220%) brightness(1.12)}
 /* Page margin: the wireframe's s5 at the 1440 design width, down to 24px at the 320 floor
    (Type System §14). Interpolated, so there is no breakpoint to maintain. */
 html{--gutter:clamp(1.5rem, 4.1667vw, 3.75rem)}
@@ -107,8 +111,14 @@ a:hover{color:var(--ink)}
    no pointer events, so a double-click or a right-click lands on the page rather than on it. */
 .portrait-frame, .hero-name{-webkit-user-select:none;user-select:none}
 /* The tilt hint, iOS only: the map label's micro mono, in the hero's top corner where the
-   ground is clear of the figure, fading in late and out for good on the first gesture. */
-.tilt-hint{position:absolute;right:var(--gutter);top:var(--s3);z-index:4;margin:0;font-family:var(--font-mono);font-size:0.75rem;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;color:var(--ink-3);opacity:0;transition:opacity .6s;pointer-events:none}
+   ground is clear of the figure, fading in late and out for good on the first gesture. On a
+   pill of the bar's glass (--glass-*), in the full ink: bare on the moving gradient it fell
+   to 1.9:1, and a pill of the plain ground all but vanished into the dark gradient (1.0 to
+   1.2:1 against it); the glass's rim and shadow give it an edge in both modes (3 Oct 2026).
+   Solid, as the bar's glass is, for Reduce Transparency, Increase Contrast and high contrast. */
+.tilt-hint{position:absolute;right:var(--gutter);top:var(--s3);z-index:4;margin:0;padding:.35em .75em;border-radius:999px;background:var(--glass-sheen),var(--glass-tint);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);box-shadow:var(--glass-rim),var(--glass-lift);font-family:var(--font-mono);font-size:0.75rem;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;color:var(--ink);opacity:0;transition:opacity .6s;pointer-events:none}
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more){.tilt-hint{background:var(--sheet);-webkit-backdrop-filter:none;backdrop-filter:none}}
+@media (forced-colors: active){.tilt-hint{background:Canvas;-webkit-backdrop-filter:none;backdrop-filter:none;border:1px solid CanvasText}}
 .tilt-hint.on{opacity:1}
 .portrait img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none;-webkit-user-drag:none}
 /* The white copy of the band. It lives inside the masked portrait box but is laid out in
@@ -129,7 +139,7 @@ a:hover{color:var(--ink)}
 .paper,.paper-ink{position:absolute;inset:-3.5040% -4.6707%;pointer-events:none}
 .paper{z-index:0;filter:drop-shadow(0 6px 10px var(--lift))}
 .paper-shape{position:absolute;inset:0;background:#fff}
-.paper-shape,.paper-ink{-webkit-mask-image:url('/hero-paper.png');mask-image:url('/hero-paper.png');-webkit-mask-size:100% 100%;mask-size:100% 100%;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat}
+.paper-shape,.paper-ink{-webkit-mask-image:url('/hero-paper.webp');mask-image:url('/hero-paper.webp');-webkit-mask-size:100% 100%;mask-size:100% 100%;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat}
 .paper-ink{z-index:1}
 /* The band's foot sits on the hero's foot; this box reaches 39/1191 of its height lower. */
 .hero-name--paper{bottom:calc(var(--band-bottom) + 3.2746%);color:var(--on-paper)}
@@ -142,7 +152,10 @@ a:hover{color:var(--ink)}
 .intro > :not(.contour-map){position:relative}
 /* Page title: t4 · 700 · --lh-tight · --ink · balance · 56.25rem. Per §14 a display role
    interpolates with the viewport, two steps down to t2 at the 320 floor. */
-.statement{margin:0;font-size:clamp(1.95rem, calc(1.636rem + 1.5714vw), 3.05rem);font-weight:700;line-height:var(--lh-tight);color:var(--ink);max-width:56.25rem;text-wrap:balance}
+/* A word too long for the line breaks rather than running off the page: only ever with
+   larger text on a narrow screen ("Something's" at 200% text on a 320px phone), never at
+   normal sizes, where every word fits. The thought below does the same. */
+.statement{margin:0;font-size:clamp(1.95rem, calc(1.636rem + 1.5714vw), 3.05rem);font-weight:700;line-height:var(--lh-tight);color:var(--ink);max-width:56.25rem;text-wrap:balance;overflow-wrap:break-word}
 
 /* ── 404 ──────────────────────────────────────────────────────────────────── */
 /* A short page: the main column takes the spare height so the footer sits at the foot of
@@ -162,7 +175,7 @@ a:hover{color:var(--ink)}
 /* ── Footer ───────────────────────────────────────────────────────────────── */
 .foot{padding:var(--s4) var(--gutter);border-top:2px solid var(--rule)}
 /* No --measure while this is a landing-only page: the one thought runs the full column. */
-.foot blockquote{margin:var(--s2) 0 0;font-size:var(--t1);font-weight:400;line-height:var(--lh-snug);color:var(--ink);text-wrap:pretty}
+.foot blockquote{margin:var(--s2) 0 0;font-size:var(--t1);font-weight:400;line-height:var(--lh-snug);color:var(--ink);text-wrap:pretty;overflow-wrap:break-word}
 .copyright{margin:var(--s4) 0 0;padding-top:var(--s2);border-top:1px solid var(--rule);font-size:var(--t-1);font-weight:400;line-height:var(--lh-normal);color:var(--ink-3)}
 /* Alone in the footer (the 404), the footer's own rule is enough. */
 .copyright:first-child{margin-top:0;padding-top:0;border-top:0}

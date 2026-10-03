@@ -11,10 +11,18 @@ const canonical = new URL('/', Astro.site).href;
 // Thought of the day. A day number is whole days since 1 Jan 2026, which is the arithmetic
 // the picker below runs on the visitor's local date. Working the dates out here keeps them
 // out of the page: the browser is handed a text and a number per thought and nothing else.
+// A date that is not a real day written YYYY-MM-DD stops the build. Written another way
+// (10/2/2026, as a spreadsheet may give it) it would reach the page as null, and one that
+// does not exist (2026-02-30) would roll over into the next month: either way the rotation's
+// past days would silently reshuffle, with the build and its check still passing.
 const EPOCH = Date.UTC(2026, 0, 1);
 const dayNumber = (iso: string) => {
-  const [y, m, d] = iso.split('-').map(Number);
-  return Math.floor((Date.UTC(y, m - 1, d) - EPOCH) / 86400000);
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(iso));
+  const t = m ? Date.UTC(+m[1], +m[2] - 1, +m[3]) : NaN;
+  if (!m || new Date(t).toISOString().slice(0, 10) !== iso) {
+    throw new Error(`src/data/thoughts.json: "${iso}" is not a date written YYYY-MM-DD.`);
+  }
+  return Math.floor((t - EPOCH) / 86400000);
 };
 const thoughtData = thoughts.map((t) => [t.text, dayNumber(t.added)]);
 
@@ -69,6 +77,10 @@ const structuredData = {
          embedding it. -->
     <meta name="robots" content="index, follow, noimageindex" />
     <link rel="canonical" href={canonical} />
+    <!-- The paper cutout is the largest thing on screen, but as a CSS mask the browser would
+         find it only once the stylesheet is in, and at low priority. Masks are fetched in CORS
+         mode, so the preload carries crossorigin to match, or Chrome fetches the file twice. -->
+    <link rel="preload" as="image" href="/hero-paper.webp" type="image/webp" fetchpriority="high" crossorigin />
     <link rel="sitemap" href="/sitemap-index.xml" />
     <script is:inline type="application/ld+json" set:html={JSON.stringify(structuredData)} />
   </Fragment>
@@ -94,8 +106,9 @@ const structuredData = {
            figure. No .grayscale: the file is already black and white apart from the yellow bar,
            which the filter would flatten. -->
       <!-- Shown only where the tilt needs permission and has not been given it: iOS. The
-           script unhides it, and it leaves for good on the first gesture. -->
-      <p class="tilt-hint" id="tilt-hint" hidden>Tap to tilt</p>
+           script unhides it, and it leaves for good on the first gesture. Hidden from screen
+           readers: it names a gesture, not content, and any tap at all answers it. -->
+      <p class="tilt-hint" id="tilt-hint" aria-hidden="true" hidden>Tap to tilt</p>
       <div class="portrait-frame">
         <div class="paper" aria-hidden="true"><div class="paper-shape"></div></div>
         <div class="paper-ink" aria-hidden="true">
@@ -299,15 +312,57 @@ const structuredData = {
         setTimeout(() => { if (hint) hint.hidden = true; }, 600);
       };
 
-      // The first reading is the rest position, so it works in whatever posture the phone
-      // is held. Once readings flow there is nothing left to ask for, so the hint goes too.
-      let tiltX = 0, tiltY = 0, tiltFrom: [number, number] | null = null;
-      addEventListener('deviceorientation', (e) => {
+      // Tilt is read against the screen as it is turned, not from the phone's raw angles, which
+      // swap axes in landscape and jump by half a turn when a phone or tablet is held upright.
+      // up() is which way is up in the device's own axes (x to the right of the screen held
+      // upright, y to its top, z out of it, as the Device Orientation spec has them); tilt()
+      // reads that against the screen's right and top: roll, its right side dropping, and
+      // pitch, its top raised toward the viewer, in degrees.
+      const RAD = Math.PI / 180;
+      const SCREEN: Record<number, [number[], number[]]> = {
+        0: [[1, 0, 0], [0, 1, 0]],
+        90: [[0, -1, 0], [1, 0, 0]],
+        180: [[-1, 0, 0], [0, -1, 0]],
+        270: [[0, 1, 0], [-1, 0, 0]],
+      };
+      const up = (beta: number, gamma: number) => {
+        const b = beta * RAD, g = gamma * RAD;
+        return [-Math.sin(g) * Math.cos(b), Math.sin(b), Math.cos(g) * Math.cos(b)];
+      };
+      // screen.orientation where there is one; iOS before 16.4 has only window.orientation.
+      const turn = () => {
+        const a = screen.orientation?.angle ?? (window as any).orientation ?? 0;
+        return (((Math.round(a / 90) * 90) % 360) + 360) % 360;
+      };
+      const tilt = (u: number[]) => {
+        const [r, s] = SCREEN[turn()];
+        const dot = (a: number[], b: number[]) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+        return [Math.asin(Math.max(-1, Math.min(1, -dot(u, r)))) / RAD, Math.atan2(dot(u, s), u[2]) / RAD];
+      };
+
+      // The rest position is how the device is held: the first reading, then easing after it
+      // with a 3s time constant, so a held tilt settles back over a few seconds and a phone
+      // picked up off a table finds its new rest rather than pinning the layers in a corner.
+      // A turn of the screen starts it afresh. Once readings flow there is nothing left to
+      // ask for, so the hint goes too. The listener runs only while the depth does (start and
+      // stop, below), so the sensor is off while the hero is off screen.
+      let tiltX = 0, tiltY = 0, reading = false;
+      let rest: number[] | null = null, restAt = 0;
+      const wrap = (d: number) => ((d + 540) % 360) - 180;
+      const onTilt = (e: DeviceOrientationEvent) => {
         if (e.gamma == null || e.beta == null) return;
-        if (!tiltFrom) { tiltFrom = [e.gamma, e.beta]; hideHint(); }
-        tiltX = clamp((e.gamma - tiltFrom[0]) / 22);
-        tiltY = clamp((e.beta - tiltFrom[1]) / 22);
-      });
+        const [roll, pitch] = tilt(up(e.beta, e.gamma));
+        if (!reading) { reading = true; hideHint(); }
+        if (!rest) { rest = [roll, pitch]; restAt = e.timeStamp; }
+        const k = 1 - Math.exp(-Math.max(0, e.timeStamp - restAt) / 3000);
+        restAt = e.timeStamp;
+        rest = [rest[0] + wrap(roll - rest[0]) * k, rest[1] + wrap(pitch - rest[1]) * k];
+        tiltX = clamp(wrap(roll - rest[0]) / 22);
+        tiltY = clamp(wrap(pitch - rest[1]) / 22);
+      };
+      const turned = () => { rest = null; };
+      if (screen.orientation) screen.orientation.addEventListener('change', turned);
+      else addEventListener('orientationchange', turned);
 
       // Waiting holds the depth still for a moment after the page arrives, in case readings
       // are about to land, so the layers don't start on the scroll and jump to the tilt.
@@ -329,7 +384,7 @@ const structuredData = {
         let touched = false;
         if (hint) {
           setTimeout(() => {
-            if (touched || tiltFrom || reduce.matches) return;
+            if (touched || reading || reduce.matches) return;
             hint.hidden = false;
             requestAnimationFrame(() => hint.classList.add('on'));
           }, 1500);
@@ -339,7 +394,7 @@ const structuredData = {
           if (!touched) { touched = true; hideHint(); }
           // Nothing to ask for where readings already flow, and nothing to unlock under
           // reduced motion, where the depth never runs.
-          if (asked || tiltFrom || reduce.matches) return;
+          if (asked || reading || reduce.matches) return;
           asked = true;
           askApi.call(orientation).then(
             (state: string) => { if (state !== 'granted') asked = false; },
@@ -361,7 +416,7 @@ const structuredData = {
           const r = hero.getBoundingClientRect();
           tx = clamp(((px - r.left) / r.width - 0.5) * 2);
           ty = clamp(((py - r.top) / r.height - 0.5) * 2);
-        } else if (tiltFrom) {
+        } else if (reading) {
           tx = tiltX; ty = tiltY;
         } else if (!waiting) {
           // How far the hero has travelled up the window, from -1 below it to 1 above.
@@ -397,15 +452,25 @@ const structuredData = {
         if (raf || reduce.matches) return;
         last = performance.now();
         raf = requestAnimationFrame(tick);
+        addEventListener('deviceorientation', onTilt);
       };
       const stop = () => {
         cancelAnimationFrame(raf);
         raf = 0;
+        removeEventListener('deviceorientation', onTilt);
       };
 
-      // Run only while the band is on screen, and not at all under reduced motion.
-      new IntersectionObserver(([entry]) => (entry?.isIntersecting ? start() : stop())).observe(track);
-      reduce.addEventListener('change', () => (reduce.matches ? stop() : start()));
+      // Run only while the hero is on screen, and not at all under reduced motion. The hero,
+      // not the band: on a phone held sideways the band can be below the fold while the
+      // portrait, and its depth, are in view. Switching reduced motion off starts it again
+      // only if the hero is on screen.
+      let onScreen = false;
+      new IntersectionObserver(([entry]) => {
+        onScreen = !!entry?.isIntersecting;
+        if (onScreen) start();
+        else stop();
+      }).observe(hero);
+      reduce.addEventListener('change', () => (reduce.matches || !onScreen ? stop() : start()));
     }
   </script>
 </Base>

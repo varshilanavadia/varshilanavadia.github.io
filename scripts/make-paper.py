@@ -1,9 +1,12 @@
 """Build the paper-cutout silhouette from the hero portrait's alpha.
 
 The paper is the portrait's outline grown outward by a fixed radius, on a canvas padded
-on every side so the grown edge never runs off the image. The site uses the file twice:
-as the white paper behind the figure, and as the mask for the copy of the name band that
-runs across the paper. Re-run after replacing public/hero-portrait.webp:
+on every side so the grown edge never runs off the image. The site uses the file twice,
+both times as a mask, so only its alpha counts: as the white paper behind the figure, and
+as the mask for the copy of the name band that runs across the paper. It is saved as a
+lossless WebP, black where it is opaque, which is under half the size of a PNG with the
+same alpha; the home page preloads it, since it is the largest thing on screen. Re-run after
+replacing public/hero-portrait.webp:
 
     python3 scripts/make-paper.py
 """
@@ -28,7 +31,7 @@ for dy in range(-R, R + 1):
         if dx * dx + dy * dy <= R * R:
             grown = np.maximum(grown, np.roll(np.roll(padded, dy, 0), dx, 1))
 a = Image.fromarray(grown.clip(0, 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(0.8))
-out = Image.new("RGBA", a.size, (255, 255, 255, 0))
+out = Image.new("RGBA", a.size, (0, 0, 0, 0))
 out.putalpha(a)
-out.save("public/hero-paper.png", optimize=True)
+out.save("public/hero-paper.webp", lossless=True, quality=100, method=6, exact=True)
 print(out.size, f"inset x {-PAD / w * 100:.4f}%  y {-PAD / h * 100:.4f}%  band +{PAD / (h + 2 * PAD) * 100:.4f}%")
