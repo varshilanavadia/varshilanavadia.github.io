@@ -18,7 +18,13 @@ The local dev panel, "Top Secret Tools", is a strip docked along the top of the 
 
 ## Deploy
 
-Every push to `main` builds the site and publishes it to GitHub Pages through `.github/workflows/deploy.yml`. Every pull request into `main` is built by `.github/workflows/check.yml`, with the same install and build, and fails if anything from the dev panel reached the build. Both pin their actions to commits rather than tags.
+Every push to `main` builds the site and publishes it to GitHub Pages through `.github/workflows/deploy.yml`. Every pull request into `main` is built by `.github/workflows/check.yml`, with the same install and build. Both run the same gates, and publish nothing if one fails:
+
+- `npm test`: the tests in `test/`, on Node's built-in runner. They pin the thought of the day's rotation (`src/scripts/pick-thought.js`, which the home page inlines) to the schedule it has always picked, and check its promises: every thought once per round, never two days running, and nothing already shown changes when a thought is added.
+- `scripts/check-build.mjs`: the build is fit to publish. No dev panel in it, only `/` and `/404`, and the analytics tag running on the site's own address only.
+- `scripts/check-thoughts.mjs`: `src/data/thoughts.json` against the version it replaces. Thoughts are only added at the end, with only `text` and a real `added` date; nothing is deleted, moved or redated. A correction to an earlier thought's text fails the pull request's check until the owner labels it `thoughts-approved`.
+
+The Node version is `.nvmrc`'s, and both workflows pin their actions to commits rather than tags.
 
 Dependabot (`.github/dependabot.yml`) opens a weekly pull request for newer npm packages and another for newer actions, skipping releases less than a week old. They go through the check like any other change, though the check doesn't run the two Pages actions: a bad bump of either fails only when publishing after the merge, and the site already live stays up.
 

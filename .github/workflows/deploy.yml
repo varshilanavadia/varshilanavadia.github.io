@@ -29,10 +29,28 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: 24
+          node-version-file: .nvmrc
           cache: npm
       - run: npm ci
+      - run: npm test
       - run: npm run build
+      # The same gate as the pull request's check, so a push straight to main is held to it
+      # too; if it fails, nothing is uploaded and the site already live stays up.
+      - name: The build is fit to publish
+        run: node scripts/check-build.mjs
+      # Against the main this push replaced. Corrections pass here: the owner approved them on
+      # the pull request. A first push, or a run started by hand, has nothing to compare with.
+      - name: thoughts.json holds to its rules
+        env:
+          BEFORE: ${{ github.event.before }}
+        run: |
+          if [ -z "$BEFORE" ] || [ "$BEFORE" = 0000000000000000000000000000000000000000 ]; then
+            echo "No earlier main to compare with."
+          elif git fetch --quiet --depth=1 origin "$BEFORE" && git show FETCH_HEAD:src/data/thoughts.json > "$RUNNER_TEMP/thoughts-before.json"; then
+            node scripts/check-thoughts.mjs "$RUNNER_TEMP/thoughts-before.json" src/data/thoughts.json --allow-edits
+          else
+            echo "The earlier main has no thoughts.json to compare with."
+          fi
       - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:
           path: dist/

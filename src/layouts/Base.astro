@@ -24,8 +24,10 @@ const year = new Date().getFullYear();
 // (`npm run preview:local`). The GitHub Pages build sets neither, so it never ships.
 const devPanel = import.meta.env.DEV || import.meta.env.PUBLIC_DEV_PANEL === '1';
 // Google Analytics 4. The measurement ID is public by design: it names the property and
-// grants nothing.
+// grants nothing. HOST is the site's own address, from astro.config.mjs's site, so a move to a
+// custom domain takes the analytics along rather than silently stopping them.
 const GA_ID = 'G-S8F7J8V6F4';
+const HOST = Astro.site?.hostname;
 ---
 
 <html lang="en">
@@ -50,14 +52,14 @@ const GA_ID = 'G-S8F7J8V6F4';
          swap, and the name band jumps as it measures itself again. Fonts are fetched in CORS
          mode, hence crossorigin, or the preload goes unused and the file comes twice. -->
     <link rel="preload" as="font" type="font/woff2" href={figtreeLatin} crossorigin />
-    <!-- Analytics, on the published address only, so dev, local and LAN previews are never
-         counted. Google's standard tag, with its script added from here rather than in the
+    <!-- Analytics, on the site's own address only (HOST, above), so dev, local and LAN
+         previews are never counted. Google's standard tag, with its script added from here rather than in the
          markup so that nothing is fetched anywhere else. Below the share-preview tags,
          which must stay near the top. The queue starts at once, but Google's script, 178 KB
          compressed, is fetched only once the page has loaded, so it does not compete with the
          portrait, the paper and the fonts; a visit that leaves before then is not counted. -->
-    <script is:inline define:vars={{ GA_ID }}>
-      if (location.hostname === 'varshilanavadia.github.io') {
+    <script is:inline define:vars={{ GA_ID, HOST }}>
+      if (location.hostname === HOST) {
         window.dataLayer = window.dataLayer || [];
         window.gtag = function () { dataLayer.push(arguments); };
         gtag('js', new Date());
