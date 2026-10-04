@@ -1,0 +1,160 @@
+---
+// About: the owner's own words, in his voice, with only typos fixed. The opening sentence is
+// set large, as the statement that used to stand here was; the rest is body text at the
+// reading measure. Beside it, where he is based: the contour map that was behind the
+// statement, now a map in its own right with its marker on Austin.
+//
+// The opening sentence inks in as it is read. Every word is in the page in full; the words
+// ahead of a reading line (65% of the way down the window) rest in a lighter ink and darken
+// as they cross it. A short script after the sentence keeps one number on it, --read, how far
+// the sentence has crossed the line, and each word measures itself against that number in
+// CSS. It runs only while the sentence is on screen and the page is scrolling, and not at all
+// under reduced motion; without script, in print, under Increase Contrast and in a
+// high-contrast theme the sentence is simply in full ink.
+//
+// After the "Scroll word reveal" example on motion.dev: the idea, not its code. CSS's own
+// scroll-driven animations (animation-timeline: view()) do the same with no script, and did
+// in Chrome, but Firefox has none, Safari only since 26, and what Safari paints could not be
+// checked from here (3 Oct 2026). The script is the one way that could be checked in all
+// three.
+import ContourMap from './ContourMap.astro';
+
+const lead =
+  'I’m firstly a human being and then an Engineer, and I believe that we are able to become better versions of ourselves and achieve better outcomes by leading with grit, abundance and a progress over perfection mindset.';
+const words = lead.split(' ');
+---
+
+<section class="section about" id="about" aria-labelledby="about-title">
+  <h2 class="eyebrow" id="about-title">About</h2>
+
+  <div class="about-text">
+    <p class="about-lead" style={`--n:${words.length}`}>
+      {words.map((word, i) => (
+        <Fragment><span class="w" style={`--i:${i}`}>{word}</span>{i < words.length - 1 ? ' ' : ''}</Fragment>
+      ))}
+    </p>
+    <script is:inline>
+      // Inline and in the parser's path, straight after the sentence, so its words are in
+      // their starting ink before the page is first painted: on a phone its first lines are
+      // on screen as the page arrives, and they must not arrive dark and then fade.
+      (() => {
+        const lead = document.currentScript.previousElementSibling;
+        const still = matchMedia('(prefers-reduced-motion: reduce)');
+        // How far the sentence has crossed the reading line, 65% of the way down the window:
+        // 0 with its first line on the line, 1 with its last. Above the window it is read,
+        // below it unread, so the number is right wherever the page is opened or left.
+        let queued = false;
+        const read = () => {
+          queued = false;
+          const box = lead.getBoundingClientRect();
+          lead.style.setProperty('--read', Math.max(0, Math.min(1, (innerHeight * 0.65 - box.top) / box.height)).toFixed(4));
+        };
+        const ask = () => {
+          if (queued) return;
+          queued = true;
+          requestAnimationFrame(read);
+        };
+        // Listening only while the sentence is on screen, and from a little before it
+        // arrives, so its ink is right as it comes into view; data-reading is what turns the
+        // lighter ink on (the styles below), so it is off under reduced motion, and comes
+        // and goes with that setting.
+        let onScreen = false, listening = false;
+        const run = () => {
+          lead.toggleAttribute('data-reading', !still.matches);
+          read();
+          const want = onScreen && !still.matches;
+          if (want === listening) return;
+          listening = want;
+          for (const type of ['scroll', 'resize']) window[want ? 'addEventListener' : 'removeEventListener'](type, ask, { passive: true });
+        };
+        run();
+        new IntersectionObserver(([entry]) => { onScreen = entry.isIntersecting; run(); }, { rootMargin: '200px 0px' }).observe(lead);
+        still.addEventListener('change', run);
+      })();
+    </script>
+    <p>
+      I’m currently a Software Engineer at Oracle where I am developing and delivering the #1
+      cloud ERP system that allows businesses to grow reliably. As a curious learner, I love to
+      solve complex problems by leveraging both parts of my brain equally (Systems 1 and 2). I
+      have a passion for learning about the intersection of core software engineering and
+      distributed systems, and expanding my knowledge of what it takes to solve various problems
+      and create impactful applications for the future.
+    </p>
+    <p>
+      Previously, I developed self-service data and analytics products at Nike (through EY) to
+      fulfill athletic needs of consumers globally. I also graduated from The Pennsylvania State
+      University with a Master’s in Computer Science where, in addition to coursework (data
+      structures, algorithms, distributed systems, databases, machine learning), I led
+      campus-wide efforts as a Global Ambassador to organize cultural events and provide a rich
+      college experience for a diverse group of international students with our motto “Learn
+      more, Think globally, Expand Horizons.” Prior to graduate school, I held a fixed-term
+      Software Engineering position in research at the Hong Kong University of Science and
+      Technology where I developed a forecasting system for ubiquitous people sensing in a Smart
+      City.
+    </p>
+    <p>
+      Outside of work, I love hiking and learning random facts about the universe, its
+      functioning and outer space. Did you know that in five billion years, the Sun will expand
+      and engulf the entire orbits of Mercury, Venus, and Earth?
+    </p>
+  </div>
+
+  <!-- Where he is based. The words are the content; the map is a picture of them, hidden from
+       screen readers, its marker labelled by the script once it has drawn. Redrawn every
+       other frame, as it was behind the statement, since the hero may be running above it. -->
+  <aside class="about-place" aria-label="Location">
+    <div class="about-map">
+      <ContourMap route="start" label="Austin, TX" every={2} />
+    </div>
+    <p class="about-based"><span class="block-label">Based in</span> Austin, TX</p>
+  </aside>
+</section>
+
+<style>
+  /* One column on a phone, in reading order: the name of the section, the words, then the
+     place. From 60rem, two columns, one part to two: the section's name and the place on the
+     left, the words on the right. The place stays in view beside the words as they scroll,
+     clear of the bar when it slides back. */
+  .about{display:grid;grid-template-columns:minmax(0,1fr);row-gap:var(--s4)}
+  .about-text{display:grid;grid-template-columns:minmax(0,1fr);row-gap:var(--s3);align-content:start}
+  .about-text p{margin:0}
+  /* Body: t0 · 400 · --lh-body · --ink-2, at the reading measure (10.2:1 on the page in the
+     light, 9.9:1 in the dark). */
+  .about-text p:not(.about-lead){max-width:var(--measure);color:var(--ink-2);overflow-wrap:break-word}
+
+  /* The opening sentence. A display role, so per the Type System's §14 it interpolates with
+     the window: t1 at the 320 floor to t3 at 1440. 600, since 700 across five lines and more
+     is a wall; the heading cap of 56.25rem the statement had. Never smaller than t1, which
+     keeps it large text at every width: the lighter ink below is measured against 3:1. */
+  .about-lead{max-width:56.25rem;margin-bottom:var(--s2);font-size:clamp(1.56rem, calc(1.3086rem + 1.2571vw), 2.44rem);font-weight:600;line-height:var(--lh-snug);color:var(--ink);text-wrap:pretty;overflow-wrap:break-word}
+
+  /* Inking in. The script above keeps --read on the sentence: 0 to 1 as it crosses the reading
+     line. A word is in full ink once --read × the number of words has passed its place in
+     the sentence, and part-way while it is passing, so the ink moves through the sentence as
+     smoothly as the page scrolls. Words not yet reached rest in --ink-unread (site.css).
+     Only while the script says so (data-reading). */
+  .about-lead[data-reading] .w{color:color-mix(in srgb, var(--ink) calc(clamp(0, var(--read, 1) * var(--n) - var(--i), 1) * 100%), var(--ink-unread))}
+  /* Increase Contrast asks for more than the lighter ink's 3:1, a high-contrast theme paints
+     all text in its own colour, and paper does not scroll: in all three the sentence is in
+     full ink throughout. */
+  @media (prefers-contrast: more), (forced-colors: active), print{.about-lead[data-reading] .w{color:inherit}}
+
+  /* The place: a map tile, then the words. The tile is the contour map at full strength, as
+     on the 404, on the page's second ground with square corners. */
+  .about-place{display:grid;grid-template-columns:minmax(0,1fr);row-gap:var(--s2);align-content:start}
+  .about-map{position:relative;height:clamp(11rem, 46vw, 16rem);background:var(--sheet-alt);overflow:hidden}
+  /* The map is drawn by its script, so without script the tile would be an empty box: it
+     shows only once the script has sized its canvas (which gives the canvas a width
+     attribute), and the words below stand alone until then. A browser too old for :has()
+     drops this rule, and shows the tile either way. */
+  .about-map:not(:has(canvas[width])){display:none}
+  .about-based{display:grid;row-gap:var(--s0);margin:0;font-size:var(--t1);font-weight:600;line-height:var(--lh-snug);color:var(--ink)}
+
+  @media (min-width:60rem){
+    .about{grid-template-columns:minmax(0,1fr) minmax(0,2fr);grid-template-rows:auto 1fr;column-gap:var(--s5)}
+    .about h2{grid-column:1;grid-row:1}
+    .about-text{grid-column:2;grid-row:1 / span 2}
+    .about-place{grid-column:1;grid-row:2;align-self:start;position:sticky;top:calc(var(--bar-h, 0px) + var(--s3))}
+    .about-map{height:auto;aspect-ratio:4 / 3;max-width:26rem}
+  }
+</style>

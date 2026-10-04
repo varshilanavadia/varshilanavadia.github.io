@@ -2,7 +2,7 @@
 // A slowly drifting topographic contour map, drawn on a canvas that fills the nearest
 // positioned ancestor. A green route is drawn across it with a marker and a mono label:
 //   route="wrong-turn"  wanders right, veers off and stops at the marker (the 404)
-//   route="start"       sets out from the marker and runs off the right edge (home)
+//   route="start"       sets out from the marker and runs off the right edge (About's map)
 // The pointer raises a hill that follows it. Colours come from the page, so the map follows
 // light and dark. Under reduced motion it is one still map, switched to and from at once if
 // the setting changes mid-visit. Several maps on one page each run on their own; each pauses
@@ -77,7 +77,7 @@ const { route, label, strength = 1, every = 1 } = Astro.props;
   const setOut: [number, number][] = [];
   {
     const r = makeRand(7);
-    // Low and to the right, clear of text set in the left of the box at any width.
+    // Low and to the right, with room to its left for the marker's label in a narrow box.
     let x = 0.74, y = 0.78, hd = -0.35;
     while (x < 1.05) {
       setOut.push([x, y]);
