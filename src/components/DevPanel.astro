@@ -17,6 +17,7 @@
     const CONTROLS = [
       { key: 'theme', label: 'Theme', options: [['device', 'Device'], ['light', 'Light'], ['dark', 'Dark']] },
       { key: 'contact', label: 'Contact', options: [['live', 'Live'], ['sent', 'Sent'], ['refused', 'Refused'], ['busy', 'Busy'], ['offline', 'Offline']] },
+      { key: 'spill', label: 'Spill', options: [['ink', 'Ink'], ['drawn', 'As drawn']] },
     ];
     const root = document.documentElement;
     const STORE = 'devPanel';
@@ -188,5 +189,11 @@
      narrow screen. The label holds a column so the rows line up while they fit. */
   .dev-panel-row{display:flex;align-items:center;flex-wrap:wrap;gap:4px;max-width:100%}
   .dev-panel-row > span:first-child{flex:0 0 auto;min-width:4.5em;color:var(--ink-3)}
+  /* The Contact button's spill, "As drawn": the filter the button has in Claude Design, CSS's
+     blur and contrast over the page's ground with the circles in the accent, in place of the
+     site's threshold on opacity (Contact.astro), to see the two side by side. !important,
+     since the site's filter is set on the element itself. */
+  :root[data-spill="drawn"] .contact-spill{background:var(--sheet);filter:blur(7px) contrast(26) !important}
+  :root[data-spill="drawn"] .contact-spill span{background:var(--color-accent)}
   .dev-panel-date{flex:1 1 auto;min-width:0;margin-left:4px;color:var(--ink-3);white-space:normal;overflow-wrap:anywhere;text-transform:none;letter-spacing:0}
 </style>
