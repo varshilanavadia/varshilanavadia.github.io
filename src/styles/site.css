@@ -4,6 +4,13 @@
 html{--s0:0.25rem;--s1:0.5rem;--s2:1rem;--s3:1.5rem;--s4:1.875rem;--s5:3.75rem}
 html{--t-1:1rem;--t0:1.25rem;--t1:1.56rem;--t2:1.95rem;--t3:2.44rem;--t4:3.05rem;--t5:3.81rem;--t6:4.76rem}
 html{--measure:46ch}
+/* The leading set, the Type System's five values. This file named four of them from the start
+   (var(--lh-…)) but nothing declared them until 4 Oct 2026, so every line that asked for one
+   fell back to the browser's normal leading: 1.2 in Figtree, 1.25 in Plex Mono. Declared,
+   they took effect where the owner chose, group by group in the dev panel: the footer and
+   the 404's line take the roles' values, the mono tags take --lh-normal, and the name band
+   keeps the 1.2 it was placed at (see .hero-name). */
+html{--lh-tight:1.05;--lh-snug:1.15;--lh-normal:1.3;--lh-body:1.5;--lh-mono:1.6}
 html{--ink:var(--color-text);--ink-2:var(--color-neutral-900);--ink-3:var(--color-neutral-800);--ink-deco:var(--color-neutral-300);--rule-strong:var(--color-divider);--rule:var(--color-divider);--rule-faint:var(--color-neutral-300);--sheet:var(--color-bg);--sheet-alt:var(--color-surface)}
 /* Inverted set, §08: the dark ground is --ink itself. */
 html{--ink-inv:var(--color-neutral-100);--ink-inv-2:var(--color-neutral-300);--ink-inv-3:var(--color-neutral-500);--rule-inv:var(--color-accent-900)}
@@ -118,7 +125,13 @@ a:hover{color:var(--ink)}
 /* The name is a band across the foot of the hero, in front of the figure, bleeding off both
    edges. 260px at 1440 is 18.06vw; the band keeps that proportion down to a 96px floor. */
 /* The marquee runs at every width, by decision (12 Sep 2026); only the size scales. */
-.hero-name{position:absolute;left:0;right:0;bottom:var(--band-bottom);z-index:1;pointer-events:none;overflow:hidden;font-size:clamp(6rem, 18.0556vw, 16.25rem);font-weight:500;line-height:var(--lh-tight);letter-spacing:-0.035em;color:var(--ink)}
+/* Leading 1.2, where the Type System's hero name is --lh-tight: the name was placed against
+   the portrait by eye while the leading set went undeclared and the band rendered at
+   Figtree's normal, which is 1.2. At 1.05 its letters sit lower, 7px on a phone and 19.5px at
+   1440 (where the wireframe drew them), and cross the arms lower. Kept where it is by the
+   owner's choice, side by side in the dev panel (4 Oct 2026). The 404's band is this rule's
+   too. */
+.hero-name{position:absolute;left:0;right:0;bottom:var(--band-bottom);z-index:1;pointer-events:none;overflow:hidden;font-size:clamp(6rem, 18.0556vw, 16.25rem);font-weight:500;line-height:1.2;letter-spacing:-0.035em;color:var(--ink)}
 .hero-name-track{display:flex;align-items:center;gap:0.16em;white-space:nowrap;width:max-content;will-change:transform}
 .hero-name-seg{display:flex;align-items:center;gap:0.16em}
 /* Depth. The script sets --dx/--dy on the hero for the portrait's layers and --bx/--by for
@@ -148,8 +161,9 @@ a:hover{color:var(--ink)}
    pill of the bar's glass (--glass-*), in the full ink: bare on the moving gradient it fell
    to 1.9:1, and a pill of the plain ground all but vanished into the dark gradient (1.0 to
    1.2:1 against it); the glass's rim and shadow give it an edge in both modes (3 Oct 2026).
-   Solid, as the bar's glass is, for Reduce Transparency, Increase Contrast and high contrast. */
-.tilt-hint{position:absolute;right:var(--gutter);top:var(--s3);z-index:4;margin:0;padding:.35em .75em;border-radius:999px;background:var(--glass-sheen),var(--glass-tint);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);box-shadow:var(--glass-rim),var(--glass-lift);font-family:var(--font-mono);font-size:0.75rem;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;color:var(--ink);opacity:0;transition:opacity .6s;pointer-events:none}
+   Solid, as the bar's glass is, for Reduce Transparency, Increase Contrast and high contrast.
+   Its leading is the label role's, --lh-normal, as the map label's is (4 Oct 2026). */
+.tilt-hint{position:absolute;right:var(--gutter);top:var(--s3);z-index:4;margin:0;padding:.35em .75em;border-radius:999px;background:var(--glass-sheen),var(--glass-tint);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);box-shadow:var(--glass-rim),var(--glass-lift);font-family:var(--font-mono);font-size:0.75rem;font-weight:700;line-height:var(--lh-normal);letter-spacing:0.04em;text-transform:uppercase;color:var(--ink);opacity:0;transition:opacity .6s;pointer-events:none}
 @media (prefers-reduced-transparency: reduce), (prefers-contrast: more){.tilt-hint{background:var(--sheet);-webkit-backdrop-filter:none;backdrop-filter:none}}
 @media (forced-colors: active){.tilt-hint{background:Canvas;-webkit-backdrop-filter:none;backdrop-filter:none;border:1px solid CanvasText}}
 .tilt-hint.on{opacity:1}
@@ -182,13 +196,8 @@ a:hover{color:var(--ink)}
 
 /* A section of the home page: the wireframe's uniform s5 frame under a 2px rule. A link to it
    stops it just below the bar (--bar-h, HeroGradient.astro), and under no-preference the page
-   glides there rather than jumping.
-   The leading set is declared here, on the section, for what is inside it: the Type System's
-   five values, which the rest of this file names (var(--lh-…)) but which were never declared
-   for the site, so outside a section those declarations fall back to the browser's normal
-   leading. Declaring them for the whole page would move the hero's name band, the footer
-   and the 404, which were all tuned by eye as they are; that is the owner's to decide. */
-.section{position:relative;padding:var(--s5) var(--gutter);border-top:2px solid var(--rule);scroll-margin-top:var(--bar-h, 0px);--lh-tight:1.05;--lh-snug:1.15;--lh-normal:1.3;--lh-body:1.5;line-height:var(--lh-body)}
+   glides there rather than jumping. */
+.section{position:relative;padding:var(--s5) var(--gutter);border-top:2px solid var(--rule);scroll-margin-top:var(--bar-h, 0px)}
 @media (prefers-reduced-motion: no-preference){html{scroll-behavior:smooth}}
 /* Eyebrow: inherited size · 700 · --lh-normal · 1px · uppercase · --ink. The section's name,
    an h2, so the design system's heading styles are set aside in full. Shown, where the
