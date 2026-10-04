@@ -34,18 +34,28 @@
 // them like oil: seven circles, three in from each bracket's corner and one to close the
 // middle, swelling one after another and running together where they touch. The timing is the
 // drawing's own, not the site's spring: a second for each circle, 110ms apart, the brackets
-// in 600ms, the label turning 300ms in. The slow run of it is the effect. Each time it is
-// pointed at, the circles take new sizes and places, and each time it is left, the order they
-// swell in is dealt again, so it does not spill the same way twice running (the script at the
-// foot of this file); without script it spills the one way the styles give.
+// in 600ms. The slow run of it is the effect. Each time it is pointed at, the circles take new
+// sizes and places, and each time it is left, the order they swell in is dealt again, so it
+// does not spill the same way twice running (the script at the foot of this file); without
+// script it spills the one way the styles give.
 //
-// The circles run together under an SVG filter: a blur, then a threshold on their opacity
-// alone. The drawing used CSS's blur and contrast, which threshold every colour channel. On
-// the white page it was first drawn for, that gives black on white; on this page's ground it
-// gives a white plate behind the button and a bright green and cyan rim round the spill,
-// neither a colour of the system (the dev panel's Spill row shows it, to compare). A
-// threshold on opacity makes the same shapes and leaves the spill in the ink's own colour, on
-// any ground, in the light and in the dark.
+// The label turns where the spill covers it and nowhere else: a letter half under the ink is
+// half turned, and it turns back the same way as the ink draws off. This is what the Type
+// System asks of the button (the label inverts per pixel as the edge crosses it). The landing
+// wireframe turns the whole label by the clock instead, 300ms after the pointer arrives,
+// which holds up there because its spill comes out black and its label is the dark green
+// ink, so the label never quite goes; here the spill is the ink itself, and a label turned
+// by the clock would vanish into it and come back, as the first build of this did.
+//
+// Both are one SVG filter's work (the markup below has it step by step). It blurs the circles
+// and cuts them off at half cover, which is what makes them run together; it keeps a second
+// copy of the label only where that spill is; and it paints the spill in ink and those
+// letters in the page's colour over it. The wireframe has CSS's blur and contrast for the
+// first part, which threshold every colour channel rather than cover alone: on the white
+// page it was first drawn for, that gives black on white, and on this page's ground a white
+// plate behind the button and a bright green and cyan rim round the spill, neither a colour
+// of the system. The dev panel's Spill row puts the wireframe's mechanism on the button,
+// whole, to compare.
 //
 // Plex Mono's 400 is loaded here, for this section alone: the typed answers, the types and
 // the counter are 400 in the Type System, and an answer of several lines in the 700 the rest
@@ -136,17 +146,37 @@ const spill = [
           <button class="contact-button" type="submit">
             {/* The filter is named here, not in the stylesheet, where a browser may look for
                 #contact-goo in the stylesheet's own file rather than in this page. */}
-            <span class="contact-spill" aria-hidden="true" style="filter:url(#contact-goo)">
-              {spill.map(({ at, size, slot }) => <span style={`${at};width:${size}rem;height:${size}rem;--slot:${slot}`}></span>)}
-            </span>
             <span class="contact-label">Say hello</span>
+            <span class="contact-spill" aria-hidden="true" style="filter:url(#contact-goo)">
+              {spill.map(({ at, size, slot }) => <span class="contact-blob" style={`${at};width:${size}rem;height:${size}rem;--slot:${slot}`}></span>)}
+              <span class="contact-label">Say hello</span>
+            </span>
           </button>
-          {/* What makes the circles run together: blurred by 7px, then cut off where their
-              opacity passes a half (26a - 12.5 is CSS's contrast(26), on opacity alone). */}
+          {/* The filter that makes the spill, and turns the label where the spill is. What it
+              is given is not what is seen: the circles arrive in red and a second copy of the
+              label in blue, so that it can tell them apart, and it gives back ink and the
+              page's colour (the styles below).
+              The circles first: their cover (red, where anything is drawn at all), blurred
+              by 7px, then cut off where it passes a half, which is what makes circles that
+              touch run together. 26a - 12.5 is CSS's contrast(26), on opacity alone.
+              Then the label's cover (blue), kept sharp, and kept only where the spill is.
+              Then the two painted: the spill in ink, and over it those letters in the page's
+              colour. */}
           <svg class="contact-goo" width="0" height="0" aria-hidden="true" focusable="false">
             <filter id="contact-goo" color-interpolation-filters="sRGB">
+              <feColorMatrix in="SourceGraphic" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  1 0 0 1 -1" />
               <feGaussianBlur stdDeviation="7" />
-              <feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 26 -12.5" />
+              <feColorMatrix type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 26 -12.5" result="spill" />
+              <feColorMatrix in="SourceGraphic" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 1 1 -1" />
+              <feComposite in2="spill" operator="in" result="letters" />
+              <feFlood class="contact-flood-ink" />
+              <feComposite in2="spill" operator="in" result="ink" />
+              <feFlood class="contact-flood-sheet" />
+              <feComposite in2="letters" operator="in" result="turned" />
+              <feMerge>
+                <feMergeNode in="ink" />
+                <feMergeNode in="turned" />
+              </feMerge>
             </filter>
           </svg>
           {/* The wireframe's shortcut. True only once the script is listening, so it is hidden
@@ -235,34 +265,38 @@ const spill = [
   /* The bracket button. Button label: t0 · 600 · --lh-snug · 0.5px, sentence case, never
      wrapping, on a fixed 3.5rem control with 1.75rem at each side. At rest two corner
      brackets, 2.125rem by 1.125rem of 2px rule (the drawing's 34 by 18). Pointed at, pressed
-     or sending, three things happen, each at the drawing's own pace: the brackets run on
-     round the box in 600ms; the circles swell from nothing to 2.6 times their size, a second
-     each, 110ms apart, and run together under the filter; and the label turns to the page's
-     colour, 300ms in, over 260ms. At rest and filled the label is 10.8:1 in the light and
-     13.6:1 in the dark. Between, for about half a second, some of its letters are ink on ink
-     or pale on pale, as drawn; the Type System accepts that crossing as long as it is short.
-     The circles are clipped to the button, in a box 1rem larger all round so that the blur's
-     soft edge falls outside it. Focus is the design system's ring, which the Type System
-     keeps until a focus state is designed; the hover is not one. */
+     or sending, at the drawing's own pace: the brackets run on round the box in 600ms, and
+     the circles swell from nothing to 2.6 times their size, a second each, 110ms apart, and
+     run together under the filter, which turns the label where they cover it. Every letter,
+     and every part of one, is at each moment either ink on the page or the page's colour on
+     ink: 10.8:1 in the light and 13.6:1 in the dark, with no moment between. Focus is the
+     design system's ring, which the Type System keeps until a focus state is designed; the
+     hover is not one. */
   .contact-button{position:relative;display:inline-flex;align-items:center;height:3.5rem;margin:0;padding:0 1.75rem;border:0;border-radius:0;background:none;-webkit-appearance:none;appearance:none;overflow:hidden;isolation:isolate;font-family:inherit;font-size:var(--t0);font-weight:600;line-height:var(--lh-snug);letter-spacing:0.5px;color:var(--ink);white-space:nowrap;cursor:pointer;-webkit-tap-highlight-color:transparent;--spill:1000ms;--spill-step:110ms}
   .contact-button::before,.contact-button::after{content:'';position:absolute;z-index:2;box-sizing:border-box;width:var(--bw, 2.125rem);height:var(--bh, 1.125rem);border:0 solid var(--ink);transition:width 600ms ease-out,height 600ms ease-out}
   .contact-button::before{top:0;right:0;border-top-width:2px;border-right-width:2px}
   .contact-button::after{bottom:0;left:0;border-bottom-width:2px;border-left-width:2px}
-  .contact-label{position:relative;z-index:1;color:var(--lbl, var(--ink));transition:color 260ms ease-out 300ms}
-  .contact-spill{position:absolute;inset:-1rem;pointer-events:none}
+  /* The spill lies over the label, in a box 1rem larger than the button all round. Inside
+     it, for the filter and seen by no one: the circles in red, and a second copy of the
+     label in blue, set exactly over the first. `screen` adds the blue to the red where they
+     cross, so that neither hides the other from the filter. */
+  .contact-spill{position:absolute;inset:-1rem;z-index:1;pointer-events:none}
+  .contact-spill .contact-label{position:absolute;inset:1rem;display:flex;align-items:center;padding:0 1.75rem;color:#00f;mix-blend-mode:screen}
+  .contact-flood-ink{flood-color:var(--ink)}
+  .contact-flood-sheet{flood-color:var(--sheet)}
   /* --k, --jx and --jy are the script's: this hover's size and place for the circle. */
-  .contact-spill span{position:absolute;border-radius:50%;background:var(--ink);transform:translate(var(--jx, 0px),var(--jy, 0px)) scale(calc(var(--sp, 0) * var(--k, 1)));transition:transform var(--spill) cubic-bezier(.3,.9,.3,1) calc(var(--spill-step) * var(--slot))}
+  .contact-blob{position:absolute;border-radius:50%;background:#f00;transform:translate(var(--jx, 0px),var(--jy, 0px)) scale(calc(var(--sp, 0) * var(--k, 1)));transition:transform var(--spill) cubic-bezier(.3,.9,.3,1) calc(var(--spill-step) * var(--slot))}
   .contact-goo{position:absolute}
-  .contact-button:active,.contact-button[aria-disabled="true"]{--bw:100%;--bh:100%;--sp:2.6;--lbl:var(--sheet)}
+  .contact-button:active,.contact-button[aria-disabled="true"]{--bw:100%;--bh:100%;--sp:2.6}
   .contact-button[aria-disabled="true"]{cursor:progress}
   /* Only where there is a pointer to hover with, so a tap does not leave the button inked. */
   @media (hover:hover){
-    .contact-button:hover{--bw:100%;--bh:100%;--sp:2.6;--lbl:var(--sheet)}
+    .contact-button:hover{--bw:100%;--bh:100%;--sp:2.6}
   }
   /* A high-contrast theme paints no backgrounds and picks its own colours: a plain box in
      the theme's button colours, with no brackets and no spill. */
   @media (forced-colors: active){
-    .contact-button{border:2px solid ButtonText;--lbl:ButtonText}
+    .contact-button{border:2px solid ButtonText}
     .contact-button::before,.contact-button::after,.contact-spill{display:none}
   }
 
@@ -281,7 +315,7 @@ const spill = [
   /* Under reduced motion every state arrives at once: the button fills in an instant, as the
      Type System asks of it, and nothing rises or fades. */
   @media (prefers-reduced-motion: reduce){
-    .contact-field,.contact-answer input,.contact-answer textarea,.contact-button::before,.contact-button::after,.contact-spill span,.contact-label{transition:none}
+    .contact-field,.contact-answer input,.contact-answer textarea,.contact-button::before,.contact-button::after,.contact-blob{transition:none}
     .contact-error:not([hidden]),.contact-status:not(:empty),.contact-done:not([hidden]){animation:none}
   }
 
@@ -309,7 +343,8 @@ const spill = [
   const done = form?.querySelector<HTMLElement>('.contact-done');
   if (form && button && status && go && done) {
     const fields = Array.from(form.querySelectorAll<Field>('.contact-answer :is(input, textarea)'));
-    const label = button.querySelector<HTMLElement>('.contact-label')!;
+    // Two: the label, and its copy inside the spill (the styles above).
+    const labels = Array.from(button.querySelectorAll<HTMLElement>('.contact-label'));
     const row = (field: Field) => field.closest<HTMLElement>('.contact-field')!;
     const note = (field: Field) => document.getElementById(`${field.id}-error`)!;
 
@@ -396,7 +431,7 @@ const spill = [
       for (const field of fields) field.readOnly = !!now;
       form.setAttribute('aria-busy', String(sending));
       button.setAttribute('aria-disabled', String(sending));
-      label.textContent = sending ? 'Sending…' : 'Say hello';
+      for (const label of labels) label.textContent = sending ? 'Sending…' : 'Say hello';
       go.hidden = now === 'sent';
       done.hidden = now !== 'sent';
     };
@@ -453,7 +488,7 @@ const spill = [
     // re-aimed at any time, so they are dealt as the pointer arrives; its delay cannot be
     // changed mid-flight without stalling the spill, so the order is dealt after the pointer
     // has left and the spill has drawn back.
-    const blobs = Array.from(button.querySelectorAll<HTMLElement>('.contact-spill span'));
+    const blobs = Array.from(button.querySelectorAll<HTMLElement>('.contact-blob'));
     // The styles' two times, in milliseconds, whichever unit they arrive in: the build writes
     // 110ms as .11s.
     const time = (name: string, otherwise: number) => {
