@@ -5,7 +5,8 @@
 // bundle when the panel is off. To add a control, add an entry to CONTROLS: key, label, and
 // options as [value, label] pairs, the first being the default (which clears the attribute).
 // The day stepper below is not one of those: it previews another date rather than setting an
-// attribute, so it is built on its own.
+// attribute, so it is built on its own. The Contact row is one, though no stylesheet reads it:
+// the stand-in for fetch below does, to rehearse the Contact form's replies.
 // The class name dev-panel is what scripts/check-build.mjs looks for: both workflows run it, and
 // it fails a build that mentions the name anywhere, which is how a panel that escaped into
 // production gets caught. Renaming it here without changing that script leaves the gate
@@ -15,6 +16,7 @@
   (() => {
     const CONTROLS = [
       { key: 'theme', label: 'Theme', options: [['device', 'Device'], ['light', 'Light'], ['dark', 'Dark']] },
+      { key: 'contact', label: 'Contact', options: [['live', 'Live'], ['sent', 'Sent'], ['refused', 'Refused'], ['busy', 'Busy'], ['offline', 'Offline']] },
     ];
     const root = document.documentElement;
     const STORE = 'devPanel';
@@ -33,6 +35,29 @@
     // touching the clock. Set here, at head time, so the thought script down in the footer
     // picks the previewed day on first paint too, rather than correcting itself afterwards.
     window.__dayOffset = state.dayOffset || 0;
+
+    // The Contact form's replies, rehearsed. On Live the form really sends, to the owner's
+    // inbox. On anything else a request to Formspree goes nowhere and is answered here after
+    // a moment, in Formspree's own words (src/scripts/formspree.ts has the format): sent,
+    // the email address refused, its rate limit, or no connection at all. So every state of
+    // the form can be read, on a phone too, without a message being sent. Only the page's
+    // script is caught: with JavaScript off the form posts for real, whatever this says.
+    const REPLIES = {
+      sent: [200, { next: '/thanks', ok: true }],
+      refused: [422, { error: 'Validation errors', errors: [{ code: 'TYPE_EMAIL', field: 'email', message: 'should be an email' }] }],
+      busy: [429, { error: 'Too many requests', errors: [{ code: 'RATE_LIMITED', message: 'Too many requests' }] }],
+    };
+    const send = window.fetch;
+    window.fetch = (input, init) => {
+      const mode = root.dataset.contact;
+      const url = typeof input === 'string' ? input : input.url || String(input);
+      if (!mode || !url.startsWith('https://formspree.io/')) return send(input, init);
+      return new Promise((resolve, reject) => setTimeout(() => {
+        const reply = REPLIES[mode];
+        if (!reply) reject(new TypeError('Failed to fetch'));
+        else resolve(new Response(JSON.stringify(reply[1]), { status: reply[0], headers: { 'Content-Type': 'application/json' } }));
+      }, 1200));
+    };
 
     addEventListener('DOMContentLoaded', () => {
       const panel = document.createElement('aside');
