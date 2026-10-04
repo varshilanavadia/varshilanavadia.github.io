@@ -26,8 +26,10 @@ const { route, label, strength = 1, every = 1 } = Astro.props;
 <style>
   .contour-map{position:absolute;inset:0;overflow:hidden;pointer-events:none}
   .contour-map canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
-  /* The marker's label: IBM Plex Mono, set as a tag beside the dot, flipped left near the edge. */
-  .contour-label{position:absolute;left:0;top:0;margin:0;padding:0.3em 0.55em;font-family:var(--font-mono);font-size:0.75rem;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;background:var(--ink);color:var(--sheet);white-space:nowrap;opacity:0;transition:opacity .5s;transform:translate(14px,-50%)}
+  /* The marker's label: IBM Plex Mono, set as a tag beside the dot, flipped left near the edge.
+     Its leading is the label role's, --lh-normal, set here so the tag is one height wherever
+     the map sits: left to inherit, it was 22px tall on the 404 and 25px in About (4 Oct 2026). */
+  .contour-label{position:absolute;left:0;top:0;margin:0;padding:0.3em 0.55em;font-family:var(--font-mono);font-size:0.75rem;font-weight:700;line-height:var(--lh-normal);letter-spacing:0.04em;text-transform:uppercase;background:var(--ink);color:var(--sheet);white-space:nowrap;opacity:0;transition:opacity .5s;transform:translate(14px,-50%)}
   .contour-label.on{opacity:1}
   .contour-label.flip{transform:translate(calc(-100% - 14px),-50%)}
 </style>
