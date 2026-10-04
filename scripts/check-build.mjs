@@ -12,7 +12,10 @@
 //     and the repository is public, so it would publish. Update the list when a real page is
 //     added;
 //   - the analytics tag is missing from the home page, or no longer runs only on the site's
-//     own address (astro.config.mjs's site, as the sitemap gives it).
+//     own address (astro.config.mjs's site, as the sitemap gives it);
+//   - anything carries an email address or a mailto: link. The site shows none: the Contact
+//     form posts to Formspree by the form's id (src/site.ts), and the owner's address is in
+//     Formspree's settings only.
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
 
@@ -39,8 +42,14 @@ else if (!host || !home.includes(`"${host}"`) || !home.includes('location.hostna
   problems.push(`the analytics tag no longer runs only on the site's own address (${host ?? 'not found in the sitemap'})`);
 }
 
+// Text files only: the bytes of a font or an image can spell anything.
+const TEXT = /\.(html|js|css|xml|txt|json|webmanifest|svg)$/;
+const ADDRESS = /mailto:|[\w.%+-]+@[\w-]+(\.[\w-]+)*\.[a-z]{2,}/i;
+const addressed = files.filter((f) => TEXT.test(f) && ADDRESS.test(readFileSync(f, 'utf8')));
+if (addressed.length) problems.push(`an email address reached the build, in ${addressed.map((f) => relative(DIST, f)).join(', ')}`);
+
 if (problems.length) {
   console.error(`The build is not fit to publish:\n- ${problems.join('\n- ')}`);
   process.exit(1);
 }
-console.log(`The build holds: no dev panel, pages ${PAGES.join(' and ')}, analytics on ${host} only.`);
+console.log(`The build holds: no dev panel, pages ${PAGES.join(' and ')}, analytics on ${host} only, no email address.`);
