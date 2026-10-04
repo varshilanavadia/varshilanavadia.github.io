@@ -12,4 +12,11 @@ export const links = [
 export const sections = [
   { id: 'about', label: 'About' },
   { id: 'work', label: 'Work' },
+  { id: 'contact', label: 'Contact' },
 ];
+
+// The Contact form's Formspree form (src/components/Contact.astro posts to
+// https://formspree.io/f/<this>). Public by design, as any form's address is: it names the
+// form and grants nothing, and it stands in for the owner's email address, which is in
+// Formspree's settings and nowhere on the site.
+export const FORMSPREE_FORM_ID = 'moevgbzn';
