@@ -189,11 +189,15 @@
      narrow screen. The label holds a column so the rows line up while they fit. */
   .dev-panel-row{display:flex;align-items:center;flex-wrap:wrap;gap:4px;max-width:100%}
   .dev-panel-row > span:first-child{flex:0 0 auto;min-width:4.5em;color:var(--ink-3)}
-  /* The Contact button's spill, "As drawn": the filter the button has in Claude Design, CSS's
-     blur and contrast over the page's ground with the circles in the accent, in place of the
-     site's threshold on opacity (Contact.astro), to see the two side by side. !important,
-     since the site's filter is set on the element itself. */
-  :root[data-spill="drawn"] .contact-spill{background:var(--sheet);filter:blur(7px) contrast(26) !important}
-  :root[data-spill="drawn"] .contact-spill span{background:var(--color-accent)}
+  /* The Contact button's spill, "As drawn": the mechanism the button has in the landing
+     wireframe, whole, in place of the site's (Contact.astro), to see the two side by side.
+     The circles in the accent on the page's ground under CSS's blur and contrast, and the
+     label turned by the clock, 300ms in, rather than by the spill. !important, since the
+     site's filter is set on the element itself. */
+  :root[data-spill="drawn"] .contact-spill{z-index:0;background:var(--sheet);filter:blur(7px) contrast(26) !important}
+  :root[data-spill="drawn"] .contact-blob{background:var(--color-accent)}
+  :root[data-spill="drawn"] .contact-button .contact-spill .contact-label{display:none}
+  :root[data-spill="drawn"] .contact-button > .contact-label{position:relative;z-index:1;transition:color 260ms ease-out 300ms}
+  :root[data-spill="drawn"] .contact-button:is(:hover,:active,[aria-disabled="true"]) > .contact-label{color:var(--color-neutral-100)}
   .dev-panel-date{flex:1 1 auto;min-width:0;margin-left:4px;color:var(--ink-3);white-space:normal;overflow-wrap:anywhere;text-transform:none;letter-spacing:0}
 </style>
