@@ -1,0 +1,281 @@
+---
+// The bracket button, the design system's one button, with its spill.
+//   <BracketButton label="Say hello" type="submit" />      a button
+//   <BracketButton label="Read it" href="/somewhere" />    a link that looks the same
+// Two corner brackets at rest. Pointed at, pressed or held, the brackets run on round the box
+// while ink pours in from their two corners like a thick liquid, meets in the middle and
+// fills the button, and the label turns to the page's colour exactly where the ink covers
+// it. Left alone, the ink parts in the middle and draws back into the corners.
+//
+// Any other attribute given lands on the button itself. A page's own script can ask two
+// things of it afterwards:
+//   - data-label="Sending…" changes what it says, and taking the attribute off puts the
+//     first label back (the label is drawn twice, so it is not changed by hand);
+//   - aria-disabled="true" holds it filled, as a press does.
+//
+// How the liquid is made. Nothing is simulated: it is nine plain circles and one SVG filter.
+//   1. The circles pour. Each starts as a point just outside one of the two corners the
+//      brackets sit in, and slides to its own place in the button, growing as it goes: the
+//      nearest first, the farthest last and longest on the way, each quick at first and then
+//      slowing, as something thick does as it spreads. Between them they cover the button,
+//      whatever its width. Leaving reverses it, the farthest first.
+//   2. The filter makes circles liquid. It pushes their outlines about by a slow, smooth
+//      noise, so that no edge is an arc of a circle; then it blurs them and cuts the blur off
+//      at half strength. That cut is what makes two shapes that come near each other reach
+//      across and join, as two drops do. What is left is the spill.
+//   3. The filter lights it. From the spill's own outline it works out a slope round the
+//      edge, as if the liquid stood proud of the page, and from that slope a darker rim, a
+//      glint along the edges that face the light (from the upper left) and a shadow on the
+//      page. All three are at the edge and nowhere else, so the filled button is flat ink,
+//      to the pixel.
+//   4. The filter turns the label. It is handed a second copy of the label and keeps it only
+//      where the spill is, in the page's colour, over the ink: a letter half under the ink
+//      is half turned.
+// To tell the circles from that copy of the label, the filter is given them in red and in
+// blue. Neither colour is ever seen: it paints only in the page's own (the styles below).
+//
+// Each time it is pointed at, the circles take new sizes and places; each time it is left,
+// one corner or the other is given a head start and the noise is drawn afresh; so it does not
+// spill the same way twice running (the script at the foot of this file). Without script it
+// spills the one way the styles give. Under reduced motion it fills at once.
+//
+// It began in Claude Design as seven circles swelling where they stood, merged by CSS's blur
+// and contrast, with the label turned by the clock. The brackets, their timing, the two
+// corners and the label's type are still that drawing's. The pour, the noise and the light
+// are the site's (4 Oct 2026), for a spill that reads as liquid rather than as circles; the
+// timing is its own too, not the site's spring, since the slow run of it is the effect.
+import { uid } from '../scripts/uid';
+
+interface Props {
+  /** What the button says. Given as text, not as a child, because it is drawn twice. */
+  label: string;
+  /** With an href it is a link; without one, a button of this type. */
+  href?: string;
+  type?: 'submit' | 'button';
+  class?: string;
+  [attribute: string]: unknown;
+}
+const { label, href, type = 'button', class: className, ...rest } = Astro.props;
+const Tag = href ? 'a' : 'button';
+// The filter's name, this button's alone: two buttons on a page each have their own.
+const filter = uid('bracket-spill');
+
+// Where the circles end up: two staggered rows, as fractions of the button's width and
+// height, close enough that circles of the size the styles give leave no gap between them.
+const HEAD = 0.2;
+const FOOT = 0.8;
+const cells: [number, number][] = [
+  [1, HEAD], [0.75, HEAD], [0.5, HEAD], [0.25, HEAD], [0, HEAD],
+  [0.875, FOOT], [0.625, FOOT], [0.375, FOOT], [0.125, FOOT],
+];
+// Each pours from the nearer of the two brackets' corners, the top right or the bottom left,
+// and the nearer it ends up, the sooner it leaves and the sooner it is there: 80ms apart, the
+// bottom left's half a step behind the top right's, and from 750ms on the way for the nearest
+// to 1300ms for the farthest. Measured on the button as it was drawn, 142 by 56.
+const W = 142;
+const H = 56;
+const reach = (fx: number, fy: number, from: 'tr' | 'bl') =>
+  from === 'tr' ? Math.hypot((1 - fx) * W, fy * H) : Math.hypot(fx * W, (1 - fy) * H);
+const nearest = cells
+  .map(([fx, fy]) => {
+    const from = reach(fx, fy, 'tr') <= reach(fx, fy, 'bl') ? ('tr' as const) : ('bl' as const);
+    return { fx, fy, from, far: reach(fx, fy, from) };
+  })
+  .sort((a, b) => a.far - b.far);
+const farthest = Math.max(...nearest.map((b) => b.far));
+const turn = { tr: 0, bl: 0 };
+const circles = nearest.map((b) => ({
+  ...b,
+  flow: Math.round(750 + 550 * (b.far / farthest)),
+  in: turn[b.from]++ * 80 + (b.from === 'bl' ? 40 : 0),
+}));
+const longest = Math.max(...circles.map((b) => b.in));
+---
+
+<Tag class:list={['bracket-button', className]} href={href} type={href ? undefined : type} {...rest}>
+  <span class="bracket-button-label">{label}</span>
+  {/* The filter is named here, not in the stylesheet, where a browser may look for it in
+      the stylesheet's own file rather than in this page. */}
+  <span class="bracket-button-spill" aria-hidden="true" style={`filter:url(#${filter})`}>
+    {/* --out is half of what --in leaves: the farthest circle leaves first, and promptly. */}
+    {circles.map((b) => (
+      <span
+        class={`bracket-button-circle from-${b.from}`}
+        style={`--fx:${b.fx};--fy:${b.fy};--flow:${b.flow}ms;--in:${b.in}ms;--out:${Math.round((longest - b.in) / 2)}ms`}
+      ></span>
+    ))}
+    <span class="bracket-button-label">{label}</span>
+  </span>
+  <svg class="bracket-button-filter" width="0" height="0" aria-hidden="true" focusable="false">
+    <filter id={filter} color-interpolation-filters="sRGB">
+      {/* 2. The circles' cover (red, where anything is drawn at all), pushed about by the
+             noise, up to 11px either way; blurred by 7px; cut off at a half. 26a - 12.5 is
+             CSS's contrast(26), on cover alone. */}
+      <feColorMatrix in="SourceGraphic" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  1 0 0 1 -1" result="circles" />
+      <feTurbulence class="bracket-button-noise" type="fractalNoise" baseFrequency="0.014 0.02" numOctaves="1" seed="7" result="noise" />
+      <feDisplacementMap class="bracket-button-wobble" in="circles" in2="noise" scale="22" xChannelSelector="R" yChannelSelector="G" />
+      <feGaussianBlur stdDeviation="7" />
+      <feColorMatrix type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 26 -12.5" result="spill" />
+      {/* 4. The label's cover (blue), kept sharp, and kept only where the spill is. */}
+      <feColorMatrix in="SourceGraphic" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 1 1 -1" />
+      <feComposite in2="spill" operator="in" result="letters" />
+      {/* 3. The slope round the edge: the spill blurred a little, full in its middle and
+             falling away over its last few pixels. The rim is where it has fallen away. */}
+      <feGaussianBlur in="spill" stdDeviation="3.5" result="slope" />
+      <feColorMatrix in="slope" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -1 1" />
+      <feComposite in2="spill" operator="in" result="rim" />
+      {/* The glint: light from the upper left on that slope. A flat surface catches a little
+             of it too (0.39 of full), which the matrix takes off again, so that the flat of
+             the spill catches none; then softened by a pixel and kept inside the spill. */}
+      <feSpecularLighting in="slope" surfaceScale="12" specularConstant="1.3" specularExponent="10" lighting-color="#fff">
+        <feDistantLight azimuth="225" elevation="35" />
+      </feSpecularLighting>
+      <feColorMatrix type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1.7 -0.68" />
+      <feGaussianBlur stdDeviation="1" />
+      <feComposite in2="spill" operator="in" result="glint" />
+      {/* The shadow: the spill, a pixel right and two down, softened. */}
+      <feOffset in="spill" dx="1" dy="2" />
+      <feGaussianBlur stdDeviation="1.5" result="cast" />
+      {/* Painted, from the page up: shadow, ink, the darker rim, the glint, the letters. */}
+      <feFlood class="bracket-button-shadow" />
+      <feComposite in2="cast" operator="in" result="shadow" />
+      <feFlood class="bracket-button-ink" />
+      <feComposite in2="spill" operator="in" result="ink" />
+      <feFlood class="bracket-button-shade" />
+      <feComposite in2="rim" operator="in" result="shade" />
+      <feFlood class="bracket-button-sheen" />
+      <feComposite in2="glint" operator="in" result="sheen" />
+      <feFlood class="bracket-button-sheet" />
+      <feComposite in2="letters" operator="in" result="turned" />
+      <feMerge>
+        <feMergeNode in="shadow" />
+        <feMergeNode in="ink" />
+        <feMergeNode in="shade" />
+        <feMergeNode in="sheen" />
+        <feMergeNode in="turned" />
+      </feMerge>
+    </filter>
+  </svg>
+</Tag>
+
+<style>
+  /* Button label: t0 · 600 · --lh-snug · 0.5px, sentence case, never wrapping, on a fixed
+     3.5rem control with 1.75rem at each side. At rest two corner brackets, 2.125rem by
+     1.125rem of 2px rule (the drawing's 34 by 18), which run on round the box in 600ms.
+     Every letter, and every part of one, is at each moment either ink on the page or the
+     page's colour on ink: 10.8:1 in the light and 13.6:1 in the dark. Focus is the design
+     system's ring, which the Type System keeps until a focus state is designed; the hover
+     is not one. */
+  .bracket-button{position:relative;display:inline-flex;align-items:center;height:3.5rem;margin:0;padding:0 1.75rem;border:0;border-radius:0;background:none;-webkit-appearance:none;appearance:none;overflow:hidden;isolation:isolate;font-family:inherit;font-size:var(--t0);font-weight:600;line-height:var(--lh-snug);letter-spacing:0.5px;color:var(--ink);text-decoration:none;white-space:nowrap;cursor:pointer;-webkit-tap-highlight-color:transparent}
+  .bracket-button::before,.bracket-button::after{content:'';position:absolute;z-index:2;box-sizing:border-box;width:var(--bw, 2.125rem);height:var(--bh, 1.125rem);border:0 solid var(--ink)}
+  .bracket-button::before{top:0;right:0;border-top-width:2px;border-right-width:2px}
+  .bracket-button::after{bottom:0;left:0;border-bottom-width:2px;border-left-width:2px}
+  .bracket-button[aria-disabled="true"]{cursor:progress}
+
+  /* The spill lies over the label, clipped to the button, in a box 1rem larger all round so
+     that the blur's soft edge and the noise's push fall outside what is seen. Inside it, for
+     the filter and seen by no one: the circles in red, and a second copy of the label in
+     blue, set exactly over the first. `screen` adds the blue to the red where they cross, so
+     that neither hides the other from the filter. */
+  .bracket-button-spill{position:absolute;inset:-1rem;z-index:1;pointer-events:none}
+  .bracket-button-spill .bracket-button-label{position:absolute;inset:1rem;display:flex;align-items:center;padding:0 1.75rem;color:#00f;mix-blend-mode:screen}
+  .bracket-button-filter{position:absolute}
+  /* What the filter paints in. The spill is the ink and the turned letters the page, so both
+     follow the theme. The glint is the ink mixed towards a pale green of the ramp: lighter
+     than the ink in the light, and in the dark, where the ink is pale, a green tint on it.
+     The rim is the dark ground at 40%, and the shadow the one the paper cutout casts. */
+  .bracket-button-ink{flood-color:var(--ink)}
+  .bracket-button-sheet{flood-color:var(--sheet)}
+  .bracket-button-sheen{flood-color:color-mix(in srgb, var(--ink), var(--color-accent-300) 70%)}
+  .bracket-button-shade{flood-color:var(--ground-dark);flood-opacity:.4}
+  .bracket-button-shadow{flood-color:var(--lift)}
+
+  /* A circle, at rest: a point at its corner (--sx, --sy: 0.5rem outside the button's own),
+     nothing to see. A third of the spill's width, and never under 4.25rem, which is what
+     keeps nine of them covering a button however wide it is. Filled: at its place (--x, --y:
+     the fractions the markup gives, --fx and --fy, with the script's few pixels of chance,
+     --jx and --jy) and full size, or a little over (--k). */
+  .bracket-button-circle{position:absolute;left:var(--sx);top:var(--sy);width:max(4.25rem, 32%);aspect-ratio:1;border-radius:50%;background:#f00;translate:-50% -50%;scale:0;--x:calc(1rem + var(--fx) * (100% - 2rem) + var(--jx, 0px));--y:calc(1rem + var(--fy) * (100% - 2rem) + var(--jy, 0px))}
+  .bracket-button-circle.from-tr{--sx:calc(100% - .5rem);--sy:.5rem}
+  .bracket-button-circle.from-bl{--sx:.5rem;--sy:calc(100% - .5rem)}
+  .bracket-button:is(:active,[aria-disabled="true"]){--bw:100%;--bh:100%}
+  .bracket-button:is(:active,[aria-disabled="true"]) .bracket-button-circle{left:var(--x);top:var(--y);scale:var(--k, 1)}
+  /* Only where there is a pointer to hover with, so a tap does not leave the button inked. */
+  @media (hover:hover){
+    .bracket-button:hover{--bw:100%;--bh:100%}
+    .bracket-button:hover .bracket-button-circle{left:var(--x);top:var(--y);scale:var(--k, 1)}
+  }
+  /* The motion, all of it, and only for those who have not asked for less: under reduced
+     motion none of this applies, and the button fills in an instant, as the Type System asks
+     of it. The brackets take 600ms. A circle on its way in (--pour) slides for --flow,
+     starting after --in, quick and then slowing, and has grown in the first six tenths of
+     that. On its way out (--ebb, the rest state's timing) it slides back a tenth slower,
+     starting after --out, and shrinks only in the second half, so the ink draws back to its
+     corner before it goes. */
+  @media (prefers-reduced-motion: no-preference){
+    .bracket-button::before,.bracket-button::after{transition:width 600ms ease-out,height 600ms ease-out}
+    .bracket-button-circle{--back:calc(var(--flow) * 1.1);--pour:left var(--flow) cubic-bezier(.16,.84,.3,1) var(--in),top var(--flow) cubic-bezier(.16,.84,.3,1) var(--in),scale calc(var(--flow) * .6) cubic-bezier(.2,.7,.2,1) var(--in);--ebb:left var(--back) cubic-bezier(.45,0,.25,1) var(--out),top var(--back) cubic-bezier(.45,0,.25,1) var(--out),scale calc(var(--back) * .5) ease-in calc(var(--out) + var(--back) * .5);transition:var(--ebb)}
+    .bracket-button:is(:active,[aria-disabled="true"]) .bracket-button-circle{transition:var(--pour)}
+    @media (hover:hover){
+      .bracket-button:hover .bracket-button-circle{transition:var(--pour)}
+    }
+  }
+  /* A high-contrast theme paints no backgrounds and picks its own colours: a plain box in
+     the theme's button colours, with no brackets and no spill. */
+  @media (forced-colors: active){
+    .bracket-button{border:2px solid ButtonText}
+    .bracket-button::before,.bracket-button::after,.bracket-button-spill{display:none}
+  }
+</style>
+
+<script>
+  for (const button of document.querySelectorAll<HTMLElement>('.bracket-button')) {
+    // What it says, in both copies: data-label, or the label it was built with.
+    const labels = Array.from(button.querySelectorAll<HTMLElement>('.bracket-button-label'));
+    const built = labels[0]?.textContent ?? '';
+    new MutationObserver(() => {
+      for (const label of labels) label.textContent = button.dataset.label ?? built;
+    }).observe(button, { attributes: true, attributeFilter: ['data-label'] });
+
+    // The spill's chance, so that it does not spill the same way twice running. Dealt in two
+    // halves, at different moments, because they take a rewrite differently (as Claude
+    // Design's drawing found): where a circle is headed and how large can be re-aimed at any
+    // time, so they are dealt as the pointer arrives; when it sets off cannot be changed
+    // mid-flight without stalling the spill, and a new noise would make the edge jump, so
+    // those are dealt once the pointer has left and the ink has drawn back.
+    const circles = Array.from(button.querySelectorAll<HTMLElement>('.bracket-button-circle'));
+    const noise = button.querySelector('.bracket-button-noise');
+    const written = circles.map((circle) => parseFloat(circle.style.getPropertyValue('--in')) || 0);
+    const between = (lo: number, hi: number) => lo + Math.random() * (hi - lo);
+    // Never smaller than drawn, which is the size that is sure to cover the button.
+    const aim = () => {
+      for (const circle of circles) {
+        circle.style.setProperty('--k', between(1, 1.18).toFixed(2));
+        circle.style.setProperty('--jx', `${Math.round(between(-5, 5))}px`);
+        circle.style.setProperty('--jy', `${Math.round(between(-3, 3))}px`);
+      }
+    };
+    // One corner or the other pours 60 to 200ms behind, and every circle a little early or
+    // late; the way out is the way in backwards, at twice the pace.
+    const deal = () => {
+      const behind = Math.random() < 0.5 ? 'from-tr' : 'from-bl';
+      const lag = between(60, 200);
+      const starts = circles.map((circle, i) => Math.max(0, Math.round(written[i] + (circle.classList.contains(behind) ? lag : 0) + between(-25, 25))));
+      const last = Math.max(...starts);
+      circles.forEach((circle, i) => {
+        circle.style.setProperty('--in', `${starts[i]}ms`);
+        circle.style.setProperty('--out', `${Math.round((last - starts[i]) / 2)}ms`);
+      });
+      noise?.setAttribute('seed', String(Math.floor(between(1, 999))));
+    };
+    // Dealt 2.4 seconds after the pointer leaves, by when the slowest circle is home.
+    let dealing = 0;
+    button.addEventListener('pointerenter', () => { clearTimeout(dealing); aim(); });
+    button.addEventListener('pointerleave', () => {
+      clearTimeout(dealing);
+      dealing = window.setTimeout(() => { if (!button.matches(':hover')) deal(); }, 2400);
+    });
+    aim();
+    deal();
+  }
+</script>
