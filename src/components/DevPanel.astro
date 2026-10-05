@@ -6,7 +6,8 @@
 // options as [value, label] pairs, the first being the default (which clears the attribute).
 // The day stepper below is not one of those: it previews another date rather than setting an
 // attribute, so it is built on its own. The Contact row is one, though no stylesheet reads it:
-// the stand-in for fetch below does, to rehearse the Contact form's replies.
+// the stand-in for fetch below does, to rehearse the Contact form's replies. The four numbered
+// rows after it each take one part of the bracket button's spill away, to see what it adds.
 // The class name dev-panel is what scripts/check-build.mjs looks for: both workflows run it, and
 // it fails a build that mentions the name anywhere, which is how a panel that escaped into
 // production gets caught. Renaming it here without changing that script leaves the gate
@@ -17,7 +18,10 @@
     const CONTROLS = [
       { key: 'theme', label: 'Theme', options: [['device', 'Device'], ['light', 'Light'], ['dark', 'Dark']] },
       { key: 'contact', label: 'Contact', options: [['live', 'Live'], ['sent', 'Sent'], ['refused', 'Refused'], ['busy', 'Busy'], ['offline', 'Offline']] },
-      { key: 'spill', label: 'Spill', options: [['ink', 'Ink'], ['drawn', 'As drawn']] },
+      { key: 'pour', label: '1 Pour', options: [['on', 'On'], ['off', 'Off']] },
+      { key: 'wobble', label: '2 Wobble', options: [['on', 'On'], ['off', 'Off']] },
+      { key: 'sheen', label: '3 Sheen', options: [['on', 'On'], ['off', 'Off']] },
+      { key: 'shadow', label: '4 Shadow', options: [['on', 'On'], ['off', 'Off']] },
     ];
     const root = document.documentElement;
     const STORE = 'devPanel';
@@ -60,7 +64,17 @@
       }, 1200));
     };
 
+    // 2 Wobble is the one part of the spill no stylesheet can reach: the noise's push is an
+    // attribute of the filter (BracketButton.astro), so Off sets it to nothing by hand.
+    const wobble = () => {
+      for (const push of document.querySelectorAll('.bracket-button-wobble')) {
+        push.dataset.scale ??= push.getAttribute('scale');
+        push.setAttribute('scale', root.dataset.wobble === 'off' ? '0' : push.dataset.scale);
+      }
+    };
+
     addEventListener('DOMContentLoaded', () => {
+      wobble();
       const panel = document.createElement('aside');
       panel.className = 'dev-panel';
       panel.setAttribute('aria-label', 'Top Secret Tools, local dev panel');
@@ -84,7 +98,7 @@
           const b = document.createElement('button');
           b.textContent = text;
           b.addEventListener('click', () => {
-            state[c.key] = v; apply(c, v); save();
+            state[c.key] = v; apply(c, v); save(); wobble();
             row.querySelectorAll('button').forEach((x, i) => x.setAttribute('aria-pressed', String(c.options[i][0] === v)));
           });
           b.setAttribute('aria-pressed', String(cur() === v));
@@ -189,15 +203,15 @@
      narrow screen. The label holds a column so the rows line up while they fit. */
   .dev-panel-row{display:flex;align-items:center;flex-wrap:wrap;gap:4px;max-width:100%}
   .dev-panel-row > span:first-child{flex:0 0 auto;min-width:4.5em;color:var(--ink-3)}
-  /* The Contact button's spill, "As drawn": the mechanism the button has in the landing
-     wireframe, whole, in place of the site's (Contact.astro), to see the two side by side.
-     The circles in the accent on the page's ground under CSS's blur and contrast, and the
-     label turned by the clock, 300ms in, rather than by the spill. !important, since the
-     site's filter is set on the element itself. */
-  :root[data-spill="drawn"] .contact-spill{z-index:0;background:var(--sheet);filter:blur(7px) contrast(26) !important}
-  :root[data-spill="drawn"] .contact-blob{background:var(--color-accent)}
-  :root[data-spill="drawn"] .contact-button .contact-spill .contact-label{display:none}
-  :root[data-spill="drawn"] .contact-button > .contact-label{position:relative;z-index:1;transition:color 260ms ease-out 300ms}
-  :root[data-spill="drawn"] .contact-button:is(:hover,:active,[aria-disabled="true"]) > .contact-label{color:var(--color-neutral-100)}
+  /* The bracket button's spill (BracketButton.astro), a part at a time. Each Off takes one
+     thing away, so its share of the effect can be seen on its own:
+     1 Pour: the circles swell where they end up, as Claude Design drew them, rather than
+       pouring in from the brackets' corners.
+     2 Wobble: no noise on the edge (the script above), so the edges are arcs of circles.
+     3 Sheen: no darker rim and no glint, so the ink is flat.
+     4 Shadow: no shadow on the page. */
+  :root[data-pour="off"] .bracket-button .bracket-button-circle{left:var(--x);top:var(--y)}
+  :root[data-sheen="off"] .bracket-button :is(.bracket-button-sheen,.bracket-button-shade){flood-opacity:0}
+  :root[data-shadow="off"] .bracket-button .bracket-button-shadow{flood-opacity:0}
   .dev-panel-date{flex:1 1 auto;min-width:0;margin-left:4px;color:var(--ink-3);white-space:normal;overflow-wrap:anywhere;text-transform:none;letter-spacing:0}
 </style>
