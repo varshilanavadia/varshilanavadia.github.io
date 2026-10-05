@@ -66,14 +66,9 @@
     };
 
     // 2 Wobble is the one part of the spill no stylesheet can reach: the noise's push is an
-    // attribute of the filter (BracketButton.astro), so Off sets it to nothing by hand. Each
-    // button is first given a nudge (a blur it listens for), so that it has taken up
-    // 5 Liquid's choice before its filter is touched; where it simulates the liquid it has
-    // set the push to nothing itself, and is left alone.
+    // attribute of the filter (BracketButton.astro), so Off sets it to nothing by hand.
     const wobble = () => {
-      for (const button of document.querySelectorAll('.bracket-button')) button.dispatchEvent(new Event('blur'));
       for (const push of document.querySelectorAll('.bracket-button-wobble')) {
-        if (push.closest('[data-simulated]')) continue;
         push.dataset.scale ??= push.getAttribute('scale');
         push.setAttribute('scale', root.dataset.wobble === 'off' ? '0' : push.dataset.scale);
       }
@@ -211,13 +206,12 @@
   .dev-panel-row > span:first-child{flex:0 0 auto;min-width:4.5em;color:var(--ink-3)}
   /* The bracket button's spill (BracketButton.astro), a part at a time.
      5 Liquid chooses how the ink moves: Simulated, a small fluid simulation, which is what
-     the site does; or Circles, the nine circles the styles pour, which is what a visitor
-     without JavaScript gets. The button's script reads it.
+     the site does; or Circles, the nine circles the styles pour in the same picture, which
+     is what a visitor without JavaScript gets. The button's script reads it.
      The other four each take one thing away, so its share of the effect can be seen:
      1 Pour (Circles only): the circles swell where they end up, as Claude Design drew
        them, rather than pouring in from the brackets' corners.
-     2 Wobble (Circles only): no noise on the edge (the script above), so the edges are
-       arcs of circles.
+     2 Wobble: no noise on the edge (the script above).
      3 Sheen: no darker rim and no glint, so the ink is flat.
      4 Shadow: no shadow on the page. */
   :root[data-pour="off"] .bracket-button .bracket-button-circle{left:var(--x);top:var(--y)}
