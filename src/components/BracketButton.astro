@@ -3,9 +3,10 @@
 //   <BracketButton label="Say hello" type="submit" />      a button
 //   <BracketButton label="Read it" href="/somewhere" />    a link that looks the same
 // Two corner brackets at rest. Pointed at, pressed or held, the brackets run on round the box
-// while ink pours in from their two corners like a thick liquid, meets in the middle and
-// fills the button, and the label turns to the page's colour exactly where the ink covers
-// it. Left alone, the ink parts in the middle and draws back into the corners.
+// while ink spreads across the button from their two corners like a thick liquid poured on
+// a table, meets in the middle and covers it, and the label turns to the page's colour
+// exactly where the ink covers it. Left alone, the ink parts in the middle and is drawn back
+// into the corners.
 //
 // Any other attribute given lands on the button itself. A page's own script can ask two
 // things of it afterwards:
@@ -16,18 +17,20 @@
 // How the liquid is made. Two things: something that moves like a liquid, and one SVG filter
 // that makes it look like one.
 //   1. It moves like a liquid because it is one, simulated (src/scripts/liquid.ts, which says
-//      how): about a thousand particles in a tank just larger than the button. Ink pours in
-//      at the top right corner and wells up at the bottom left, falls, runs along the floor,
-//      meets and rises until the button is under it; let go, it tips towards the bottom left
-//      and drains out. The script at the foot of this file steps it along, only while
-//      something is happening, and draws each particle as a disc on a canvas.
-//   2. The filter makes discs one body. It blurs them and cuts the blur off at half
-//      strength: discs that overlap become a single smooth shape, and two shapes that come
-//      near each other reach across and join, as two drops do. What is left is the spill.
+//      how): about a thousand particles on a patch of surface just larger than the button,
+//      seen from above. Ink is poured on at the top right corner and at the bottom left, each
+//      stream aimed at the other; each runs out as a tongue, slows and swells, the two meet
+//      and close up, and the ink goes on spreading until the button is covered. Let go, it is
+//      drawn back to the two corners. The script at the foot of this file steps it along,
+//      only while something is happening, and draws each particle as a disc on a canvas.
+//   2. The filter makes discs one body. It pushes their outline about by a slow, smooth
+//      noise, so that the edge is never quite regular, then blurs them and cuts the blur off
+//      at half strength: discs that overlap become a single smooth shape, and two shapes that
+//      come near each other reach across and join, as two drops do. What is left is the spill.
 //   3. The filter lights it. From the spill's own outline it works out a slope round the
 //      edge, as if the liquid stood proud of the page, and from that slope a darker rim, a
 //      glint along the edges that face the light (from the upper left) and a shadow on the
-//      page. All three are at the edge and nowhere else, so the filled button is flat ink,
+//      page. All three are at the edge and nowhere else, so the covered button is flat ink,
 //      to the pixel.
 //   4. The filter turns the label. It is handed a second copy of the label and keeps it only
 //      where the spill is, in the page's colour, over the ink: a letter half under the ink
@@ -35,18 +38,17 @@
 // To tell the liquid from that copy of the label, the filter is given them in red and in
 // blue. Neither colour is ever seen: it paints only in the page's own (the styles below).
 //
-// Without script there is no simulation, and the styles pour nine circles in its place: each
-// starts as a point outside one of the two corners and slides to its own place, the nearest
-// first, and the same filter joins and lights them, with a slow noise pushing their outlines
-// about so that no edge is an arc of a circle. That was the button before the simulation
-// (4 Oct 2026), and is still what a visitor without JavaScript gets. Under reduced motion
-// neither runs: the button fills at once.
+// Without script there is no simulation, and the styles pour nine circles in its place, in
+// the same picture: each starts as a point outside one of the two corners and slides to its
+// own place, the nearest first, and the same filter joins and lights them. That was the
+// button before the simulation (4 Oct 2026), and is still what a visitor without JavaScript
+// gets. Under reduced motion neither runs: the button is covered at once.
 //
 // It began in Claude Design as seven circles swelling where they stood, merged by CSS's blur
 // and contrast, with the label turned by the clock. The brackets, their timing, the two
 // corners and the label's type are still that drawing's, and joining shapes by a blur and a
-// cut is its idea. The liquid, the light and the label turned by the ink are the site's; so
-// is the spill's timing, which is the liquid's own and not the site's spring.
+// cut is its idea. The liquid, the light and the label turned by the ink are the site's own;
+// so is the spill's timing, which is the liquid's and not the site's spring.
 import { uid } from '../scripts/uid';
 
 interface Props {
@@ -114,15 +116,13 @@ const longest = Math.max(...circles.map((b) => b.in));
   </span>
   <svg class="bracket-button-filter" width="0" height="0" aria-hidden="true" focusable="false">
     <filter id={filter} color-interpolation-filters="sRGB">
-      {/* 2. The liquid's cover (red, where anything is drawn at all); blurred; cut off at a
-             half. 26a - 12.5 is CSS's contrast(26), on cover alone. As written here it is for
-             the nine circles: pushed about by the noise first, up to 11px either way, and
-             blurred by 7px. For the simulated liquid the script sets the push to nothing and
-             the blur to 4px. */}
+      {/* 2. The liquid's cover (red, where anything is drawn at all), pushed about by the
+             noise, up to 11px either way; blurred by 7px; cut off at a half. 26a - 12.5 is
+             CSS's contrast(26), on cover alone. */}
       <feColorMatrix in="SourceGraphic" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  1 0 0 1 -1" result="circles" />
       <feTurbulence class="bracket-button-noise" type="fractalNoise" baseFrequency="0.014 0.02" numOctaves="1" seed="7" result="noise" />
       <feDisplacementMap class="bracket-button-wobble" in="circles" in2="noise" scale="22" xChannelSelector="R" yChannelSelector="G" />
-      <feGaussianBlur class="bracket-button-blur" stdDeviation="7" />
+      <feGaussianBlur stdDeviation="7" />
       <feColorMatrix type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 26 -12.5" result="spill" />
       {/* 4. The label's cover (blue), kept sharp, and kept only where the spill is. */}
       <feColorMatrix in="SourceGraphic" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 1 1 -1" />
@@ -242,7 +242,7 @@ const longest = Math.max(...circles.map((b) => b.in));
 </style>
 
 <script>
-  import { pour, STEP, SIDE, FLOOR } from '../scripts/liquid';
+  import { pour, STEP } from '../scripts/liquid';
 
   const still = matchMedia('(prefers-reduced-motion: reduce)');
   const hovers = matchMedia('(hover: hover)');
@@ -256,15 +256,14 @@ const longest = Math.max(...circles.map((b) => b.in));
     }).observe(button, { attributes: true, attributeFilter: ['data-label'] });
 
     // The liquid, simulated (src/scripts/liquid.ts has how). The script's part is small: to
-    // know when the button wants filling, to step the liquid along while anything is
+    // know when the button wants covering, to step the liquid along while anything is
     // happening, and to draw its particles on the canvas as red discs, which the filter then
-    // treats exactly as it treats the circles: blurred and cut off into one body of ink,
-    // lit, with the label turned where it covers it.
+    // treats exactly as it treats the circles: pushed about, blurred and cut off into one
+    // body of ink, lit, with the label turned where it covers it.
     const spill = button.querySelector<HTMLElement>('.bracket-button-spill')!;
     const canvas = button.querySelector<HTMLCanvasElement>('.bracket-button-liquid')!;
     const pen = canvas.getContext('2d');
-    const wobble = button.querySelector('.bracket-button-wobble');
-    const blur = button.querySelector('.bracket-button-blur');
+    const noise = button.querySelector('.bracket-button-noise');
     /** A particle is drawn this many pixels across its radius: wide enough that neighbours
         overlap into a solid body. */
     const DOT = 4.6;
@@ -285,15 +284,15 @@ const longest = Math.max(...circles.map((b) => b.in));
     // panel never ships, so on the published site it is never set.)
     const simulated = () => !!pen && spill.offsetWidth > 0 && !still.matches && document.documentElement.dataset.liquid !== 'circles';
 
-    // A tank the button's size, built when first wanted and again if the button changes
-    // size (a longer label), keeping the liquid it had.
+    // A patch of surface the button's size, built when first wanted and again if the button
+    // changes size (a longer label), keeping the liquid it had.
     const fit = () => {
       const width = button.offsetWidth;
       const height = button.offsetHeight;
       if (liquid && canvas.width === spill.offsetWidth && canvas.height === spill.offsetHeight) return;
-      const tank = pour(width, height);
-      if (liquid) tank.inherit(liquid);
-      liquid = tank;
+      const patch = pour(width, height);
+      if (liquid) patch.inherit(liquid);
+      liquid = patch;
       margin = (spill.offsetWidth - width) / 2;
       canvas.width = spill.offsetWidth;
       canvas.height = spill.offsetHeight;
@@ -310,23 +309,23 @@ const longest = Math.max(...circles.map((b) => b.in));
         pen.arc(x, y, DOT, 0, 6.2832);
       }
       pen.fill();
-      // The tank's walls and floor are just outside the button, and the filter would light
-      // the liquid's edge along them as if it were a surface, close enough to show at the
-      // button's own edge. So where the liquid touches a wall or the floor, it is drawn on
-      // outwards to the edge of the canvas, a rem beyond the button: two pixels of it at
-      // each wall, stretched.
-      const left = margin - SIDE;
-      const right = canvas.width - left;
-      const floor = canvas.height - margin + FLOOR;
-      pen.drawImage(canvas, left, 0, 2, canvas.height, 0, 0, left, canvas.height);
-      pen.drawImage(canvas, right - 2, 0, 2, canvas.height, right, 0, left, canvas.height);
-      pen.drawImage(canvas, 0, floor - 2, canvas.width, 2, 0, floor, canvas.width, canvas.height - floor);
+      // The patch of surface the ink spreads on ends just outside the button, and the filter
+      // would light the ink's edge along its walls as if it were the ink's own, close enough
+      // to show at the button's border. So where the ink touches a wall it is drawn on
+      // outwards to the edge of the canvas, a rem beyond the button: two pixels of it at each
+      // wall, stretched. Sides first, so that the corners are carried out too.
+      const side = margin - liquid.past[0];
+      const head = margin - liquid.past[1];
+      const { width, height } = canvas;
+      pen.drawImage(canvas, side, 0, 2, height, 0, 0, side, height);
+      pen.drawImage(canvas, width - side - 2, 0, 2, height, width - side, 0, side, height);
+      pen.drawImage(canvas, 0, head, width, 2, 0, 0, width, head);
+      pen.drawImage(canvas, 0, height - head - 2, width, 2, 0, height - head, width, head);
     };
     // One frame: as many steps as the time since the last frame calls for (two, at 60 a
     // second; never more than four, so a stalled tab does not come back in a rush), then
-    // drawn. It stops asking for frames once nothing is left to happen: empty and unwanted,
-    // or full and wanted for a second and a half, by when the surface is still. Nothing
-    // runs while the button is merely sitting there.
+    // drawn. It stops asking for frames once nothing is left to happen: all drawn back and
+    // unwanted, or covered and wanted for ninety frames more, by when the ink is still. Nothing runs while the button is merely sitting there.
     const tick = (now: number) => {
       frame = 0;
       if (!liquid || !simulated()) return;
@@ -335,24 +334,15 @@ const longest = Math.max(...circles.map((b) => b.in));
       last = now;
       for (; owed >= STEP; owed -= STEP) liquid.step(want);
       draw();
-      if (!want && !liquid.count) return;
+      // All drawn back: asleep, with a new noise for the filter to push the next edge about by.
+      if (!want && !liquid.count) return void noise?.setAttribute('seed', String(Math.floor(1 + Math.random() * 998)));
       calm = want && liquid.full ? calm + 1 : 0;
       if (calm < 90) frame = requestAnimationFrame(tick);
     };
-    // Woken by anything that could change what is wanted. For the simulated liquid the
-    // filter is asked for less: no noise on the edge, since the liquid's own edge is uneven
-    // already, and a narrower blur, 4px for the circles' 7, so that a drop that has left the
-    // body is still seen.
-    const drawn = { scale: wobble?.getAttribute('scale') ?? '0', blur: blur?.getAttribute('stdDeviation') ?? '0' };
-    let was: boolean | null = null;
+    // Woken by anything that could change what is wanted.
     const wake = () => {
       const on = simulated();
-      if (on !== was) {
-        was = on;
-        button.toggleAttribute('data-simulated', on);
-        wobble?.setAttribute('scale', on ? '0' : drawn.scale);
-        blur?.setAttribute('stdDeviation', on ? '4' : drawn.blur);
-      }
+      button.toggleAttribute('data-simulated', on);
       if (!on) {
         cancelAnimationFrame(frame);
         frame = 0;
@@ -382,7 +372,6 @@ const longest = Math.max(...circles.map((b) => b.in));
     // mid-flight without stalling the spill, and a new noise would make the edge jump, so
     // those are dealt once the pointer has left and the ink has drawn back.
     const circles = Array.from(button.querySelectorAll<HTMLElement>('.bracket-button-circle'));
-    const noise = button.querySelector('.bracket-button-noise');
     const written = circles.map((circle) => parseFloat(circle.style.getPropertyValue('--in')) || 0);
     const between = (lo: number, hi: number) => lo + Math.random() * (hi - lo);
     // Never smaller than drawn, which is the size that is sure to cover the button.
