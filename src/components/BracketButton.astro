@@ -27,11 +27,18 @@
 //      noise, so that the edge is never quite regular, then blurs them and cuts the blur off
 //      at half strength: discs that overlap become a single smooth shape, and two shapes that
 //      come near each other reach across and join, as two drops do. What is left is the spill.
-//   3. The filter lights it. From the spill's own outline it works out a slope round the
-//      edge, as if the liquid stood proud of the page, and from that slope a darker rim, a
-//      glint along the edges that face the light (from the upper left) and a shadow on the
-//      page. All three are at the edge and nowhere else, so the covered button is flat ink,
-//      to the pixel.
+//   3. The filter lights it. The spill's outline, blurred, is a rounded bead running round
+//      its edge, as the edge of a thick liquid stands proud of the page. The bead shifted a
+//      few pixels down and right, taken from itself, says which way each part of the edge
+//      faces: towards the light, from the upper left, or away from it. The side towards the
+//      light gets a sharp white glint and a broad soft sheen reaching into the body; the
+//      side away gets a dark shade; the last few pixels of the edge, where the ink is
+//      thin, show its colour lighter and greener; and the spill casts a shadow on the page.
+//      All of it is at the edge and nowhere else, so the covered button is flat ink, to the
+//      pixel. (The filter's own lighting primitives are not used for this: they work in
+//      screen pixels, so the same values light the button three times as strongly on a 1x
+//      screen as on a phone, and Safari and Firefox differ again. Shifting the bead by a
+//      distance in CSS pixels draws the same everywhere.)
 //   4. The filter turns the label. It is handed a second copy of the label and keeps it only
 //      where the spill is, in the page's colour, over the ink: a letter half under the ink
 //      is half turned.
@@ -122,44 +129,62 @@ const longest = Math.max(...circles.map((b) => b.in));
       <feColorMatrix in="SourceGraphic" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  1 0 0 1 -1" result="circles" />
       <feTurbulence class="bracket-button-noise" type="fractalNoise" baseFrequency="0.014 0.02" numOctaves="1" seed="7" result="noise" />
       <feDisplacementMap class="bracket-button-wobble" in="circles" in2="noise" scale="22" xChannelSelector="R" yChannelSelector="G" />
-      <feGaussianBlur stdDeviation="7" />
+      <feGaussianBlur stdDeviation="7" result="soft" />
       <feColorMatrix type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 26 -12.5" result="spill" />
       {/* 4. The label's cover (blue), kept sharp, and kept only where the spill is. */}
       <feColorMatrix in="SourceGraphic" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 1 1 -1" />
       <feComposite in2="spill" operator="in" result="letters" />
-      {/* 3. The slope round the edge: the spill blurred a little, full in its middle and
-             falling away over its last few pixels. The rim is where it has fallen away. */}
-      <feGaussianBlur in="spill" stdDeviation="3.5" result="slope" />
-      <feColorMatrix in="slope" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -1 1" />
-      <feComposite in2="spill" operator="in" result="rim" />
-      {/* The glint: light from the upper left on that slope. A flat surface catches a little
-             of it too (0.39 of full), which the matrix takes off again, so that the flat of
-             the spill catches none; then softened by a pixel and kept inside the spill. */}
-      <feSpecularLighting in="slope" surfaceScale="12" specularConstant="1.3" specularExponent="10" lighting-color="#fff">
-        <feDistantLight azimuth="225" elevation="35" />
-      </feSpecularLighting>
-      <feColorMatrix type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1.7 -0.68" />
-      <feGaussianBlur stdDeviation="1" />
-      <feComposite in2="spill" operator="in" result="glint" />
-      {/* The shadow: the spill, a pixel right and two down, softened. */}
-      <feOffset in="spill" dx="1" dy="2" />
-      <feGaussianBlur stdDeviation="1.5" result="cast" />
-      {/* Painted, from the page up: shadow, ink, the darker rim, the glint, the letters. */}
+      {/* 3. The bead round the edge: the spill blurred by 4px, full in its middle and
+             falling away over its last ten pixels or so. The same bead 3px down and right.
+             Where the edge faces the upper left the bead stands higher than its shifted
+             self, where it faces the lower right, lower: the two differences are the slope
+             towards the light and the slope away from it, at most about 0.4. */}
+      <feGaussianBlur in="spill" stdDeviation="4" result="bead" />
+      <feOffset in="bead" dx="3" dy="3" result="beadAway" />
+      <feComposite in="bead" in2="beadAway" operator="arithmetic" k2="1" k3="-1" result="toLight" />
+      <feComposite in="bead" in2="beadAway" operator="arithmetic" k2="-1" k3="1" result="fromLight" />
+      {/* The glint: the steepest of the slope towards the light (over 0.31), a line; the
+             sheen: all of that slope, saturated and softened by 3px, so that it reaches into
+             the body; the shade: the slope away, the same. Each kept inside the spill. */}
+      <feColorMatrix in="toLight" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 8 -2.5" />
+      <feGaussianBlur stdDeviation="0.6" />
+      <feComposite in2="spill" operator="in" result="lit" />
+      <feColorMatrix in="toLight" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 4 0" />
+      <feGaussianBlur stdDeviation="3" />
+      <feComposite in2="spill" operator="in" result="litSoft" />
+      <feColorMatrix in="fromLight" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 3 0" />
+      <feGaussianBlur stdDeviation="2.5" />
+      <feComposite in2="spill" operator="in" result="unlit" />
+      {/* The thin edge: where the blur before the cut is between a half and 0.75, the last
+             three pixels or so of the spill all round, fading inwards. */}
+      <feColorMatrix in="soft" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -4 3" />
+      <feComposite in2="spill" operator="in" result="thin" />
+      {/* The shadow: the spill, a pixel and a half right and two and a half down, softened. */}
+      <feOffset in="spill" dx="1.5" dy="2.5" />
+      <feGaussianBlur stdDeviation="2" result="cast" />
+      {/* Painted, from the page up: shadow, ink, the thin edge, the shade, the sheen, the
+             glint, the letters. */}
       <feFlood class="bracket-button-shadow" />
       <feComposite in2="cast" operator="in" result="shadow" />
       <feFlood class="bracket-button-ink" />
       <feComposite in2="spill" operator="in" result="ink" />
+      <feFlood class="bracket-button-edge" />
+      <feComposite in2="thin" operator="in" result="edge" />
       <feFlood class="bracket-button-shade" />
-      <feComposite in2="rim" operator="in" result="shade" />
+      <feComposite in2="unlit" operator="in" result="shade" />
       <feFlood class="bracket-button-sheen" />
-      <feComposite in2="glint" operator="in" result="sheen" />
+      <feComposite in2="litSoft" operator="in" result="sheen" />
+      <feFlood class="bracket-button-glint" />
+      <feComposite in2="lit" operator="in" result="glint" />
       <feFlood class="bracket-button-sheet" />
       <feComposite in2="letters" operator="in" result="turned" />
       <feMerge>
         <feMergeNode in="shadow" />
         <feMergeNode in="ink" />
+        <feMergeNode in="edge" />
         <feMergeNode in="shade" />
         <feMergeNode in="sheen" />
+        <feMergeNode in="glint" />
         <feMergeNode in="turned" />
       </feMerge>
     </filter>
@@ -180,37 +205,47 @@ const longest = Math.max(...circles.map((b) => b.in));
   .bracket-button::after{bottom:0;left:0;border-bottom-width:2px;border-left-width:2px}
   .bracket-button[aria-disabled="true"]{cursor:progress}
 
-  /* The spill lies over the label, clipped to the button, in a box 1rem larger all round so
-     that the blur's soft edge and the noise's push fall outside what is seen. Inside it, for
-     the filter and seen by no one: the liquid in red (the canvas, or the circles), and a
-     second copy of the label in blue, set exactly over the first. `screen` adds the blue to the red where they cross, so
-     that neither hides the other from the filter. */
-  .bracket-button-spill{position:absolute;inset:-1rem;z-index:1;pointer-events:none}
-  .bracket-button-spill .bracket-button-label{position:absolute;inset:1rem;display:flex;align-items:center;padding:0 1.75rem;color:#00f;mix-blend-mode:screen}
+  /* The spill lies over the label, clipped to the button, in a box --m larger all round, so
+     that the blur's soft edge, the noise's push and the light's reach from the edge of what
+     is drawn (the filter sees an edge there, and lights some 20px inside it) all fall outside
+     what is seen. Inside it, for the filter and seen by no one: the liquid in red (the
+     canvas, or the circles), and a second copy of the label in blue, set exactly over the
+     first. `screen` adds the blue to the red where they cross, so that neither hides the
+     other from the filter. */
+  .bracket-button{--m:1.5rem}
+  .bracket-button-spill{position:absolute;inset:calc(-1 * var(--m));z-index:1;pointer-events:none}
+  .bracket-button-spill .bracket-button-label{position:absolute;inset:var(--m);display:flex;align-items:center;padding:0 1.75rem;color:#00f;mix-blend-mode:screen}
   .bracket-button-filter{position:absolute}
   /* What the filter paints in. The spill is the ink and the turned letters the page, so both
-     follow the theme. The glint is the ink mixed towards a pale green of the ramp: lighter
-     than the ink in the light, and in the dark, where the ink is pale, a green tint on it.
-     The rim is the dark ground at 40%, and the shadow the one the paper cutout casts. */
+     follow the theme. The light on it is white, as the glass tokens' is (site.css): a glint
+     at nearly full strength and a sheen at 50%, which on the pale ink of the dark theme is
+     scarcely there, as it is on a pale glossy thing. The shade is the ink taken most of the
+     way to black, at 70%: in the dark it is what gives the pale ink its roundness. The thin
+     edge is the ink seen thin, a quarter of it mixed into the ramp's middle green: a lit
+     green in the light, a pale one in the dark. The shadow is the one the paper cutout
+     casts. */
   .bracket-button-ink{flood-color:var(--ink)}
   .bracket-button-sheet{flood-color:var(--sheet)}
-  .bracket-button-sheen{flood-color:color-mix(in srgb, var(--ink), var(--color-accent-300) 70%)}
-  .bracket-button-shade{flood-color:var(--ground-dark);flood-opacity:.4}
+  .bracket-button-glint{flood-color:#fff;flood-opacity:.95}
+  .bracket-button-sheen{flood-color:#fff;flood-opacity:.5}
+  .bracket-button-shade{flood-color:color-mix(in srgb, var(--ink), #000 70%);flood-opacity:.7}
+  .bracket-button-edge{flood-color:color-mix(in srgb, var(--ink) 25%, var(--color-accent-500))}
   .bracket-button-shadow{flood-color:var(--lift)}
 
   /* A circle, at rest: a point at its corner (--sx, --sy: 0.5rem outside the button's own),
-     nothing to see. A third of the spill's width, and never under 4.25rem, which is what
-     keeps nine of them covering a button however wide it is. Filled: at its place (--x, --y:
+     nothing to see. A third of the spill's width as it was first drawn, 1rem larger than the
+     button all round (hence the .32rem), and never under 4.25rem, which is what keeps nine
+     of them covering a button however wide it is. Filled: at its place (--x, --y:
      the fractions the markup gives, --fx and --fy, with the script's few pixels of chance,
      --jx and --jy) and full size, or a little over (--k). */
-  .bracket-button-circle{position:absolute;left:var(--sx);top:var(--sy);width:max(4.25rem, 32%);aspect-ratio:1;border-radius:50%;background:#f00;translate:-50% -50%;scale:0;--x:calc(1rem + var(--fx) * (100% - 2rem) + var(--jx, 0px));--y:calc(1rem + var(--fy) * (100% - 2rem) + var(--jy, 0px))}
+  .bracket-button-circle{position:absolute;left:var(--sx);top:var(--sy);width:max(4.25rem, calc(32% - .32rem));aspect-ratio:1;border-radius:50%;background:#f00;translate:-50% -50%;scale:0;--x:calc(var(--m) + var(--fx) * (100% - 2 * var(--m)) + var(--jx, 0px));--y:calc(var(--m) + var(--fy) * (100% - 2 * var(--m)) + var(--jy, 0px))}
   /* Where the script simulates the liquid (data-simulated, and src/scripts/liquid.ts), it
      draws on this canvas, the size of the spill, and the circles stand down. */
   .bracket-button-liquid{position:absolute;inset:0;width:100%;height:100%;display:none}
   .bracket-button[data-simulated] .bracket-button-liquid{display:block}
   .bracket-button[data-simulated] .bracket-button-circle{display:none}
-  .bracket-button-circle.from-tr{--sx:calc(100% - .5rem);--sy:.5rem}
-  .bracket-button-circle.from-bl{--sx:.5rem;--sy:calc(100% - .5rem)}
+  .bracket-button-circle.from-tr{--sx:calc(100% - var(--m) + .5rem);--sy:calc(var(--m) - .5rem)}
+  .bracket-button-circle.from-bl{--sx:calc(var(--m) - .5rem);--sy:calc(100% - var(--m) + .5rem)}
   .bracket-button:is(:active,[aria-disabled="true"]){--bw:100%;--bh:100%}
   .bracket-button:is(:active,[aria-disabled="true"]) .bracket-button-circle{left:var(--x);top:var(--y);scale:var(--k, 1)}
   /* Only where there is a pointer to hover with, so a tap does not leave the button inked. */
@@ -312,7 +347,7 @@ const longest = Math.max(...circles.map((b) => b.in));
       // The patch of surface the ink spreads on ends just outside the button, and the filter
       // would light the ink's edge along its walls as if it were the ink's own, close enough
       // to show at the button's border. So where the ink touches a wall it is drawn on
-      // outwards to the edge of the canvas, a rem beyond the button: two pixels of it at each
+      // outwards to the edge of the canvas, --m beyond the button: two pixels of it at each
       // wall, stretched. Sides first, so that the corners are carried out too.
       const side = margin - liquid.past[0];
       const head = margin - liquid.past[1];
