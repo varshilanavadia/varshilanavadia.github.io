@@ -1,0 +1,383 @@
+---
+// Contact: a form, and no address. The messages go to Formspree, which holds the owner's
+// email address in its own settings and forwards them; nothing on the site or in the
+// repository carries it. The form's id is FORMSPREE_FORM_ID in src/site.ts.
+//
+// The form is the wireframe's: three questions, each a row with its number and its type down
+// a rail, as a record has them, the answers typed in mono, and the bracket button. The rows
+// take the grid Work's rows have, the rail where its dates run. The Type System's §10 gives
+// the roles, and the Semantic Mapping's G2 the elements: the question alone is the label, and
+// the rail is hidden from screen readers, which are told what it shows by the fields
+// themselves (required, invalid, the limit).
+//
+// It is a plain form first. Without script it posts to Formspree as any form does, the browser
+// checks the answers, and Formspree's own pages take it from there (its CAPTCHA, where the
+// form's settings ask for one, then its thank-you page). With script, the one at the foot of
+// this file sends the same fields without leaving the page and answers in place:
+//   - a missing or malformed answer is said under its field, in the Type System's three
+//     signals, none of them a colour: the field's rule doubles, the message is the one bold
+//     line in the field, and the rail adds "· error". Focus goes to the first such field, which
+//     is described by its message (aria-invalid, aria-describedby). No summary above the form,
+//     by §10;
+//   - while it sends, and once it is sent, the answers are read-only, the system's state for
+//     a value worth reading: the form stays as the record of what was sent, so nothing moves
+//     on the page, and "Message sent" takes the button's place, with focus;
+//   - if it cannot be sent, the answers stay as typed and a line under the button says what
+//     to do. That line is an alert, so it is read out when it appears.
+//
+// Spam, as Formspree documents it: the `_gotcha` field is its honeypot, a field no visitor
+// sees or reaches; filled in, Formspree drops the message silently. The rest is on its side,
+// in the form's settings: its filter, its CAPTCHA, and "Restrict to Domain".
+//
+// The button is the bracket button, a component of its own with its spill
+// (BracketButton.astro). This form asks two things of it, in the ways it offers: to say
+// "Sending…", and to stay filled while it sends.
+//
+// Plex Mono's 400 is loaded here, for this section alone: the typed answers, the types and
+// the counter are 400 in the Type System, and an answer of several lines in the 700 the rest
+// of the site makes do with is hard to read. One more file, 15 KB.
+import '@fontsource/ibm-plex-mono/400.css';
+import BracketButton from './BracketButton.astro';
+import { FORMSPREE_FORM_ID } from '../site';
+
+const action = `https://formspree.io/f/${FORMSPREE_FORM_ID}`;
+// The wireframe's counter: the longest message the form takes.
+const LIMIT = 2000;
+
+// The questions and their placeholders are the wireframe's. `name`, `email` and `message` are
+// names Formspree knows: `email` becomes the reply-to of the message it forwards.
+const fields = [
+  { name: 'name', type: 'string', question: 'What’s your name?', placeholder: 'Author name..', input: 'text', autocomplete: 'name' },
+  { name: 'email', type: 'email', question: 'What’s your email?', placeholder: 'Author email..', input: 'email', autocomplete: 'email' },
+  { name: 'message', type: 'text', question: 'What’s your message?', placeholder: 'Commit message..', input: 'textarea', autocomplete: 'off' },
+] as const;
+---
+
+<section class="section contact" id="contact" aria-labelledby="contact-title">
+  <h2 class="eyebrow" id="contact-title">Contact</h2>
+
+  <form class="contact-form" action={action} method="POST">
+    {fields.map((field, i) => (
+      <div class="contact-field">
+        {/* The rail: a record's margin, read by eye only. */}
+        <p class="contact-rail" aria-hidden="true">
+          <span class="contact-index">{String(i + 1).padStart(2, '0')}</span>
+          <span class="contact-type">
+            {field.type} <span class="contact-flag">· required</span> <span class="contact-flag contact-fault">· error</span>
+          </span>
+          {/* Without script the limit; with it, the count so far. */}
+          {field.input === 'textarea' && <span class="contact-count" data-limit={LIMIT}>max {LIMIT}</span>}
+        </p>
+        <div class="contact-answer">
+          <label for={`contact-${field.name}`}>{field.question}</label>
+          {field.input === 'textarea' ? (
+            <textarea
+              id={`contact-${field.name}`}
+              name={field.name}
+              rows="5"
+              maxlength={LIMIT}
+              required
+              autocomplete={field.autocomplete}
+              placeholder={field.placeholder}
+              aria-describedby={`contact-${field.name}-limit`}
+            />
+          ) : (
+            <input
+              id={`contact-${field.name}`}
+              name={field.name}
+              type={field.input}
+              required
+              autocomplete={field.autocomplete}
+              autocapitalize={field.input === 'email' ? 'none' : undefined}
+              spellcheck={field.input === 'email' ? 'false' : undefined}
+              placeholder={field.placeholder}
+            />
+          )}
+          {field.input === 'textarea' && (
+            <p class="sr-only" id={`contact-${field.name}-limit`}>Up to {LIMIT.toLocaleString('en-US')} characters.</p>
+          )}
+          <p class="contact-error" id={`contact-${field.name}-error`} hidden></p>
+        </div>
+      </div>
+    ))}
+
+    {/* Formspree's honeypot. Out of sight, out of the tab order and out of autofill's way. */}
+    <input class="contact-pot" type="text" name="_gotcha" tabindex="-1" autocomplete="off" aria-hidden="true" />
+
+    <div class="contact-send">
+      <div class="contact-go">
+        <div class="contact-press">
+          <BracketButton class="contact-button" type="submit" label="Say hello" />
+          {/* The wireframe's shortcut. True only once the script is listening, so it is hidden
+              until then, and shown only where there is a keyboard to press it on. */}
+          <p class="contact-keys" aria-hidden="true" hidden><kbd>⌘</kbd><kbd>↵</kbd> to send</p>
+        </div>
+        {/* Empty until there is something to say, and never hidden, so that a screen reader
+            is already listening to it when there is. */}
+        <p class="contact-status" role="alert"></p>
+      </div>
+      <div class="contact-done" hidden>
+        <p class="contact-note" tabindex="-1"><strong>Message sent.</strong> Thank you for writing.</p>
+        <button class="contact-again" type="button">Send another message</button>
+      </div>
+    </div>
+  </form>
+</section>
+
+<style>
+  /* One column, as Work is: the section's name, then the rows. From 60rem each row takes
+     the section grid (one part to two, with an s5 gap): the rail down the column Work's dates
+     run in, the question and its answer in line with Work's titles. */
+  .contact,.contact-form,.contact-field,.contact-answer,.contact-send{display:grid;grid-template-columns:minmax(0,1fr)}
+  .contact{row-gap:var(--s4)}
+  .contact-form{margin:0;border-top:1px solid var(--rule)}
+
+  /* A row: the question, the answer, and under them the field's rule, a hairline. */
+  .contact-field{row-gap:var(--s1);padding:var(--s3) 0;border-bottom:1px solid var(--rule);transition:border-color var(--spring-time, .4s) var(--spring, ease)}
+
+  /* The rail. Field index: t-1 mono · 700 · --lh-mono · tabular · --ink. Field type and
+     counter: t-1 mono · 400 · --ink-3 (7.1:1 on the page in the light, 5.5:1 in the dark).
+     On one line above the question on a phone, the counter at its far end; a column from
+     60rem. "· required" is the type column's own way of saying so (§10), and breaks before
+     its dot, never after. */
+  .contact-rail{display:flex;flex-wrap:wrap;column-gap:var(--s2);margin:0;font-family:var(--font-mono);font-size:var(--t-1);font-weight:400;line-height:var(--lh-mono);color:var(--ink-3)}
+  .contact-index{font-weight:700;font-variant-numeric:tabular-nums;color:var(--ink)}
+  .contact-flag{white-space:nowrap}
+  .contact-count{margin-left:auto;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .contact-fault{display:none}
+
+  /* The question. Row title: t1 · 600 · --lh-snug · --ink · balance, and always a label. */
+  .contact-answer label{font-size:var(--t1);font-weight:600;line-height:var(--lh-snug);color:var(--ink);text-wrap:balance;overflow-wrap:break-word}
+  /* The answer. Mono answer: t0 mono · 400 · --lh-body, the placeholder in --ink-3 and what
+     is typed in --ink, which is the one sign that a field has content. No box: the row's
+     rule is the field's. 7px above and below the 30px line make the 44px target, and t0 is
+     over the 16px under which iOS zooms the page into a field. The message grows with what
+     is typed where the browser can size a field to its content, and scrolls and can be
+     dragged taller where it cannot. */
+  .contact-answer input,.contact-answer textarea{display:block;box-sizing:border-box;width:100%;margin:var(--s0) 0 0;padding:7px 0;border:0;border-radius:0;background:none;-webkit-appearance:none;appearance:none;font-family:var(--font-mono);font-size:var(--t0);font-weight:400;line-height:var(--lh-body);color:var(--ink);transition:color var(--spring-time, .4s) var(--spring, ease)}
+  .contact-answer textarea{min-height:calc(5 * var(--lh-body) * var(--t0) + 14px);resize:vertical;field-sizing:content}
+  .contact-answer ::placeholder{color:var(--ink-3);opacity:1}
+  /* A browser that fills a field in paints it in a colour of its own, pale blue or yellow,
+     which is no ground of this page: the page's ground is laid back over it, and the ink
+     kept. Two rules, since a browser that knows only one of the names drops a list of both. */
+  .contact-answer input:-webkit-autofill{box-shadow:inset 0 0 0 100vmax var(--sheet);-webkit-text-fill-color:var(--ink);caret-color:var(--ink)}
+  .contact-answer input:autofill{box-shadow:inset 0 0 0 100vmax var(--sheet);-webkit-text-fill-color:var(--ink);caret-color:var(--ink)}
+
+  /* Invalid, in §10's three signals: the field's rule from 1px to --rule-strong at 2px (a
+     pixel comes off the padding, so nothing moves), the message where a caption would sit,
+     t-1 · 600 · --lh-normal · --ink, the one bold line in the field, and "· error" in the
+     rail. The message rises into place as Work's lines do. */
+  .contact-field[data-invalid]{padding-bottom:calc(var(--s3) - 1px);border-bottom:2px solid var(--rule-strong)}
+  .contact-field[data-invalid] .contact-fault{display:inline}
+  .contact-error,.contact-status{margin:var(--s1) 0 0;font-size:var(--t-1);font-weight:600;line-height:var(--lh-normal);color:var(--ink);overflow-wrap:break-word}
+  .contact-error:not([hidden]),.contact-status:not(:empty),.contact-done:not([hidden]){animation:contact-in var(--spring-time, .4s) var(--spring, ease) both}
+  @keyframes contact-in{from{opacity:0;translate:0 .5rem}}
+
+  /* Read-only, while it sends and once it is sent: the answers in --ink-3 with no field rule
+     at all (§10), so the form reads as a record rather than as something to fill in. */
+  .contact-form[data-state] .contact-field{border-color:transparent}
+  .contact-form[data-state] :is(input,textarea){color:var(--ink-3);resize:none}
+  .contact-form[data-state] .contact-flag{display:none}
+
+  .contact-pot{display:none}
+
+  /* The foot of the form: the button, the shortcut at the far end of its line, and under
+     them whatever there is to say. */
+  .contact-send{padding-top:var(--s4)}
+  .contact-press{display:flex;flex-wrap:wrap;align-items:center;column-gap:var(--s3);row-gap:var(--s2)}
+  .contact-keys[hidden]{display:none}
+  .contact-status{margin:0}
+  .contact-status:not(:empty){margin-top:var(--s2)}
+  .contact-keys{display:flex;align-items:center;column-gap:var(--s1);margin:0 0 0 auto;font-family:var(--font-mono);font-size:var(--t-1);font-weight:400;line-height:var(--lh-mono);color:var(--ink-3);white-space:nowrap}
+  .contact-keys kbd{padding:2px 6px;border:1px solid var(--rule);font:inherit;line-height:var(--lh-normal)}
+
+  /* Sent. The note takes focus so that it is read out, and is nothing to press, so it draws
+     no ring. "Send another message" is a Standalone link in a button's element: t0 · 600 ·
+     --lh-normal · --ink over a 1px --ink-3 underline that turns --ink when pointed at, in a
+     44px target. */
+  .contact-done{justify-items:start;row-gap:var(--s1)}
+  .contact-done:not([hidden]){display:grid}
+  .contact-note{margin:0;color:var(--ink-2)}
+  .contact-note strong{font-weight:600;color:var(--ink)}
+  .contact-note:focus{outline:none}
+  .contact-again{margin:0;padding:calc((2.75rem - var(--lh-normal) * var(--t0)) / 2) 0;border:0;border-radius:0;background:none;font-family:inherit;font-size:var(--t0);font-weight:600;line-height:var(--lh-normal);color:var(--ink);text-decoration:underline;text-decoration-color:var(--ink-3);text-decoration-thickness:1px;text-underline-offset:3px;cursor:pointer}
+  .contact-again:hover{text-decoration-color:var(--ink)}
+
+  /* Under reduced motion every state arrives at once, and nothing rises or fades. */
+  @media (prefers-reduced-motion: reduce){
+    .contact-field,.contact-answer input,.contact-answer textarea{transition:none}
+    .contact-error:not([hidden]),.contact-status:not(:empty),.contact-done:not([hidden]){animation:none}
+  }
+
+  @media (min-width:60rem){
+    .contact-field,.contact-send{grid-template-columns:minmax(0,1fr) minmax(0,2fr);column-gap:var(--s5)}
+    .contact-field{align-items:first baseline}
+    .contact-rail{display:block}
+    .contact-rail > span{display:block}
+    .contact-count{margin-left:0}
+    .contact-send > *{grid-column:2}
+  }
+</style>
+
+<script>
+  // The form, sent from the page. Everything here is an addition: without it the form posts
+  // to Formspree and the browser does the checking (see the head of this file).
+  import { outcome, type Outcome } from '../scripts/formspree';
+
+  type Field = HTMLInputElement | HTMLTextAreaElement;
+
+  const form = document.querySelector<HTMLFormElement>('.contact-form');
+  const button = form?.querySelector<HTMLButtonElement>('.contact-button');
+  const status = form?.querySelector<HTMLElement>('.contact-status');
+  const go = form?.querySelector<HTMLElement>('.contact-go');
+  const done = form?.querySelector<HTMLElement>('.contact-done');
+  if (form && button && status && go && done) {
+    const fields = Array.from(form.querySelectorAll<Field>('.contact-answer :is(input, textarea)'));
+    const row = (field: Field) => field.closest<HTMLElement>('.contact-field')!;
+    const note = (field: Field) => document.getElementById(`${field.id}-error`)!;
+
+    // The checking is done here from now on, so that what is wrong is said in the page's own
+    // words, under the field, rather than in the browser's bubble.
+    form.noValidate = true;
+
+    // What to do about an answer, or nothing if it will do. Prose that names what to do,
+    // never a code (§10). The last three are Formspree's own refusals, by its codes.
+    const SAY: Record<string, Record<string, string>> = {
+      name: { missing: 'Enter your name.' },
+      email: { missing: 'Enter your email address.', malformed: 'Check the email address: it needs an @ and a domain after it.' },
+      message: { missing: 'Enter a message.', long: 'Shorten the message to 2,000 characters or fewer.' },
+    };
+    const CODES: Record<string, string> = { REQUIRED_FIELD_EMPTY: 'missing', REQUIRED_FIELD_MISSING: 'missing', TYPE_EMAIL: 'malformed' };
+    const OTHERWISE = 'Check this answer and try again.';
+    const fault = (field: Field) => {
+      const say = SAY[field.name] ?? {};
+      // Spaces alone are no answer, though the browser's `required` lets them through.
+      if (!field.value.trim()) return say.missing ?? OTHERWISE;
+      if (field.validity.typeMismatch) return say.malformed ?? OTHERWISE;
+      if (field.validity.tooLong || (field.maxLength > 0 && field.value.length > field.maxLength)) return say.long ?? OTHERWISE;
+      return '';
+    };
+
+    // A field's error, shown or cleared: the row's three signals (the styles above), and for
+    // a screen reader the field marked invalid and described by its message. The limit's
+    // description, where the field has one, stays.
+    const describedBy = new Map(fields.map((f) => [f, f.getAttribute('aria-describedby') ?? '']));
+    const mark = (field: Field, message: string) => {
+      const el = note(field);
+      row(field).toggleAttribute('data-invalid', !!message);
+      el.textContent = message;
+      el.hidden = !message;
+      if (message) field.setAttribute('aria-invalid', 'true');
+      else field.removeAttribute('aria-invalid');
+      const ids = [message ? el.id : '', describedBy.get(field)].filter(Boolean).join(' ');
+      if (ids) field.setAttribute('aria-describedby', ids);
+      else field.removeAttribute('aria-describedby');
+    };
+    // Every fault is marked, and focus goes to the first, whose message is read with it.
+    const settle = (faults: Map<Field, string>) => {
+      for (const field of fields) mark(field, faults.get(field) ?? '');
+      const first = fields.find((f) => faults.get(f));
+      first?.focus();
+      return !first;
+    };
+    // Once a field is marked it is checked again as it is typed in, so the mark goes the
+    // moment the answer will do; a field not yet marked is left alone until the form is sent.
+    for (const field of fields) {
+      field.addEventListener('input', () => { if (row(field).hasAttribute('data-invalid')) mark(field, fault(field)); });
+    }
+
+    // The counter: the message's length so far against the limit, in place of the limit alone.
+    const count = form.querySelector<HTMLElement>('.contact-count');
+    const message = fields.find((f) => f.name === 'message');
+    const tally = () => { if (count && message) count.textContent = `${message.value.length} / ${count.dataset.limit}`; };
+    message?.addEventListener('input', tally);
+    tally();
+
+    // The shortcut: Command or Control with Return sends, from any field. The hint names the
+    // key this machine has, and shows only where there is a keyboard and a pointer.
+    const apple = /Mac|iPhone|iPad/.test(navigator.platform);
+    const keys = form.querySelector<HTMLElement>('.contact-keys');
+    if (keys && matchMedia('(hover: hover) and (pointer: fine)').matches) {
+      if (!apple) keys.querySelector('kbd')!.textContent = 'Ctrl';
+      keys.hidden = false;
+      button.setAttribute('aria-keyshortcuts', apple ? 'Meta+Enter' : 'Control+Enter');
+    }
+    form.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && (e.metaKey || e.ctrlKey) && !e.isComposing) {
+        e.preventDefault();
+        form.requestSubmit();
+      }
+    });
+
+    // Sending. The button stays in the tab order and says what it is doing (a disabled one
+    // would drop the focus it holds); a second press while it sends does nothing. The
+    // answers are read-only while it sends and once it is sent (data-state, the styles above).
+    const state = (now: '' | 'sending' | 'sent') => {
+      const sending = now === 'sending';
+      if (now) form.dataset.state = now;
+      else delete form.dataset.state;
+      for (const field of fields) field.readOnly = !!now;
+      form.setAttribute('aria-busy', String(sending));
+      button.setAttribute('aria-disabled', String(sending));
+      // The button's own ways of being told (BracketButton.astro): what to say, and to hold.
+      if (sending) button.dataset.label = 'Sending…';
+      else delete button.dataset.label;
+      go.hidden = now === 'sent';
+      done.hidden = now !== 'sent';
+    };
+
+    // The request Formspree documents (src/scripts/formspree.ts). Given up after 15 seconds,
+    // so a stalled connection ends in a line that says so rather than in "Sending…" for good.
+    const send = async (): Promise<Outcome> => {
+      try {
+        const reply = await fetch(form.action, {
+          method: 'POST',
+          body: new FormData(form),
+          headers: { Accept: 'application/json' },
+          signal: AbortSignal.timeout(15000),
+        });
+        return outcome(reply.status, await reply.json().catch(() => null));
+      } catch {
+        return { kind: 'failed' };
+      }
+    };
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      // Not twice: while it sends, or once it is sent, when Return in a read-only answer
+      // would otherwise send the same message again.
+      if (form.dataset.state) return;
+      status.textContent = '';
+      if (!settle(new Map(fields.map((f) => [f, fault(f)])))) return;
+      state('sending');
+      const result = await send();
+      if (result.kind === 'sent') {
+        state('sent');
+        form.querySelector<HTMLElement>('.contact-note')?.focus();
+        return;
+      }
+      state('');
+      if (result.kind === 'refused') {
+        // Formspree turned an answer down that passed here: said under that field, in the
+        // same words. A field this form does not have falls through to the line below.
+        const faults = new Map<Field, string>();
+        for (const { field, code } of result.fields) {
+          const el = fields.find((f) => f.name === field);
+          if (el) faults.set(el, SAY[field]?.[CODES[code]] ?? OTHERWISE);
+        }
+        if (faults.size && !settle(faults)) return;
+      }
+      status.textContent = result.kind === 'busy'
+        ? 'Too many messages are arriving at once. Wait a minute, then send it again.'
+        : 'The message was not sent. Check your connection, then send it again: what you typed is still here.';
+    });
+
+    // Another message: the form as it arrived, with focus on its first question.
+    form.querySelector('.contact-again')?.addEventListener('click', () => {
+      form.reset();
+      state('');
+      tally();
+      fields[0]?.focus();
+    });
+  }
+</script>
